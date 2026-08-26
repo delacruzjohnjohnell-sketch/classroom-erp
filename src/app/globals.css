@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background: #F5F3EE;
+  color: #1B2430;
+}
+
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.02em; color: #8a8172; padding: 8px 10px; border-bottom: 1.5px solid #DDD8CC; }
+td { padding: 9px 10px; vertical-align: top; border-bottom: 1px solid #DDD8CC; }
