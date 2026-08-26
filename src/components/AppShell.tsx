@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LogOut, ArrowLeft, Loader2, LayoutDashboard, BookOpen, Truck,
-  Package, ShoppingCart, Briefcase, FileBarChart, Landmark,
+  Package, ShoppingCart, Briefcase, FileBarChart, Landmark, Boxes,
 } from "lucide-react";
 import { useSession } from "@/lib/session";
 
@@ -16,6 +16,7 @@ const NAV = [
   { href: "/inventory", label: "Inventory", icon: Package },
   { href: "/sales", label: "Invoices", icon: ShoppingCart },
   { href: "/banking", label: "Banking", icon: Landmark },
+  { href: "/fixed-assets", label: "Fixed Assets", icon: Boxes },
   { href: "/hr", label: "HR", icon: Briefcase },
   { href: "/reports", label: "Reports", icon: FileBarChart },
 ];

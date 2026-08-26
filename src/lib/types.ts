@@ -15,6 +15,7 @@ export type Account = {
   code: string;
   name: string;
   type: "asset" | "liability" | "equity" | "revenue" | "expense";
+  is_bank: boolean;
 };
 
 export type JournalEntry = { id: string; tenant_id: string; entry_date: string; memo: string | null };

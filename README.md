@@ -16,10 +16,13 @@ at once. Free to run and host.
 4. Open a **second** New query, paste in `supabase/migrations/0002_invoicing_upgrade.sql`, and run it
    too. This adds due dates, partial payments, A/R and A/P aging, bank reconciliation, and file
    attachments — the features that make this feel closer to QuickBooks than a bare ledger.
-5. Go to **Authentication → Providers → Email**, make sure the **Email** provider itself is enabled,
+5. Open a **third** New query, paste in `supabase/migrations/0003_coa_assets_payroll.sql`, and run it.
+   This adds an editable chart of accounts, multi-bank-account support, fixed assets with
+   depreciation, and Philippine statutory payroll (SSS, PhilHealth, Pag-IBIG, withholding tax).
+6. Go to **Authentication → Providers → Email**, make sure the **Email** provider itself is enabled,
    and turn **off** "Confirm email" for the fastest classroom setup (students can sign up and start
    immediately). Turn it back on if you want email verification for a real deployment.
-6. Go to **Project Settings → API** and copy your **Project URL** and **Publishable key** (this is
+7. Go to **Project Settings → API** and copy your **Project URL** and **Publishable key** (this is
    what used to be called the "anon key" — it's safe to use in the browser).
 
 ## 2. Run it locally
@@ -80,6 +83,18 @@ tables, so any transaction anywhere in the app is reflected correctly in the fin
   Storage, scoped per-tenant the same way every other table is).
 - **Sidebar navigation** — a persistent left-hand nav instead of top tabs, closer to how QuickBooks,
   Xero, and NetSuite actually lay out their app shell.
+- **Editable chart of accounts** — add, rename, retype, or delete accounts directly from Financials,
+  instead of being stuck with the seeded default list.
+- **Multiple bank accounts** — flag any asset account as a bank account; Banking now shows a
+  per-account dropdown with its own transaction log and reconciliation, not just one "Cash" bucket.
+- **Fixed assets & depreciation** — a real asset register (cost, salvage value, useful life) with
+  one-click straight-line monthly depreciation that posts Dr Depreciation Expense /
+  Cr Accumulated Depreciation, exactly like a real books close.
+- **Philippine statutory payroll** — running payroll now computes SSS, PhilHealth, and Pag-IBIG
+  (both employee and employer shares) plus BIR withholding tax per employee, shows a preview before
+  posting, and remits everything as proper payable liabilities — not just a lump "payroll expense."
+  Rates live in `src/lib/philippinePayroll.ts` and are approximate 2023–2024 tables; verify against
+  current issuances before relying on this for real payroll.
 
 ## Project structure
 

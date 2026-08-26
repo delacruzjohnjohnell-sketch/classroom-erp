@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Plus, X, Loader2 } from "lucide-react";
+import { Plus, X, Loader2, Pencil, Trash2 } from "lucide-react";
 import AppShell from "@/components/AppShell";
-import { Panel, Empty, Modal, Label, GoldBtn, OutlineBtn } from "@/components/ui";
+import { Panel, Empty, Modal, Label, GoldBtn, OutlineBtn, FormStyles } from "@/components/ui";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { money, todayStr, type Account } from "@/lib/types";
@@ -22,6 +22,7 @@ function FinancialsBody() {
   const [entries, setEntries] = useState<EntryWithLines[]>([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState<null | "sale" | "expense" | "manual">(null);
+  const [accountModal, setAccountModal] = useState<null | "new" | Account>(null);
 
   const load = async () => {
     if (!effectiveTenantId) return;
@@ -84,20 +85,44 @@ function FinancialsBody() {
 
       {tab === "accounts" && (
         <Panel title="Chart of accounts">
+          <div className="flex justify-end mb-3">
+            <GoldBtn onClick={() => setAccountModal("new")}><Plus size={14} /> New account</GoldBtn>
+          </div>
           <table>
-            <thead><tr><th>Code</th><th>Account</th><th>Type</th><th className="text-right">Balance</th></tr></thead>
+            <thead><tr><th>Code</th><th>Account</th><th>Type</th><th>Bank?</th><th className="text-right">Balance</th><th></th></tr></thead>
             <tbody>
               {accounts.map((a) => (
                 <tr key={a.id}>
                   <td style={{ color: GOLD, fontWeight: 600 }}>{a.code}</td>
                   <td>{a.name}</td>
                   <td className="capitalize text-[#6b6357]">{a.type}</td>
+                  <td>{(a as any).is_bank ? "Yes" : ""}</td>
                   <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{money(balances[a.id] || 0)}</td>
+                  <td className="flex gap-2">
+                    <button onClick={() => setAccountModal(a)} className="text-[#8a8172]"><Pencil size={13} /></button>
+                    <button onClick={async () => { if (confirm(`Delete ${a.name}? This cannot be undone.`)) { await supabase.from("accounts").delete().eq("id", a.id); load(); } }} className="text-red-700" style={{ color: "#A6402F" }}><Trash2 size={13} /></button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </Panel>
+      )}
+
+      {accountModal && (
+        <AccountModal
+          account={accountModal === "new" ? null : accountModal}
+          onClose={() => setAccountModal(null)}
+          onSave={async (vals) => {
+            if (accountModal === "new") {
+              await supabase.from("accounts").insert({ tenant_id: effectiveTenantId, code: vals.code, name: vals.name, type: vals.type, is_bank: vals.is_bank });
+            } else {
+              await supabase.from("accounts").update({ code: vals.code, name: vals.name, type: vals.type, is_bank: vals.is_bank }).eq("id", (accountModal as Account).id);
+            }
+            setAccountModal(null);
+            load();
+          }}
+        />
       )}
 
       {modal === "sale" && (
@@ -174,6 +199,37 @@ function ManualModal({ accounts, onClose, onSubmit }:
           Debits {money(totalDebit)} · Credits {money(totalCredit)} {balanced ? "· Balanced" : "· Must balance to save"}
         </div>
         <button type="submit" disabled={!balanced} className="primary-btn mt-3" style={{ opacity: balanced ? 1 : 0.5 }}>Save entry</button>
+      </form>
+      <ModalStyles />
+    </Modal>
+  );
+}
+
+function AccountModal({ account, onClose, onSave }: { account: Account | null; onClose: () => void; onSave: (vals: { code: string; name: string; type: string; is_bank: boolean }) => void }) {
+  const [code, setCode] = useState(account?.code ?? "");
+  const [name, setName] = useState(account?.name ?? "");
+  const [type, setType] = useState<Account["type"]>(account?.type ?? "asset");
+  const [isBank, setIsBank] = useState((account as any)?.is_bank ?? false);
+
+  return (
+    <Modal title={account ? "Edit account" : "New account"} onClose={onClose}>
+      <form onSubmit={(e) => { e.preventDefault(); onSave({ code, name, type, is_bank: isBank }); }}>
+        <Label>Code</Label>
+        <input className="input" value={code} onChange={(e) => setCode(e.target.value)} placeholder="e.g. 1050" required />
+        <Label>Name</Label>
+        <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. BDO Checking" required />
+        <Label>Type</Label>
+        <select className="input" value={type} onChange={(e) => setType(e.target.value as Account["type"])}>
+          <option value="asset">Asset</option><option value="liability">Liability</option>
+          <option value="equity">Equity</option><option value="revenue">Revenue</option><option value="expense">Expense</option>
+        </select>
+        {type === "asset" && (
+          <label className="flex items-center gap-2 mt-3.5 text-[13px]">
+            <input type="checkbox" checked={isBank} onChange={(e) => setIsBank(e.target.checked)} />
+            This is a bank account (shows up in Banking)
+          </label>
+        )}
+        <button type="submit" className="primary-btn mt-4">Save</button>
       </form>
       <ModalStyles />
     </Modal>
