@@ -7,9 +7,12 @@
 // before relying on this for real payroll. This is built for teaching the
 // *structure* of Philippine payroll accounting, not as a certified calculator.
 
+export type PayPeriod = "monthly" | "semi_first" | "semi_second";
+
 export type PayrollBreakdown = {
   employeeId: string;
   employeeName: string;
+  payPeriod: PayPeriod;
   gross: number;
   sssEE: number;
   sssER: number;
@@ -18,6 +21,7 @@ export type PayrollBreakdown = {
   pagibigEE: number;
   pagibigER: number;
   withholdingTax: number;
+  loanDeduction: number;
   netPay: number;
 };
 
@@ -116,36 +120,89 @@ const WTAX_BRACKETS: { max: number; base: number; rate: number; excessOver: numb
 ];
 
 export function computeWithholdingTax(taxableIncome: number): number {
-  const bracket = WTAX_BRACKETS.find((b) => taxableIncome <= b.max) ?? WTAX_BRACKETS[WTAX_BRACKETS.length - 1];
+  return computeWithholdingTaxForPeriod(taxableIncome, 1);
+}
+
+// scale = 1 for monthly, 0.5 for semi-monthly (halves the monthly bracket
+// thresholds and base tax, keeping the same marginal rates — an approximation
+// of BIR's separate semi-monthly table, not the official one).
+export function computeWithholdingTaxForPeriod(taxableIncome: number, scale: number): number {
+  const bracket = WTAX_BRACKETS.find((b) => taxableIncome <= b.max * scale) ?? WTAX_BRACKETS[WTAX_BRACKETS.length - 1];
   if (bracket.rate === 0) return 0;
-  return round2(bracket.base + (taxableIncome - bracket.excessOver) * bracket.rate);
+  return round2(bracket.base * scale + (taxableIncome - bracket.excessOver * scale) * bracket.rate);
 }
 
 function round2(n: number) {
   return Math.round(n * 100) / 100;
 }
 
-export function computeMonthlyPayroll(employeeId: string, employeeName: string, annualSalary: number): PayrollBreakdown {
-  const gross = round2(annualSalary / 12);
-  const sss = computeSSS(gross);
-  const philhealth = computePhilHealth(gross);
-  const pagibig = computePagIBIG(gross);
+function computePayrollCore(
+  employeeId: string, employeeName: string, gross: number, monthlySalaryForBrackets: number,
+  payPeriod: PayPeriod, loanDeduction: number
+): PayrollBreakdown {
+  const isSemi = payPeriod !== "monthly";
+
+  // SSS/PhilHealth/Pag-IBIG are withheld once per month, on the second cutoff for
+  // semi-monthly pay — not split across both halves, matching common PH practice.
+  const withholdStatutory = payPeriod !== "semi_first";
+  const sss = withholdStatutory ? computeSSS(monthlySalaryForBrackets) : { ee: 0, er: 0 };
+  const philhealth = withholdStatutory ? computePhilHealth(monthlySalaryForBrackets) : { ee: 0, er: 0 };
+  const pagibig = withholdStatutory ? computePagIBIG(monthlySalaryForBrackets) : { ee: 0, er: 0 };
+
   const totalEEContributions = sss.ee + philhealth.ee + pagibig.ee;
-  const taxableIncome = Math.max(0, gross - totalEEContributions);
-  const withholdingTax = computeWithholdingTax(taxableIncome);
-  const netPay = round2(gross - totalEEContributions - withholdingTax);
+  const taxableIncome = Math.max(0, gross - (withholdStatutory ? totalEEContributions : 0));
+  const withholdingTax = computeWithholdingTaxForPeriod(taxableIncome, isSemi ? 0.5 : 1);
+
+  // Loan installments are also collected on the second cutoff (paired with statutory dues).
+  const appliedLoanDeduction = payPeriod === "semi_first" ? 0 : loanDeduction;
+  const netPay = round2(gross - totalEEContributions - withholdingTax - appliedLoanDeduction);
 
   return {
-    employeeId,
-    employeeName,
-    gross,
-    sssEE: sss.ee,
-    sssER: sss.er,
-    philhealthEE: philhealth.ee,
-    philhealthER: philhealth.er,
-    pagibigEE: pagibig.ee,
-    pagibigER: pagibig.er,
-    withholdingTax,
-    netPay,
+    employeeId, employeeName, payPeriod, gross,
+    sssEE: sss.ee, sssER: sss.er,
+    philhealthEE: philhealth.ee, philhealthER: philhealth.er,
+    pagibigEE: pagibig.ee, pagibigER: pagibig.er,
+    withholdingTax, loanDeduction: appliedLoanDeduction, netPay,
   };
+}
+
+export function computePayrollForPeriod(
+  employeeId: string, employeeName: string, annualSalary: number,
+  payPeriod: PayPeriod, loanDeduction: number = 0
+): PayrollBreakdown {
+  const isSemi = payPeriod !== "monthly";
+  const gross = round2(annualSalary / (isSemi ? 24 : 12));
+  const monthlySalaryForBrackets = round2(annualSalary / 12);
+  return computePayrollCore(employeeId, employeeName, gross, monthlySalaryForBrackets, payPeriod, loanDeduction);
+}
+
+// Hourly employees: gross pay comes directly from hours actually logged in the pay
+// period × their rate, not a fixed salary divided into periods. Statutory contribution
+// brackets are based on an implied monthly-equivalent figure (gross scaled up to a full
+// month) since SSS/PhilHealth/Pag-IBIG brackets are defined in monthly terms.
+export function computeHourlyPayrollForPeriod(
+  employeeId: string, employeeName: string, hourlyRate: number, hoursWorked: number,
+  payPeriod: PayPeriod, loanDeduction: number = 0
+): PayrollBreakdown {
+  const isSemi = payPeriod !== "monthly";
+  const gross = round2(hourlyRate * hoursWorked);
+  const monthlySalaryForBrackets = round2(isSemi ? gross * 2 : gross);
+  return computePayrollCore(employeeId, employeeName, gross, monthlySalaryForBrackets, payPeriod, loanDeduction);
+}
+
+export function computeMonthlyPayroll(employeeId: string, employeeName: string, annualSalary: number): PayrollBreakdown {
+  return computePayrollForPeriod(employeeId, employeeName, annualSalary, "monthly", 0);
+}
+
+// Date range for a given pay period, anchored to the current month.
+export function getPeriodDateRange(payPeriod: PayPeriod): { start: string; end: string } {
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const fmt = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const lastDay = new Date(y, m + 1, 0).getDate();
+
+  if (payPeriod === "semi_first") return { start: fmt(new Date(y, m, 1)), end: fmt(new Date(y, m, 15)) };
+  if (payPeriod === "semi_second") return { start: fmt(new Date(y, m, 16)), end: fmt(new Date(y, m, lastDay)) };
+  return { start: fmt(new Date(y, m, 1)), end: fmt(new Date(y, m, lastDay)) };
 }

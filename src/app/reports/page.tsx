@@ -55,8 +55,8 @@ function ReportsBody() {
         supabase.from("accounts").select("*").eq("tenant_id", effectiveTenantId),
         supabase.from("journal_entries").select("id, entry_date, memo, journal_lines(*)").eq("tenant_id", effectiveTenantId),
         supabase.from("items").select("*").eq("tenant_id", effectiveTenantId),
-        supabase.from("purchase_orders").select("*, vendors(name)").eq("tenant_id", effectiveTenantId),
-        supabase.from("sales_orders").select("*, customers(name)").eq("tenant_id", effectiveTenantId),
+        supabase.from("bills").select("*, vendors(name)").eq("tenant_id", effectiveTenantId),
+        supabase.from("invoices").select("*, customers(name)").eq("tenant_id", effectiveTenantId),
         supabase.from("employees").select("*").eq("tenant_id", effectiveTenantId),
         supabase.from("invoice_payments").select("*").eq("tenant_id", effectiveTenantId),
         supabase.from("bill_payments").select("*").eq("tenant_id", effectiveTenantId),
@@ -119,7 +119,7 @@ function ReportsBody() {
 
   // A/R and A/P aging
   const arRows = sos.filter((s) => s.status === "fulfilled").map((s) => {
-    const paid = invoicePayments.filter((p) => p.sales_order_id === s.id).reduce((sum, p) => sum + p.amount, 0);
+    const paid = invoicePayments.filter((p) => p.invoice_id === s.id).reduce((sum, p) => sum + p.amount, 0);
     const balance = round2(s.total - paid);
     return { name: s.customers?.name ?? "Unknown", dueDate: s.due_date, balance, bucket: agingBucket(s.due_date) };
   }).filter((r) => r.balance > 0.005);
@@ -127,7 +127,7 @@ function ReportsBody() {
   const totalAR = arRows.reduce((s, r) => s + r.balance, 0);
 
   const apRows = pos.filter((p) => p.status === "received").map((p) => {
-    const paid = billPayments.filter((bp) => bp.purchase_order_id === p.id).reduce((sum, bp) => sum + bp.amount, 0);
+    const paid = billPayments.filter((bp) => bp.bill_id === p.id).reduce((sum, bp) => sum + bp.amount, 0);
     const balance = round2(p.total - paid);
     return { name: p.vendors?.name ?? "Unknown", dueDate: p.due_date, balance, bucket: agingBucket(p.due_date) };
   }).filter((r) => r.balance > 0.005);

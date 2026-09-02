@@ -3,7 +3,7 @@ import "./globals.css";
 import { SessionProvider } from "@/lib/session";
 
 export const metadata: Metadata = {
-  title: "Ledger & Co. — Classroom ERP",
+  title: "JJ and Co. — Classroom ERP",
   description: "A teaching ERP with financials, procurement, inventory, sales, HR, and reports.",
 };
 

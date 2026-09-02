@@ -1,9 +1,10 @@
 import { todayStr } from "./types";
 
-export type PaymentStatus = "Draft" | "Open" | "Partial" | "Paid" | "Overdue";
+export type PaymentStatus = "Draft" | "Pending Approval" | "Open" | "Partial" | "Paid" | "Overdue";
 
-export function computePaymentStatus(postedStatus: "draft" | "fulfilled" | "received", total: number, paid: number, dueDate: string | null): PaymentStatus {
+export function computePaymentStatus(postedStatus: "draft" | "pending_approval" | "fulfilled" | "received", total: number, paid: number, dueDate: string | null): PaymentStatus {
   if (postedStatus === "draft") return "Draft";
+  if (postedStatus === "pending_approval") return "Pending Approval";
   if (paid >= total - 0.005) return "Paid";
   const overdue = dueDate && dueDate < todayStr();
   if (paid > 0) return overdue ? "Overdue" : "Partial";
@@ -12,6 +13,7 @@ export function computePaymentStatus(postedStatus: "draft" | "fulfilled" | "rece
 
 export const STATUS_COLOR: Record<PaymentStatus, string> = {
   Draft: "#8a8172",
+  "Pending Approval": "#A6402F",
   Open: "#C08A2E",
   Partial: "#5B7B93",
   Paid: "#12524F",

@@ -47,8 +47,8 @@ function DashboardBody() {
         supabase.from("journal_entries").select("id, entry_date, memo, journal_lines(*)").eq("tenant_id", effectiveTenantId),
         supabase.from("items").select("*").eq("tenant_id", effectiveTenantId),
         supabase.from("employees").select("id").eq("tenant_id", effectiveTenantId),
-        supabase.from("purchase_orders").select("*, vendors(name)").eq("tenant_id", effectiveTenantId),
-        supabase.from("sales_orders").select("*, customers(name)").eq("tenant_id", effectiveTenantId),
+        supabase.from("bills").select("*, vendors(name)").eq("tenant_id", effectiveTenantId),
+        supabase.from("invoices").select("*, customers(name)").eq("tenant_id", effectiveTenantId),
         supabase.from("payroll_runs").select("*").eq("tenant_id", effectiveTenantId),
       ]);
 

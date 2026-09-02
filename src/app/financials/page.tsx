@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Plus, X, Loader2, Pencil, Trash2 } from "lucide-react";
+import { Plus, X, Loader2, Pencil, Trash2, Paperclip } from "lucide-react";
 import AppShell from "@/components/AppShell";
-import { Panel, Empty, Modal, Label, GoldBtn, OutlineBtn, FormStyles } from "@/components/ui";
+import { Panel, Empty, Modal, Label, GoldBtn, OutlineBtn, TinyBtn, FormStyles } from "@/components/ui";
+import Attachments from "@/components/Attachments";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { money, todayStr, type Account } from "@/lib/types";
@@ -17,22 +18,37 @@ export default function FinancialsPage() {
 
 function FinancialsBody() {
   const { effectiveTenantId } = useSession();
-  const [tab, setTab] = useState<"journal" | "accounts">("journal");
+  const [tab, setTab] = useState<"journal" | "accounts" | "recurring">("journal");
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [entries, setEntries] = useState<EntryWithLines[]>([]);
+  const [recurring, setRecurring] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [modal, setModal] = useState<null | "sale" | "expense" | "manual">(null);
+  const [modal, setModal] = useState<null | "sale" | "expense" | "manual" | "recurring">(null);
   const [accountModal, setAccountModal] = useState<null | "new" | Account>(null);
+  const [postedByNames, setPostedByNames] = useState<Record<string, string>>({});
+  const [lockedThrough, setLockedThrough] = useState<string | null>(null);
+  const [reversing, setReversing] = useState<string | null>(null);
+  const [attachEntry, setAttachEntry] = useState<{ id: string; memo: string } | null>(null);
 
   const load = async () => {
     if (!effectiveTenantId) return;
     setLoading(true);
-    const [acc, ent] = await Promise.all([
+    const [acc, ent, tenantRow, rec] = await Promise.all([
       supabase.from("accounts").select("*").eq("tenant_id", effectiveTenantId).order("code"),
-      supabase.from("journal_entries").select("id, entry_date, memo, journal_lines(*)").eq("tenant_id", effectiveTenantId).order("entry_date", { ascending: false }),
+      supabase.from("journal_entries").select("id, entry_date, memo, created_by, journal_lines(*)").eq("tenant_id", effectiveTenantId).order("entry_date", { ascending: false }),
+      supabase.from("tenants").select("books_locked_through").eq("id", effectiveTenantId).single(),
+      supabase.from("recurring_entries").select("*").eq("tenant_id", effectiveTenantId).order("next_run_date"),
     ]);
     setAccounts((acc.data as Account[]) ?? []);
     setEntries((ent.data as any as EntryWithLines[]) ?? []);
+    setLockedThrough((tenantRow.data as any)?.books_locked_through ?? null);
+    setRecurring(rec.data ?? []);
+
+    const creatorIds = Array.from(new Set(((ent.data as any[]) ?? []).map((e) => e.created_by).filter(Boolean)));
+    if (creatorIds.length > 0) {
+      const { data: profs } = await supabase.from("profiles").select("id, full_name").in("id", creatorIds);
+      setPostedByNames(Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.full_name])));
+    }
     setLoading(false);
   };
 
@@ -41,22 +57,43 @@ function FinancialsBody() {
   const balances = useMemo(() => computeAccountBalances(entries), [entries]);
   const accountsById = Object.fromEntries(accounts.map((a) => [a.id, a]));
 
+  const [postError, setPostError] = useState("");
+
   const postEntry = async (date: string, memo: string, lines: { account_id: string; debit: number; credit: number }[]) => {
+    setPostError("");
     const { data: je, error } = await supabase.from("journal_entries")
       .insert({ tenant_id: effectiveTenantId, entry_date: date, memo }).select().single();
-    if (error || !je) return;
-    await supabase.from("journal_lines").insert(lines.map((l) => ({ ...l, journal_entry_id: je.id })));
+    if (error || !je) { setPostError(error?.message || "Could not post entry."); return; }
+    const { error: lineErr } = await supabase.from("journal_lines").insert(lines.map((l) => ({ ...l, journal_entry_id: je.id })));
+    if (lineErr) { setPostError(lineErr.message); return; }
     setModal(null);
     load();
+  };
+
+  const reverseEntry = async (entryId: string) => {
+    setReversing(entryId);
+    const { error } = await supabase.rpc("reverse_journal_entry", { original_id: entryId, reversal_date: todayStr() });
+    setReversing(null);
+    if (error) { setPostError(error.message); return; }
+    load();
+  };
+
+  const saveLock = async (date: string) => {
+    const { error } = await supabase.from("tenants").update({ books_locked_through: date || null }).eq("id", effectiveTenantId);
+    if (!error) setLockedThrough(date || null);
   };
 
   if (loading) return <div className="py-16 flex justify-center"><Loader2 className="animate-spin" size={20} color={TEAL} /></div>;
 
   return (
     <>
+      <ModalStyles />
+      {postError && <div className="text-[12.5px] font-semibold px-4 py-2.5 rounded-lg" style={{ background: "#F6E7E3", color: RED }}>{postError}</div>}
+
       <div className="flex gap-2 flex-wrap">
         <button onClick={() => setTab("journal")} className={`text-[13px] font-semibold px-3 py-1.5 rounded-md ${tab === "journal" ? "bg-panel border border-hairline" : "text-[#8a8172]"}`}>Journal entries</button>
         <button onClick={() => setTab("accounts")} className={`text-[13px] font-semibold px-3 py-1.5 rounded-md ${tab === "accounts" ? "bg-panel border border-hairline" : "text-[#8a8172]"}`}>Chart of accounts</button>
+        <button onClick={() => setTab("recurring")} className={`text-[13px] font-semibold px-3 py-1.5 rounded-md ${tab === "recurring" ? "bg-panel border border-hairline" : "text-[#8a8172]"}`}>Recurring</button>
         <div className="flex-1" />
         <GoldBtn onClick={() => setModal("sale")}><Plus size={14} /> Record sale</GoldBtn>
         <OutlineBtn onClick={() => setModal("expense")}><Plus size={14} /> Record expense</OutlineBtn>
@@ -64,17 +101,47 @@ function FinancialsBody() {
       </div>
 
       {tab === "journal" && (
+        <Panel title="Books lock">
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-[12.5px] text-[#6b6357]">
+              {lockedThrough ? <>Entries dated on or before <strong>{lockedThrough}</strong> can't be posted.</> : "No lock set — entries can be posted to any date."}
+            </span>
+            <input className="input" style={{ width: 160 }} type="date" defaultValue={lockedThrough ?? ""} onBlur={(e) => saveLock(e.target.value)} />
+            {lockedThrough && <button onClick={() => saveLock("")} className="text-[12px] text-teal font-semibold">Clear lock</button>}
+          </div>
+        </Panel>
+      )}
+
+      {tab === "journal" && (
         <Panel title="Journal entries">
           {entries.length === 0 ? <Empty>No entries yet — record a sale or expense to get started.</Empty> : (
             <table>
-              <thead><tr><th>Date</th><th>Memo</th><th>Account</th><th className="text-right">Debit</th><th className="text-right">Credit</th></tr></thead>
+              <thead><tr><th>Date</th><th>Memo</th><th>Posted by</th><th>Account</th><th className="text-right">Debit</th><th className="text-right">Credit</th><th></th></tr></thead>
               <tbody>
-                {entries.map((e) => e.journal_lines.map((l, i) => (
+                {entries.map((e: any) => e.journal_lines.map((l: any, i: number) => (
                   <tr key={l.id}>
-                    {i === 0 ? <><td rowSpan={e.journal_lines.length}>{e.entry_date}</td><td rowSpan={e.journal_lines.length}>{e.memo}</td></> : null}
+                    {i === 0 ? (
+                      <>
+                        <td rowSpan={e.journal_lines.length}>{e.entry_date}</td>
+                        <td rowSpan={e.journal_lines.length}>{e.memo}</td>
+                        <td rowSpan={e.journal_lines.length} className="text-[#6b6357]">{postedByNames[e.created_by] ?? "—"}</td>
+                      </>
+                    ) : null}
                     <td>{accountsById[l.account_id]?.name ?? l.account_id}</td>
                     <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{l.debit ? money(l.debit) : ""}</td>
                     <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{l.credit ? money(l.credit) : ""}</td>
+                    {i === 0 ? (
+                      <td rowSpan={e.journal_lines.length}>
+                        <div className="flex items-center gap-2.5">
+                          <button onClick={() => reverseEntry(e.id)} disabled={reversing === e.id} className="text-[11px] font-semibold text-teal">
+                            {reversing === e.id ? "…" : "Reverse"}
+                          </button>
+                          <button onClick={() => setAttachEntry({ id: e.id, memo: e.memo })} className="text-[#8a8172]" title="Attachments">
+                            <Paperclip size={13} />
+                          </button>
+                        </div>
+                      </td>
+                    ) : null}
                   </tr>
                 )))}
               </tbody>
@@ -109,6 +176,41 @@ function FinancialsBody() {
         </Panel>
       )}
 
+      {tab === "recurring" && (
+        <>
+          <div className="flex justify-end"><GoldBtn onClick={() => setModal("recurring")}><Plus size={14} /> New recurring entry</GoldBtn></div>
+          <Panel title="Recurring entries">
+            <div className="text-[12px] text-[#8a8172] mb-3">
+              Posting isn't automatic — this tracks what's due and lets you post it in one click. Open this page to check for anything due.
+            </div>
+            {recurring.length === 0 ? <Empty>No recurring entries yet — e.g. monthly rent or a subscription.</Empty> : (
+              <table>
+                <thead><tr><th>Memo</th><th>Frequency</th><th>Next due</th><th>Status</th><th></th></tr></thead>
+                <tbody>
+                  {recurring.map((r) => {
+                    const due = r.active && r.next_run_date <= todayStr();
+                    return (
+                      <tr key={r.id}>
+                        <td>{r.memo}</td><td className="capitalize">{r.frequency}</td>
+                        <td style={{ color: due ? RED : undefined, fontWeight: due ? 600 : 400 }}>{r.next_run_date}</td>
+                        <td>{!r.active ? <span className="text-[11px] text-[#8a8172]">Ended</span> : due ? <span className="text-[11px] font-semibold" style={{ color: RED }}>Due</span> : <span className="text-[11px] text-teal">Scheduled</span>}</td>
+                        <td>
+                          {r.active && (
+                            <TinyBtn onClick={async () => { await supabase.rpc("post_recurring_entry", { target_recurring_id: r.id, post_date: todayStr() }); load(); }}>
+                              Post now
+                            </TinyBtn>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </Panel>
+        </>
+      )}
+
       {accountModal && (
         <AccountModal
           account={accountModal === "new" ? null : accountModal}
@@ -136,6 +238,21 @@ function FinancialsBody() {
           onSubmit={(amount, date, memo, debit, credit) => postEntry(date, memo || "Expense", [{ account_id: debit, debit: amount, credit: 0 }, { account_id: credit, debit: 0, credit: amount }])} />
       )}
       {modal === "manual" && <ManualModal accounts={accounts} onClose={() => setModal(null)} onSubmit={(date, memo, lines) => postEntry(date, memo, lines)} />}
+      {modal === "recurring" && (
+        <RecurringEntryModal accounts={accounts} onClose={() => setModal(null)}
+          onSubmit={async (memo, frequency, startDate, endDate, lines) => {
+            const { data: rec } = await supabase.from("recurring_entries")
+              .insert({ tenant_id: effectiveTenantId, memo, frequency, start_date: startDate, next_run_date: startDate, end_date: endDate || null })
+              .select().single();
+            if (rec) await supabase.from("recurring_entry_lines").insert(lines.map((l) => ({ recurring_entry_id: rec.id, account_id: l.account_id, debit: l.debit, credit: l.credit })));
+            setModal(null); load();
+          }} />
+      )}
+      {attachEntry && (
+        <Modal title={`Attachments — ${attachEntry.memo || "Journal entry"}`} onClose={() => setAttachEntry(null)}>
+          <Attachments relatedTable="journal_entries" relatedId={attachEntry.id} />
+        </Modal>
+      )}
     </>
   );
 }
@@ -199,6 +316,56 @@ function ManualModal({ accounts, onClose, onSubmit }:
           Debits {money(totalDebit)} · Credits {money(totalCredit)} {balanced ? "· Balanced" : "· Must balance to save"}
         </div>
         <button type="submit" disabled={!balanced} className="primary-btn mt-3" style={{ opacity: balanced ? 1 : 0.5 }}>Save entry</button>
+      </form>
+      <ModalStyles />
+    </Modal>
+  );
+}
+
+function RecurringEntryModal({ accounts, onClose, onSubmit }:
+  { accounts: Account[]; onClose: () => void;
+    onSubmit: (memo: string, frequency: "weekly" | "monthly", startDate: string, endDate: string, lines: { account_id: string; debit: number; credit: number }[]) => void }) {
+  const [memo, setMemo] = useState(""); const [frequency, setFrequency] = useState<"weekly" | "monthly">("monthly");
+  const [startDate, setStartDate] = useState(todayStr()); const [endDate, setEndDate] = useState("");
+  const [lines, setLines] = useState([{ account_id: accounts[0]?.id ?? "", debit: "", credit: "" }, { account_id: accounts[1]?.id ?? "", debit: "", credit: "" }]);
+  const totalDebit = lines.reduce((s, l) => s + (parseFloat(l.debit) || 0), 0);
+  const totalCredit = lines.reduce((s, l) => s + (parseFloat(l.credit) || 0), 0);
+  const balanced = totalDebit > 0 && Math.abs(totalDebit - totalCredit) < 0.005;
+  const update = (i: number, field: "account_id" | "debit" | "credit", value: string) => setLines((prev) => prev.map((l, idx) => (idx === i ? { ...l, [field]: value } : l)));
+
+  return (
+    <Modal title="New recurring entry" onClose={onClose} wide>
+      <form onSubmit={(e) => {
+        e.preventDefault();
+        if (!balanced || !memo) return;
+        onSubmit(memo, frequency, startDate, endDate, lines.map((l) => ({ account_id: l.account_id, debit: parseFloat(l.debit) || 0, credit: parseFloat(l.credit) || 0 })));
+      }}>
+        <Label>Memo</Label>
+        <input className="input" value={memo} onChange={(e) => setMemo(e.target.value)} placeholder="e.g. Monthly office rent" required />
+        <div className="grid grid-cols-3 gap-2.5">
+          <div><Label>Frequency</Label>
+            <select className="input" value={frequency} onChange={(e) => setFrequency(e.target.value as "weekly" | "monthly")}>
+              <option value="monthly">Monthly</option><option value="weekly">Weekly</option>
+            </select></div>
+          <div><Label>Starts</Label><input className="input" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required /></div>
+          <div><Label>Ends (optional)</Label><input className="input" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} /></div>
+        </div>
+        <div className="mt-2.5">
+          {lines.map((l, i) => (
+            <div key={i} className="flex gap-2 mb-2 items-center">
+              <select className="input flex-[2]" value={l.account_id} onChange={(e) => update(i, "account_id", e.target.value)}>{accounts.map((a) => <option key={a.id} value={a.id}>{a.code} · {a.name}</option>)}</select>
+              <input className="input flex-1" type="number" min="0" step="0.01" placeholder="Debit" value={l.debit} onChange={(e) => update(i, "debit", e.target.value)} />
+              <input className="input flex-1" type="number" min="0" step="0.01" placeholder="Credit" value={l.credit} onChange={(e) => update(i, "credit", e.target.value)} />
+              {lines.length > 2 && <button type="button" onClick={() => setLines((prev) => prev.filter((_, idx) => idx !== i))}><X size={14} /></button>}
+            </div>
+          ))}
+          <button type="button" className="text-xs text-teal border border-dashed border-hairline rounded-md px-2.5 py-1.5 flex items-center gap-1"
+            onClick={() => setLines((prev) => [...prev, { account_id: accounts[0]?.id ?? "", debit: "", credit: "" }])}><Plus size={13} /> Add line</button>
+        </div>
+        <div className="text-[12.5px] font-semibold mt-2.5" style={{ color: balanced ? TEAL : RED }}>
+          Debits {money(totalDebit)} · Credits {money(totalCredit)} {balanced ? "· Balanced" : "· Must balance to save"}
+        </div>
+        <button type="submit" disabled={!balanced || !memo} className="primary-btn mt-3" style={{ opacity: balanced && memo ? 1 : 0.5 }}>Save template</button>
       </form>
       <ModalStyles />
     </Modal>

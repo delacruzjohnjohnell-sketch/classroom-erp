@@ -1,4 +1,4 @@
-# Ledger & Co. — Classroom ERP
+# JJ and Co. — Classroom ERP
 
 A real, deployable ERP teaching app: Financials, Procurement, Inventory, Sales/CRM, HR, Reports, and a
 cross-module Dashboard. Students each run their own company ("tenant"); the teacher sees every company
@@ -19,10 +19,37 @@ at once. Free to run and host.
 5. Open a **third** New query, paste in `supabase/migrations/0003_coa_assets_payroll.sql`, and run it.
    This adds an editable chart of accounts, multi-bank-account support, fixed assets with
    depreciation, and Philippine statutory payroll (SSS, PhilHealth, Pag-IBIG, withholding tax).
-6. Go to **Authentication → Providers → Email**, make sure the **Email** provider itself is enabled,
+6. Open a **fourth** New query, paste in `supabase/migrations/0004_period_lock_numbering_audit.sql`,
+   and run it. This adds human-readable invoice/bill numbers, a period-lock control (so closed
+   months can't be silently edited), journal-entry immutability with proper reversing entries,
+   and an audit trail showing who posted each entry.
+7. Open a **fifth** New query, paste in `supabase/migrations/0005_restrict_teacher_role.sql`, and
+   run it. This locks the Teacher role to one specific email address — edit the email inside that
+   file first if you need to change it.
+8. Open a **sixth** New query, paste in `supabase/migrations/0006_employee_details_payslip.sql`, and
+   run it. This adds employee statutory ID fields (TIN, SSS/PhilHealth/Pag-IBIG numbers) and
+   auto-generated employee numbers.
+9. Open a **seventh** New query, paste in `supabase/migrations/0007_approval_thresholds.sql`, and
+   run it. This adds a company-set dollar threshold above which invoices and bills queue for
+   teacher approval instead of posting immediately.
+10. Open an **eighth** New query, paste in `supabase/migrations/0008_sales_order_quote_chain.sql`,
+   and run it. **This one renames tables** — it turns the old "sales_orders" table (which was really
+   acting as an invoice) into a real `invoices` table, and creates genuine `quotes` and `sales_orders`
+   tables for the stages before it. All your existing invoice data is preserved, just under its
+   correct name — nothing is deleted.
+11. Open a **ninth** New query, paste in `supabase/migrations/0009_purchase_order_receipt_chain.sql`,
+   and run it. Same idea on the procurement side: the old "purchase_orders" table (really a bill)
+   becomes `bills`, and genuine `purchase_orders` and `goods_receipts` tables are added before it.
+13. Open a **tenth** New query, paste in `supabase/migrations/0010_hr_depth.sql`, and run it. This
+   adds time tracking, leave requests, employee loans, 13th month pay, and semi-monthly pay periods.
+14. Open an **eleventh** New query, paste in `supabase/migrations/0011_hourly_pay_wiring.sql`, and
+   run it. This adds an hourly pay type, so time tracking actually feeds into pay for those employees.
+15. Open a **twelfth** New query, paste in `supabase/migrations/0012_recurring_entries.sql`, and run
+   it. This adds recurring journal entry templates.
+16. Go to **Authentication → Providers → Email**, make sure the **Email** provider itself is enabled,
    and turn **off** "Confirm email" for the fastest classroom setup (students can sign up and start
    immediately). Turn it back on if you want email verification for a real deployment.
-7. Go to **Project Settings → API** and copy your **Project URL** and **Publishable key** (this is
+17. Go to **Project Settings → API** and copy your **Project URL** and **Publishable key** (this is
    what used to be called the "anon key" — it's safe to use in the browser).
 
 ## 2. Run it locally
@@ -95,6 +122,64 @@ tables, so any transaction anywhere in the app is reflected correctly in the fin
   posting, and remits everything as proper payable liabilities — not just a lump "payroll expense."
   Rates live in `src/lib/philippinePayroll.ts` and are approximate 2023–2024 tables; verify against
   current issuances before relying on this for real payroll.
+- **Document numbering** — invoices and bills now get real numbers (INV-0001, BILL-0001), auto-assigned
+  per company, instead of being identified only by an internal ID.
+- **Period lock** — set a "books locked through" date in Financials; no one can post a journal entry
+  dated on or before it. Teaches the real concept of closing a month's books.
+- **Journal immutability + reversing entries** — a posted journal entry can no longer be edited or
+  deleted at the database level. Mistakes get corrected with "Reverse" — a real accounting workflow,
+  not a silent edit to history.
+- **Audit trail** — every journal entry now shows who posted it, resolved from the account that created
+  it (also fixed a related bug: teammates sharing a company couldn't previously see each other's names).
+- **Restricted teacher access** — the Teacher role is locked server-side to one specific email
+  address, regardless of what a signup form claims. Anyone else who tries "Teacher" at signup is
+  silently assigned Student instead.
+- **Payslip generation** — every payroll run's per-employee breakdown is now browsable (Payroll
+  history → expand a run) with a "Payslip" link that opens a clean, printable payslip in a new tab
+  (Print / Save as PDF), showing the employee's TIN, SSS, PhilHealth, and Pag-IBIG numbers alongside
+  the full earnings/deductions breakdown.
+- **Fuller employee records** — employees now get an auto-generated employee number (EMP-0001) and
+  optional statutory ID fields, captured once and reused on every payslip.
+- **Approval thresholds** — the teacher can set a dollar amount in Bills or Invoices above which a
+  student's transaction queues as "Pending Approval" instead of posting immediately. The teacher
+  approves with the same button a student would've used ("Mark received" / "Send invoice") — calling
+  it as the teacher is what makes it post. This is the single biggest structural piece that makes the
+  system behave like a real ERP instead of a ledger anyone can write to freely.
+- **Attachments on journal entries** — any journal entry can now have files attached (a paperclip
+  icon next to "Reverse" in the journal table), not just invoices and bills.
+- **Real document lifecycles** — Sales now runs Quote → Sales Order → Invoice → Payment as four
+  genuinely distinct stages (a Quote and a Sales Order carry no accounting impact at all; only the
+  Invoice posts to the ledger). Procurement runs Purchase Order → Goods Receipt → Bill → Payment,
+  with Goods Receipts tracking partial deliveries against a PO before a Bill is ever created. Each
+  stage has its own document number (QT-0001, SO-0001, PO-0001, GR-0001) and its own tab in the
+  Sales / Procurement pages.
+- **Time & Attendance** — log hours per employee per day. **Wired into actual pay**: an employee can
+  now be set to Hourly pay type, and their gross pay on every payroll run is computed directly from
+  hours logged in the pay period × their rate (pulled live from Time & Attendance, not a fixed
+  number). Monthly-salaried employees are unaffected — their pay stays fixed and their time entries
+  remain attendance records only, matching how real payroll actually treats the two employment types
+  differently.
+- **Leave management** — employees can have leave requests filed against them (vacation/sick/
+  emergency/unpaid), with teacher-only approval enforced at the database level, not just hidden in
+  the UI.
+- **Employee loans** — issue a loan to an employee (posts Dr Employee Loans Receivable / Cr Cash
+  immediately), and its monthly installment is automatically deducted from that employee's next
+  payroll run until paid off, with the payroll journal entry correctly crediting the loan receivable
+  instead of Cash for that portion.
+- **13th month pay** — one click sums each employee's actual gross pay from the year's regular
+  payroll runs, divides by 12 (the Philippine statutory formula), and posts it as its own payroll run.
+- **Semi-monthly pay periods** — Run Payroll now offers Monthly, or Semi-monthly 1st/2nd half.
+  Statutory contributions and loan deductions are withheld once per month (on the 2nd cutoff),
+  matching common Philippine payroll practice; withholding tax is computed on both halves using a
+  scaled version of the monthly BIR bracket table (documented in `philippinePayroll.ts` as an
+  approximation, not the official separate semi-monthly table).
+- **Recurring entries** — Financials → Recurring lets you set up a template (e.g. monthly rent) that
+  tracks its own next-due date. Honest limitation: this stack has no background job scheduler, so
+  posting isn't silent/automatic — the system flags what's due in red and you post it in one click.
+- **Global search** — a search bar in the top bar of every page finds customers, vendors, inventory
+  items (by name or SKU), employees (by name or employee number), and any document by its number
+  (invoices, bills, sales orders, purchase orders, quotes), grouped by type, and takes you straight
+  to the right page and tab.
 
 ## Project structure
 

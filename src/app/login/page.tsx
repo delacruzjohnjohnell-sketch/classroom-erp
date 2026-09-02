@@ -114,6 +114,11 @@ export default function LoginPage() {
         <TabBtn active={role === "student"} onClick={() => setRole("student")}><GraduationCap size={16} className="inline mr-1.5 -mt-0.5" />Student</TabBtn>
         <TabBtn active={role === "teacher"} onClick={() => setRole("teacher")}><Users size={16} className="inline mr-1.5 -mt-0.5" />Teacher</TabBtn>
       </div>
+      {role === "teacher" && (
+        <div className="text-[11.5px] text-[#8a8172] mb-3 -mt-3">
+          Teacher access is restricted to the class instructor's email. If that's not you, use Student instead.
+        </div>
+      )}
 
       <div className="flex gap-2 text-xs mb-4">
         <button onClick={() => setAuthMode("signin")} className={`px-2.5 py-1 rounded-md ${authMode === "signin" ? "bg-teal text-white" : "text-[#6b6357]"}`}>Sign in</button>
@@ -150,7 +155,7 @@ function Shell({ children }: { children: React.ReactNode }) {
         <div className="flex items-center gap-3 mb-7">
           <div className="font-serif text-2xl text-gold border border-gold rounded-lg w-11 h-11 flex items-center justify-center">§</div>
           <div>
-            <div className="font-serif text-lg font-bold">Ledger &amp; Co.</div>
+            <div className="font-serif text-lg font-bold">JJ and Co.</div>
             <div className="text-xs text-[#6b6357]">A classroom ERP</div>
           </div>
         </div>

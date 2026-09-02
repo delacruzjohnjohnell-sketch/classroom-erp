@@ -56,9 +56,11 @@ export function TinyBtn({ children, ...props }: React.ButtonHTMLAttributes<HTMLB
 }
 export function StatusPill({ status }: { status: string }) {
   const done = status === "received" || status === "fulfilled";
+  const pending = status === "pending_approval";
+  const color = done ? "#12524F" : pending ? "#A6402F" : "#C08A2E";
   return (
-    <span className="text-[11px] font-semibold capitalize border rounded-full px-2.5 py-0.5" style={{ color: done ? "#12524F" : "#C08A2E", borderColor: done ? "#12524F" : "#C08A2E" }}>
-      {status}
+    <span className="text-[11px] font-semibold capitalize border rounded-full px-2.5 py-0.5" style={{ color, borderColor: color }}>
+      {status.replace("_", " ")}
     </span>
   );
 }

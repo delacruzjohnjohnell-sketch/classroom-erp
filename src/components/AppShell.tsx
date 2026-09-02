@@ -8,6 +8,7 @@ import {
   Package, ShoppingCart, Briefcase, FileBarChart, Landmark, Boxes,
 } from "lucide-react";
 import { useSession } from "@/lib/session";
+import GlobalSearch from "./GlobalSearch";
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -51,7 +52,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <div className="px-5 py-5 border-b border-hairline">
           <div className="flex items-center gap-2.5 mb-1">
             <div className="font-serif text-lg text-gold border border-gold rounded-md w-8 h-8 flex items-center justify-center shrink-0">§</div>
-            <div className="font-serif text-[15px] font-bold leading-tight">Ledger &amp; Co.</div>
+            <div className="font-serif text-[15px] font-bold leading-tight">JJ and Co.</div>
           </div>
         </div>
 
@@ -89,6 +90,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Main content */}
       <div className="flex-1 min-w-0">
+        <div className="px-6 py-4 border-b border-hairline flex justify-end">
+          <GlobalSearch />
+        </div>
         <div className="max-w-[1100px] px-6 py-6 flex flex-col gap-4">
           {children}
         </div>
