@@ -227,7 +227,7 @@ function ReportsBody() {
                 <BarChart data={arByBucket} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
                   <CartesianGrid stroke={LINE} vertical={false} />
                   <XAxis dataKey="bucket" tick={{ fontSize: 12, fill: INK }} axisLine={{ stroke: LINE }} tickLine={false} />
-                  <YAxis tick={{ fontSize: 12, fill: INK }} axisLine={{ stroke: LINE }} tickLine={false} tickFormatter={(v) => `$${v}`} />
+                  <YAxis tick={{ fontSize: 12, fill: INK }} axisLine={{ stroke: LINE }} tickLine={false} tickFormatter={(v) => `₱${v}`} />
                   <Tooltip formatter={(v: number) => money(v)} contentStyle={tooltipStyle} />
                   <Bar dataKey="total" fill={TEAL} radius={[4, 4, 0, 0]} />
                 </BarChart>
@@ -253,7 +253,7 @@ function ReportsBody() {
                 <BarChart data={apByBucket} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
                   <CartesianGrid stroke={LINE} vertical={false} />
                   <XAxis dataKey="bucket" tick={{ fontSize: 12, fill: INK }} axisLine={{ stroke: LINE }} tickLine={false} />
-                  <YAxis tick={{ fontSize: 12, fill: INK }} axisLine={{ stroke: LINE }} tickLine={false} tickFormatter={(v) => `$${v}`} />
+                  <YAxis tick={{ fontSize: 12, fill: INK }} axisLine={{ stroke: LINE }} tickLine={false} tickFormatter={(v) => `₱${v}`} />
                   <Tooltip formatter={(v: number) => money(v)} contentStyle={tooltipStyle} />
                   <Bar dataKey="total" fill={GOLD} radius={[4, 4, 0, 0]} />
                 </BarChart>
@@ -279,7 +279,7 @@ function ReportsBody() {
                 <BarChart data={inventoryRows.slice(0, 8).map((i) => ({ name: i.name.length > 12 ? i.name.slice(0, 11) + "…" : i.name, Value: round2(i.qty_on_hand * i.unit_cost) }))} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
                   <CartesianGrid stroke={LINE} vertical={false} />
                   <XAxis dataKey="name" tick={{ fontSize: 11, fill: INK }} axisLine={{ stroke: LINE }} tickLine={false} />
-                  <YAxis tick={{ fontSize: 12, fill: INK }} axisLine={{ stroke: LINE }} tickLine={false} tickFormatter={(v) => `$${v}`} />
+                  <YAxis tick={{ fontSize: 12, fill: INK }} axisLine={{ stroke: LINE }} tickLine={false} tickFormatter={(v) => `₱${v}`} />
                   <Tooltip formatter={(v: number) => money(v)} contentStyle={tooltipStyle} />
                   <Bar dataKey="Value" fill={TEAL} radius={[4, 4, 0, 0]} />
                 </BarChart>
@@ -307,7 +307,7 @@ function ReportsBody() {
                 <BarChart data={vendorRows.map((v) => ({ name: v.name.length > 14 ? v.name.slice(0, 13) + "…" : v.name, Spend: round2(v.total) }))} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
                   <CartesianGrid stroke={LINE} vertical={false} />
                   <XAxis dataKey="name" tick={{ fontSize: 11, fill: INK }} axisLine={{ stroke: LINE }} tickLine={false} />
-                  <YAxis tick={{ fontSize: 12, fill: INK }} axisLine={{ stroke: LINE }} tickLine={false} tickFormatter={(v) => `$${v}`} />
+                  <YAxis tick={{ fontSize: 12, fill: INK }} axisLine={{ stroke: LINE }} tickLine={false} tickFormatter={(v) => `₱${v}`} />
                   <Tooltip formatter={(v: number) => money(v)} contentStyle={tooltipStyle} />
                   <Bar dataKey="Spend" fill={GOLD} radius={[4, 4, 0, 0]} />
                 </BarChart>
@@ -351,7 +351,7 @@ function ReportsBody() {
                 <BarChart data={deptRows.map((d) => ({ name: d.name, Cost: round2(d.total) }))} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
                   <CartesianGrid stroke={LINE} vertical={false} />
                   <XAxis dataKey="name" tick={{ fontSize: 11, fill: INK }} axisLine={{ stroke: LINE }} tickLine={false} />
-                  <YAxis tick={{ fontSize: 12, fill: INK }} axisLine={{ stroke: LINE }} tickLine={false} tickFormatter={(v) => `$${v}`} />
+                  <YAxis tick={{ fontSize: 12, fill: INK }} axisLine={{ stroke: LINE }} tickLine={false} tickFormatter={(v) => `₱${v}`} />
                   <Tooltip formatter={(v: number) => money(v)} contentStyle={tooltipStyle} />
                   <Bar dataKey="Cost" fill={TEAL} radius={[4, 4, 0, 0]} />
                 </BarChart>

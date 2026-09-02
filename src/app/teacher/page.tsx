@@ -88,7 +88,7 @@ export default function TeacherPage() {
                   <BarChart data={barData} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
                     <CartesianGrid stroke={LINE} vertical={false} />
                     <XAxis dataKey="name" tick={{ fontSize: 12, fill: INK }} axisLine={{ stroke: LINE }} tickLine={false} />
-                    <YAxis tick={{ fontSize: 12, fill: INK }} axisLine={{ stroke: LINE }} tickLine={false} tickFormatter={(v) => `$${v}`} />
+                    <YAxis tick={{ fontSize: 12, fill: INK }} axisLine={{ stroke: LINE }} tickLine={false} tickFormatter={(v) => `₱${v}`} />
                     <Tooltip formatter={(v: number) => money(v)} contentStyle={tooltipStyle} />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
                     <Bar dataKey="Revenue" fill={TEAL} radius={[4, 4, 0, 0]} />

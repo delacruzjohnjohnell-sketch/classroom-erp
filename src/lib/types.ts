@@ -35,7 +35,7 @@ export type Employee = { id: string; tenant_id: string; name: string; title: str
 export type PayrollRun = { id: string; tenant_id: string; run_date: string; total: number; headcount: number };
 
 export const money = (n: number) =>
-  (n < 0 ? "-$" : "$") + Math.abs(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  (n < 0 ? "-₱" : "₱") + Math.abs(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export const round2 = (n: number) => Math.round(n * 100) / 100;
 export const todayStr = () => new Date().toISOString().slice(0, 10);

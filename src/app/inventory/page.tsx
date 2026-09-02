@@ -53,7 +53,7 @@ function InventoryBody() {
             <BarChart data={chartData} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
               <CartesianGrid stroke={LINE} vertical={false} />
               <XAxis dataKey="name" tick={{ fontSize: 11, fill: INK }} axisLine={{ stroke: LINE }} tickLine={false} />
-              <YAxis tick={{ fontSize: 12, fill: INK }} axisLine={{ stroke: LINE }} tickLine={false} tickFormatter={(v) => `$${v}`} />
+              <YAxis tick={{ fontSize: 12, fill: INK }} axisLine={{ stroke: LINE }} tickLine={false} tickFormatter={(v) => `₱${v}`} />
               <Tooltip formatter={(v: number) => money(v)} contentStyle={tooltipStyle} />
               <Bar dataKey="Value" fill={TEAL} radius={[4, 4, 0, 0]} />
             </BarChart>
