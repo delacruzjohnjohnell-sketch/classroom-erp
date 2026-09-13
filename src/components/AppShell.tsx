@@ -44,26 +44,30 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   const tenantName = tenants.find((t) => t.id === effectiveTenantId)?.name ?? "—";
+  const pageTitle = NAV.find((item) => item.href === pathname)?.label ?? "";
+  const initials = profile.full_name
+    ? profile.full_name.split(/\s+/).slice(0, 2).map((p: string) => p[0]?.toUpperCase()).join("")
+    : "?";
 
   return (
     <div className="min-h-screen flex">
       {/* Sidebar */}
-      <div className="w-[220px] shrink-0 bg-panel border-r border-hairline flex flex-col">
-        <div className="px-5 py-5 border-b border-hairline">
+      <div className="w-[220px] shrink-0 bg-sidebar flex flex-col">
+        <div className="px-5 py-5 border-b border-white/10">
           <div className="flex items-center gap-2.5 mb-1">
             <div className="font-serif text-lg text-gold border border-gold rounded-md w-8 h-8 flex items-center justify-center shrink-0">§</div>
-            <div className="font-serif text-[15px] font-bold leading-tight">JJ and Co.</div>
+            <div className="font-serif text-[15px] font-bold leading-tight text-white">JJ and Co.</div>
           </div>
         </div>
 
-        <div className="px-5 py-4 border-b border-hairline">
+        <div className="px-5 py-4 border-b border-white/10">
           {profile.role === "teacher" && (
-            <button onClick={() => { setViewTenantId(null); router.push("/teacher"); }} className="flex items-center gap-1 text-teal text-xs font-semibold mb-2">
+            <button onClick={() => { setViewTenantId(null); router.push("/teacher"); }} className="flex items-center gap-1 text-tealsoft text-xs font-semibold mb-2 hover:text-white">
               <ArrowLeft size={13} /> All companies
             </button>
           )}
-          <div className="text-[13px] font-bold truncate">{tenantName}</div>
-          <div className="text-[11px] text-[#8a8172] mt-0.5">
+          <div className="text-[13px] font-bold truncate text-white">{tenantName}</div>
+          <div className="text-[11px] text-sidebarTextMuted mt-0.5">
             {profile.role === "teacher" ? `Teacher · ${profile.full_name}` : `${profile.full_name} · Student`}
           </div>
         </div>
@@ -74,15 +78,15 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             const active = pathname === item.href;
             return (
               <Link key={item.href} href={item.href}
-                className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] font-semibold ${active ? "bg-tealsoft text-teal" : "text-[#5c5548]"}`}>
+                className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] font-semibold transition-colors ${active ? "bg-sidebarActive text-white" : "text-sidebarText hover:bg-sidebarHover hover:text-white"}`}>
                 <Icon size={16} /> {item.label}
               </Link>
             );
           })}
         </nav>
 
-        <div className="p-3 border-t border-hairline">
-          <button onClick={() => signOut()} className="flex items-center gap-2 w-full px-3 py-2 rounded-md text-[13px] text-[#6b6357] hover:bg-paper">
+        <div className="p-3 border-t border-white/10">
+          <button onClick={() => signOut()} className="flex items-center gap-2 w-full px-3 py-2 rounded-md text-[13px] text-sidebarText hover:bg-sidebarHover hover:text-white">
             <LogOut size={15} /> Sign out
           </button>
         </div>
@@ -90,8 +94,20 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Main content */}
       <div className="flex-1 min-w-0">
-        <div className="px-6 py-4 border-b border-hairline flex justify-end">
-          <GlobalSearch />
+        <div className="px-6 py-4 border-b border-hairline bg-panel flex items-center justify-between gap-4">
+          <div className="font-serif text-lg font-bold text-ink truncate">{pageTitle}</div>
+          <div className="flex items-center gap-4 shrink-0">
+            <GlobalSearch />
+            <div className="flex items-center gap-2.5 pl-3 border-l border-hairline">
+              <div className="w-8 h-8 rounded-full bg-tealsoft text-teal font-semibold text-[12px] flex items-center justify-center shrink-0">
+                {initials}
+              </div>
+              <div className="hidden sm:block leading-tight">
+                <div className="text-[13px] font-semibold text-ink truncate max-w-[140px]">{profile.full_name}</div>
+                <div className="text-[11px] text-[#8a8172] capitalize">{profile.role}</div>
+              </div>
+            </div>
+          </div>
         </div>
         <div className="max-w-[1100px] px-6 py-6 flex flex-col gap-4">
           {children}

@@ -101,10 +101,10 @@ function DashboardBody() {
   return (
     <>
       <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}>
-        <KpiCard icon={<TrendingUp size={16} />} label="Total revenue" value={money(metrics.revenue)} accent={TEAL} />
-        <KpiCard icon={<TrendingDown size={16} />} label="Total expenses" value={money(metrics.expenses)} accent={RED} />
-        <KpiCard icon={<Wallet size={16} />} label="Net income" value={money(metrics.netIncome)} accent={metrics.netIncome >= 0 ? TEAL : RED} />
-        <KpiCard icon={<Receipt size={16} />} label="Cash balance" value={money(metrics.cash)} />
+        <KpiCard badge={0} icon={<TrendingUp size={16} />} label="Total revenue" value={money(metrics.revenue)} accent={TEAL} />
+        <KpiCard badge={1} icon={<TrendingDown size={16} />} label="Total expenses" value={money(metrics.expenses)} accent={RED} />
+        <KpiCard badge={2} icon={<Wallet size={16} />} label="Net income" value={money(metrics.netIncome)} accent={metrics.netIncome >= 0 ? TEAL : RED} />
+        <KpiCard badge={3} icon={<Receipt size={16} />} label="Cash balance" value={money(metrics.cash)} />
         <KpiCard icon={<Package size={16} />} label="Inventory value" value={money(metrics.inventoryValue)} />
         <KpiCard icon={<Briefcase size={16} />} label="Employees" value={metrics.headcount} />
         <KpiCard icon={<Truck size={16} />} label="Open POs" value={openPOs} />

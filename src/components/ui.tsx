@@ -2,12 +2,25 @@
 
 import { X, Loader2 } from "lucide-react";
 
-export function KpiCard({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: string | number; accent?: string }) {
+const BADGE_COLORS = ["#12524F", "#C08A2E", "#A6402F", "#3E5C76"];
+
+export function KpiCard({ icon, label, value, accent, badge }: { icon: React.ReactNode; label: string; value: string | number; accent?: string; badge?: number }) {
+  const badgeColor = badge != null ? BADGE_COLORS[badge % BADGE_COLORS.length] : undefined;
   return (
-    <div className="bg-panel border border-hairline rounded-[11px] px-4 py-3.5 flex items-start gap-2.5">
+    <div className="bg-panel border border-hairline rounded-[11px] px-4 py-3.5 flex items-start gap-2.5 shadow-[0_1px_2px_rgba(27,36,48,0.04)]">
       <div className="mt-0.5" style={{ color: accent || "#12524F" }}>{icon}</div>
-      <div>
-        <div className="text-[11px] text-[#8a8172] font-semibold uppercase tracking-wide">{label}</div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5">
+          {badgeColor && (
+            <span
+              className="w-4 h-4 rounded-full text-white text-[9.5px] font-bold flex items-center justify-center shrink-0"
+              style={{ background: badgeColor }}
+            >
+              {badge! + 1}
+            </span>
+          )}
+          <div className="text-[11px] text-[#8a8172] font-semibold uppercase tracking-wide truncate">{label}</div>
+        </div>
         <div className="text-[19px] font-bold mt-0.5" style={{ color: accent || "#1B2430", fontVariantNumeric: "tabular-nums" }}>{value}</div>
       </div>
     </div>
@@ -16,7 +29,7 @@ export function KpiCard({ icon, label, value, accent }: { icon: React.ReactNode;
 
 export function Panel({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-panel border border-hairline rounded-xl p-[18px]">
+    <div className="bg-panel border border-hairline rounded-xl p-[18px] shadow-[0_1px_3px_rgba(27,36,48,0.05)]">
       <div className="text-[13px] font-bold mb-3 text-[#3f3a30]">{title}</div>
       {children}
     </div>
