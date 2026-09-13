@@ -8,6 +8,7 @@ import {
   Package, ShoppingCart, Briefcase, FileBarChart, Landmark, Boxes,
 } from "lucide-react";
 import { useSession } from "@/lib/session";
+import { usePagePresence } from "@/lib/presence";
 import GlobalSearch from "./GlobalSearch";
 
 const NAV = [
@@ -26,6 +27,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const { loading, userId, profile, tenants, viewTenantId, setViewTenantId, effectiveTenantId, signOut } = useSession();
   const router = useRouter();
   const pathname = usePathname();
+
+  // Hooks run unconditionally, before the loading/redirect early-return below —
+  // usePagePresence tolerates null args and just reports no other viewers.
+  const presenceSelf = userId && profile ? { userId, name: profile.full_name || "Someone", role: profile.role } : null;
+  const otherViewers = usePagePresence(effectiveTenantId, pathname, presenceSelf);
 
   useEffect(() => {
     if (loading) return;
@@ -97,6 +103,26 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <div className="px-6 py-4 border-b border-hairline bg-panel flex items-center justify-between gap-4">
           <div className="font-serif text-lg font-bold text-ink truncate">{pageTitle}</div>
           <div className="flex items-center gap-4 shrink-0">
+            {otherViewers.length > 0 && (
+              <div
+                className="flex items-center gap-1.5"
+                title={`Also here: ${otherViewers.map((v) => v.name).join(", ")}`}
+              >
+                <div className="flex -space-x-2">
+                  {otherViewers.slice(0, 3).map((v) => (
+                    <div
+                      key={v.userId}
+                      className="w-6 h-6 rounded-full bg-gold text-white text-[9.5px] font-bold flex items-center justify-center border-2 border-panel"
+                    >
+                      {v.name.split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase()).join("") || "?"}
+                    </div>
+                  ))}
+                </div>
+                <span className="text-[11px] text-[#8a8172] hidden md:inline">
+                  {otherViewers.length === 1 ? "also here" : `+${otherViewers.length} also here`}
+                </span>
+              </div>
+            )}
             <GlobalSearch />
             <div className="flex items-center gap-2.5 pl-3 border-l border-hairline">
               <div className="w-8 h-8 rounded-full bg-tealsoft text-teal font-semibold text-[12px] flex items-center justify-center shrink-0">
