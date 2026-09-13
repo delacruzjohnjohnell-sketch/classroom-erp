@@ -49,6 +49,8 @@ function SalesBody() {
   const [convertingOrder, setConvertingOrder] = useState<any | null>(null);
   const [postingInvoice, setPostingInvoice] = useState<any | null>(null);
   const [posting, setPosting] = useState(false);
+  const [voidingInvoice, setVoidingInvoice] = useState<any | null>(null);
+  const [voiding, setVoiding] = useState(false);
 
   const load = async () => {
     if (!effectiveTenantId) return;
@@ -91,6 +93,13 @@ function SalesBody() {
     const res = await mutate(supabase.rpc("post_invoice", { target_invoice_id: id }), { successMessage: "Invoice posted." });
     setPosting(false);
     if (ok(res)) setPostingInvoice(null);
+    load();
+  };
+  const doVoidInvoice = async (id: string) => {
+    setVoiding(true);
+    const res = await mutate(supabase.rpc("void_invoice", { target_invoice_id: id, void_date: new Date().toISOString().slice(0, 10) }), { successMessage: "Invoice voided." });
+    setVoiding(false);
+    if (ok(res)) setVoidingInvoice(null);
     load();
   };
   const confirmOrder = async (id: string) => { await mutate(supabase.from("sales_orders").update({ status: "confirmed" }).eq("id", id)); load(); };
@@ -239,6 +248,9 @@ function SalesBody() {
                           {o.status === "pending_approval" && profile?.role === "teacher" && <TinyBtn onClick={() => setPostingInvoice(o)}><Check size={12} /> Approve</TinyBtn>}
                           {o.status === "pending_approval" && profile?.role !== "teacher" && <span className="text-[11px] text-[#8a8172]">Awaiting teacher approval</span>}
                           {o.status === "fulfilled" && <TinyBtn onClick={() => setOpenInvoice(o)}>Details</TinyBtn>}
+                          {o.status === "fulfilled" && paid === 0 && (
+                            <button onClick={() => setVoidingInvoice(o)} className="text-[11px] text-[#8a8172] hover:text-red">Void</button>
+                          )}
                         </td>
                       </tr>
                     );
@@ -359,6 +371,24 @@ function SalesBody() {
           busy={posting}
           onCancel={() => setPostingInvoice(null)}
           onConfirm={() => doPostInvoice(postingInvoice.id)}
+        />
+      )}
+
+      {voidingInvoice && (
+        <ConfirmDialog
+          title="Void this invoice?"
+          message={
+            <>
+              This posts a reversing journal entry for <strong>{money(voidingInvoice.total)}</strong> and restores any inventory
+              it decremented. The original entry stays in the ledger — nothing is deleted, just offset. This can&rsquo;t be undone
+              from here.
+            </>
+          }
+          confirmLabel="Void invoice"
+          danger
+          busy={voiding}
+          onCancel={() => setVoidingInvoice(null)}
+          onConfirm={() => doVoidInvoice(voidingInvoice.id)}
         />
       )}
     </>

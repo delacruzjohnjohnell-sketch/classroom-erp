@@ -46,6 +46,8 @@ function ProcurementBody() {
   const [receivingOrder, setReceivingOrder] = useState<any | null>(null);
   const [postingBill, setPostingBill] = useState<any | null>(null);
   const [posting, setPosting] = useState(false);
+  const [voidingBill, setVoidingBill] = useState<any | null>(null);
+  const [voiding, setVoiding] = useState(false);
 
   const load = async () => {
     if (!effectiveTenantId) return;
@@ -85,6 +87,13 @@ function ProcurementBody() {
     const res = await mutate(supabase.rpc("post_bill", { target_bill_id: id }), { successMessage: "Bill posted." });
     setPosting(false);
     if (ok(res)) setPostingBill(null);
+    load();
+  };
+  const doVoidBill = async (id: string) => {
+    setVoiding(true);
+    const res = await mutate(supabase.rpc("void_bill", { target_bill_id: id, void_date: new Date().toISOString().slice(0, 10) }), { successMessage: "Bill voided." });
+    setVoiding(false);
+    if (ok(res)) setVoidingBill(null);
     load();
   };
   const sendOrder = async (id: string) => { await mutate(supabase.from("purchase_orders").update({ status: "sent" }).eq("id", id)); load(); };
@@ -230,6 +239,9 @@ function ProcurementBody() {
                           {b.status === "pending_approval" && profile?.role === "teacher" && <TinyBtn onClick={() => setPostingBill(b)}><Check size={12} /> Approve</TinyBtn>}
                           {b.status === "pending_approval" && profile?.role !== "teacher" && <span className="text-[11px] text-[#8a8172]">Awaiting teacher approval</span>}
                           {b.status === "received" && <TinyBtn onClick={() => setOpenBill(b)}>Details</TinyBtn>}
+                          {b.status === "received" && paid === 0 && (
+                            <button onClick={() => setVoidingBill(b)} className="text-[11px] text-[#8a8172] hover:text-red ml-1.5">Void</button>
+                          )}
                         </td>
                       </tr>
                     );
@@ -318,6 +330,24 @@ function ProcurementBody() {
           busy={posting}
           onCancel={() => setPostingBill(null)}
           onConfirm={() => doPostBill(postingBill.id)}
+        />
+      )}
+
+      {voidingBill && (
+        <ConfirmDialog
+          title="Void this bill?"
+          message={
+            <>
+              This posts a reversing journal entry for <strong>{money(voidingBill.total)}</strong> and rolls back the inventory
+              it added. The original entry stays in the ledger — nothing is deleted, just offset. This can&rsquo;t be undone
+              from here.
+            </>
+          }
+          confirmLabel="Void bill"
+          danger
+          busy={voiding}
+          onCancel={() => setVoidingBill(null)}
+          onConfirm={() => doVoidBill(voidingBill.id)}
         />
       )}
     </>

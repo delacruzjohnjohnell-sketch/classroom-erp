@@ -52,10 +52,13 @@ at once. Free to run and host.
 17. Open a **fourteenth** New query, paste in `supabase/migrations/0014_payment_amount_guard.sql`, and
    run it. This rejects (at the database level, not just in the UI) any payment that would push an
    invoice or bill over its total — closes the "overpay via devtools" gap.
-18. Go to **Authentication → Providers → Email**, make sure the **Email** provider itself is enabled,
+18. Open a **fifteenth** New query, paste in `supabase/migrations/0015_void_invoices_bills.sql`, and
+   run it. This adds the ability to void a posted invoice or bill (unpaid ones only) — it posts a
+   proper reversing journal entry and rolls back the inventory effect, rather than deleting anything.
+19. Go to **Authentication → Providers → Email**, make sure the **Email** provider itself is enabled,
    and turn **off** "Confirm email" for the fastest classroom setup (students can sign up and start
    immediately). Turn it back on if you want email verification for a real deployment.
-19. Go to **Project Settings → API** and copy your **Project URL** and **Publishable key** (this is
+20. Go to **Project Settings → API** and copy your **Project URL** and **Publishable key** (this is
    what used to be called the "anon key" — it's safe to use in the browser).
 
 ## 2. Run it locally

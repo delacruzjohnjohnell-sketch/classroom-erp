@@ -1,8 +1,9 @@
 import { todayStr } from "./types";
 
-export type PaymentStatus = "Draft" | "Pending Approval" | "Open" | "Partial" | "Paid" | "Overdue";
+export type PaymentStatus = "Draft" | "Pending Approval" | "Open" | "Partial" | "Paid" | "Overdue" | "Void";
 
-export function computePaymentStatus(postedStatus: "draft" | "pending_approval" | "fulfilled" | "received", total: number, paid: number, dueDate: string | null): PaymentStatus {
+export function computePaymentStatus(postedStatus: "draft" | "pending_approval" | "fulfilled" | "received" | "void", total: number, paid: number, dueDate: string | null): PaymentStatus {
+  if (postedStatus === "void") return "Void";
   if (postedStatus === "draft") return "Draft";
   if (postedStatus === "pending_approval") return "Pending Approval";
   if (paid >= total - 0.005) return "Paid";
@@ -18,6 +19,7 @@ export const STATUS_COLOR: Record<PaymentStatus, string> = {
   Partial: "#5B7B93",
   Paid: "#12524F",
   Overdue: "#A6402F",
+  Void: "#8a8172",
 };
 
 // Aging buckets for AR/AP reports.
