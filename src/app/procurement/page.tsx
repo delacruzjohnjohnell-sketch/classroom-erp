@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Plus, Check, Loader2, Truck, Receipt, Package, ArrowRight, PackageCheck } from "lucide-react";
 import AppShell from "@/components/AppShell";
-import { KpiCard, Panel, Empty, Modal, ConfirmDialog, Label, GoldBtn, OutlineBtn, TinyBtn, StatusPill, FormStyles } from "@/components/ui";
+import { KpiCard, Panel, Empty, Modal, ConfirmDialog, Label, GoldBtn, OutlineBtn, TinyBtn, StatusPill, SearchBox, FormStyles } from "@/components/ui";
 import { PaymentStatusPill, RecordPaymentForm, computePaymentStatus } from "@/components/PaymentUI";
 import Attachments from "@/components/Attachments";
 import { useSession } from "@/lib/session";
@@ -31,6 +31,7 @@ function ProcurementBody() {
   const searchParams = useSearchParams();
   const initialTab = (searchParams.get("tab") as Tab) || "bills";
   const [tab, setTab] = useState<Tab>(TABS.some((t) => t.key === initialTab) ? initialTab : "bills");
+  const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
   const [vendors, setVendors] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
@@ -68,6 +69,12 @@ function ProcurementBody() {
   // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/set-state-in-effect
   useEffect(() => { load(); }, [effectiveTenantId]);
 
+  const matches = (s: string | null | undefined) => (s ?? "").toLowerCase().includes(q.trim().toLowerCase());
+  const vendorsF = vendors.filter((v) => !q || matches(v.name) || matches(v.contact));
+  const ordersF = orders.filter((r) => !q || matches(r.document_number) || matches(r.vendors?.name));
+  const receiptsF = receipts.filter((r) => !q || matches(r.document_number) || matches(r.purchase_orders?.document_number) || matches(r.purchase_orders?.vendors?.name));
+  const billsF = bills.filter((r) => !q || matches(r.document_number) || matches(r.vendors?.name));
+
   const paidFor = (billId: string) => payments.filter((p) => p.bill_id === billId).reduce((s, p) => s + p.amount, 0);
   const totalOwed = bills.filter((b) => b.status === "received").reduce((s, b) => s + Math.max(0, b.total - paidFor(b.id)), 0);
   const pendingCount = bills.filter((b) => b.status === "pending_approval").length;
@@ -92,7 +99,7 @@ function ProcurementBody() {
     <>
       <div className="flex gap-1 flex-wrap">
         {TABS.map((t) => (
-          <button key={t.key} onClick={() => setTab(t.key)}
+          <button key={t.key} onClick={() => { setTab(t.key); setQ(""); }}
             className={`text-[13px] font-semibold px-3 py-1.5 rounded-md ${tab === t.key ? "bg-panel border border-hairline" : "text-[#8a8172]"}`}>
             {t.label}
           </button>
@@ -122,11 +129,14 @@ function ProcurementBody() {
 
       {tab === "vendors" && (
         <>
-          <div className="flex gap-2"><GoldBtn onClick={() => setModal("vendor")}><Plus size={14} /> New vendor</GoldBtn></div>
+          <div className="flex gap-2 items-center justify-between flex-wrap">
+            <GoldBtn onClick={() => setModal("vendor")}><Plus size={14} /> New vendor</GoldBtn>
+            <SearchBox value={q} onChange={setQ} placeholder="Search vendors…" />
+          </div>
           <Panel title="Vendors">
-            {vendors.length === 0 ? <Empty>No vendors yet.</Empty> : (
+            {vendorsF.length === 0 ? <Empty>{vendors.length === 0 ? "No vendors yet." : "No vendors match your search."}</Empty> : (
               <table><thead><tr><th>Name</th><th>Contact</th></tr></thead>
-                <tbody>{vendors.map((v) => <tr key={v.id}><td>{v.name}</td><td>{v.contact}</td></tr>)}</tbody>
+                <tbody>{vendorsF.map((v) => <tr key={v.id}><td>{v.name}</td><td>{v.contact}</td></tr>)}</tbody>
               </table>
             )}
           </Panel>
@@ -135,13 +145,16 @@ function ProcurementBody() {
 
       {tab === "orders" && (
         <>
-          <div className="flex gap-2"><OutlineBtn onClick={() => setModal("order")} disabled={vendors.length === 0}><Plus size={14} /> New purchase order</OutlineBtn></div>
+          <div className="flex gap-2 items-center justify-between flex-wrap">
+            <OutlineBtn onClick={() => setModal("order")} disabled={vendors.length === 0}><Plus size={14} /> New purchase order</OutlineBtn>
+            <SearchBox value={q} onChange={setQ} placeholder="Search purchase orders…" />
+          </div>
           <Panel title="Purchase orders">
-            {orders.length === 0 ? <Empty>No purchase orders yet — no accounting impact until goods are received and billed.</Empty> : (
+            {ordersF.length === 0 ? <Empty>{orders.length === 0 ? "No purchase orders yet — no accounting impact until goods are received and billed." : "No purchase orders match your search."}</Empty> : (
               <table>
                 <thead><tr><th>PO #</th><th>Date</th><th>Vendor</th><th className="text-right">Total</th><th>Status</th><th></th></tr></thead>
                 <tbody>
-                  {orders.map((o) => (
+                  {ordersF.map((o) => (
                     <tr key={o.id}>
                       <td style={{ color: "#C08A2E", fontWeight: 600 }}>{o.document_number}</td>
                       <td>{o.order_date}</td><td>{o.vendors?.name}</td>
@@ -164,12 +177,16 @@ function ProcurementBody() {
       )}
 
       {tab === "receipts" && (
-        <Panel title="Goods receipts">
-          {receipts.length === 0 ? <Empty>No goods receipts yet — record one from a sent Purchase Order to track partial deliveries.</Empty> : (
+        <>
+          <div className="flex gap-2 items-center justify-end flex-wrap">
+            <SearchBox value={q} onChange={setQ} placeholder="Search receipts…" />
+          </div>
+          <Panel title="Goods receipts">
+          {receiptsF.length === 0 ? <Empty>{receipts.length === 0 ? "No goods receipts yet — record one from a sent Purchase Order to track partial deliveries." : "No receipts match your search."}</Empty> : (
             <table>
               <thead><tr><th>GR #</th><th>Date</th><th>Purchase order</th><th>Vendor</th><th>Notes</th></tr></thead>
               <tbody>
-                {receipts.map((r) => (
+                {receiptsF.map((r) => (
                   <tr key={r.id}>
                     <td style={{ color: "#C08A2E", fontWeight: 600 }}>{r.document_number}</td>
                     <td>{r.receipt_date}</td><td>{r.purchase_orders?.document_number}</td>
@@ -179,18 +196,22 @@ function ProcurementBody() {
               </tbody>
             </table>
           )}
-        </Panel>
+          </Panel>
+        </>
       )}
 
       {tab === "bills" && (
         <>
-          <div className="flex gap-2"><OutlineBtn onClick={() => setModal("bill")} disabled={vendors.length === 0}><Plus size={14} /> New bill</OutlineBtn></div>
+          <div className="flex gap-2 items-center justify-between flex-wrap">
+            <OutlineBtn onClick={() => setModal("bill")} disabled={vendors.length === 0}><Plus size={14} /> New bill</OutlineBtn>
+            <SearchBox value={q} onChange={setQ} placeholder="Search bills…" />
+          </div>
           <Panel title="Bills">
-            {bills.length === 0 ? <Empty>No bills yet.</Empty> : (
+            {billsF.length === 0 ? <Empty>{bills.length === 0 ? "No bills yet." : "No bills match your search."}</Empty> : (
               <table>
                 <thead><tr><th>Bill #</th><th>Date</th><th>Due</th><th>Vendor</th><th className="text-right">Total</th><th className="text-right">Balance</th><th>Status</th><th></th></tr></thead>
                 <tbody>
-                  {bills.map((b) => {
+                  {billsF.map((b) => {
                     const paid = paidFor(b.id);
                     const status = computePaymentStatus(b.status, b.total, paid, b.due_date);
                     return (

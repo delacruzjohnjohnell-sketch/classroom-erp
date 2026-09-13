@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { Plus, Check, Loader2, Users, ShoppingCart, Receipt, ArrowRight } from "lucide-react";
 import AppShell from "@/components/AppShell";
-import { KpiCard, Panel, Empty, Modal, ConfirmDialog, Label, GoldBtn, OutlineBtn, TinyBtn, StatusPill, FormStyles } from "@/components/ui";
+import { KpiCard, Panel, Empty, Modal, ConfirmDialog, Label, GoldBtn, OutlineBtn, TinyBtn, StatusPill, SearchBox, FormStyles } from "@/components/ui";
 import { PaymentStatusPill, RecordPaymentForm, computePaymentStatus } from "@/components/PaymentUI";
 import Attachments from "@/components/Attachments";
 import { useSession } from "@/lib/session";
@@ -32,6 +32,7 @@ function SalesBody() {
   const searchParams = useSearchParams();
   const initialTab = (searchParams.get("tab") as Tab) || "invoices";
   const [tab, setTab] = useState<Tab>(TABS.some((t) => t.key === initialTab) ? initialTab : "invoices");
+  const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
   const [customers, setCustomers] = useState<any[]>([]);
   const [quotes, setQuotes] = useState<any[]>([]);
@@ -73,6 +74,12 @@ function SalesBody() {
   // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/set-state-in-effect
   useEffect(() => { load(); }, [effectiveTenantId]);
 
+  const matches = (s: string | null | undefined) => (s ?? "").toLowerCase().includes(q.trim().toLowerCase());
+  const customersF = customers.filter((c) => !q || matches(c.name) || matches(c.email));
+  const quotesF = quotes.filter((r) => !q || matches(r.document_number) || matches(r.customers?.name));
+  const ordersF = orders.filter((r) => !q || matches(r.document_number) || matches(r.customers?.name));
+  const invoicesF = invoices.filter((r) => !q || matches(r.document_number) || matches(r.customers?.name));
+
   const paidFor = (invId: string) => payments.filter((p) => p.invoice_id === invId).reduce((s, p) => s + p.amount, 0);
   const totalInvoiced = invoices.reduce((s, o) => s + o.total, 0);
   const totalOutstanding = invoices.filter((o) => o.status === "fulfilled").reduce((s, o) => s + Math.max(0, o.total - paidFor(o.id)), 0);
@@ -95,7 +102,7 @@ function SalesBody() {
     <>
       <div className="flex gap-1 flex-wrap">
         {TABS.map((t) => (
-          <button key={t.key} onClick={() => setTab(t.key)}
+          <button key={t.key} onClick={() => { setTab(t.key); setQ(""); }}
             className={`text-[13px] font-semibold px-3 py-1.5 rounded-md ${tab === t.key ? "bg-panel border border-hairline" : "text-[#8a8172]"}`}>
             {t.label}
           </button>
@@ -125,11 +132,14 @@ function SalesBody() {
 
       {tab === "customers" && (
         <>
-          <div className="flex gap-2"><GoldBtn onClick={() => setModal("customer")}><Plus size={14} /> New customer</GoldBtn></div>
+          <div className="flex gap-2 items-center justify-between flex-wrap">
+            <GoldBtn onClick={() => setModal("customer")}><Plus size={14} /> New customer</GoldBtn>
+            <SearchBox value={q} onChange={setQ} placeholder="Search customers…" />
+          </div>
           <Panel title="Customers">
-            {customers.length === 0 ? <Empty>No customers yet.</Empty> : (
+            {customersF.length === 0 ? <Empty>{customers.length === 0 ? "No customers yet." : "No customers match your search."}</Empty> : (
               <table><thead><tr><th>Name</th><th>Email</th></tr></thead>
-                <tbody>{customers.map((c) => <tr key={c.id}><td>{c.name}</td><td>{c.email}</td></tr>)}</tbody>
+                <tbody>{customersF.map((c) => <tr key={c.id}><td>{c.name}</td><td>{c.email}</td></tr>)}</tbody>
               </table>
             )}
           </Panel>
@@ -138,13 +148,16 @@ function SalesBody() {
 
       {tab === "quotes" && (
         <>
-          <div className="flex gap-2"><OutlineBtn onClick={() => setModal("quote")} disabled={customers.length === 0}><Plus size={14} /> New quote</OutlineBtn></div>
+          <div className="flex gap-2 items-center justify-between flex-wrap">
+            <OutlineBtn onClick={() => setModal("quote")} disabled={customers.length === 0}><Plus size={14} /> New quote</OutlineBtn>
+            <SearchBox value={q} onChange={setQ} placeholder="Search quotes…" />
+          </div>
           <Panel title="Quotes">
-            {quotes.length === 0 ? <Empty>No quotes yet — informal, no accounting impact until converted.</Empty> : (
+            {quotesF.length === 0 ? <Empty>{quotes.length === 0 ? "No quotes yet — informal, no accounting impact until converted." : "No quotes match your search."}</Empty> : (
               <table>
                 <thead><tr><th>Quote #</th><th>Date</th><th>Customer</th><th className="text-right">Total</th><th>Status</th><th></th></tr></thead>
                 <tbody>
-                  {quotes.map((q) => (
+                  {quotesF.map((q) => (
                     <tr key={q.id}>
                       <td style={{ color: "#C08A2E", fontWeight: 600 }}>{q.document_number}</td>
                       <td>{q.quote_date}</td><td>{q.customers?.name}</td>
@@ -168,13 +181,16 @@ function SalesBody() {
 
       {tab === "orders" && (
         <>
-          <div className="flex gap-2"><OutlineBtn onClick={() => setModal("order")} disabled={customers.length === 0}><Plus size={14} /> New sales order</OutlineBtn></div>
+          <div className="flex gap-2 items-center justify-between flex-wrap">
+            <OutlineBtn onClick={() => setModal("order")} disabled={customers.length === 0}><Plus size={14} /> New sales order</OutlineBtn>
+            <SearchBox value={q} onChange={setQ} placeholder="Search sales orders…" />
+          </div>
           <Panel title="Sales orders">
-            {orders.length === 0 ? <Empty>No sales orders yet — a confirmed commitment, still no accounting impact until invoiced.</Empty> : (
+            {ordersF.length === 0 ? <Empty>{orders.length === 0 ? "No sales orders yet — a confirmed commitment, still no accounting impact until invoiced." : "No sales orders match your search."}</Empty> : (
               <table>
                 <thead><tr><th>SO #</th><th>Date</th><th>Customer</th><th className="text-right">Total</th><th>Status</th><th></th></tr></thead>
                 <tbody>
-                  {orders.map((o) => (
+                  {ordersF.map((o) => (
                     <tr key={o.id}>
                       <td style={{ color: "#C08A2E", fontWeight: 600 }}>{o.document_number}</td>
                       <td>{o.order_date}</td><td>{o.customers?.name}</td>
@@ -195,13 +211,16 @@ function SalesBody() {
 
       {tab === "invoices" && (
         <>
-          <div className="flex gap-2"><OutlineBtn onClick={() => setModal("invoice")} disabled={customers.length === 0}><Plus size={14} /> New invoice</OutlineBtn></div>
+          <div className="flex gap-2 items-center justify-between flex-wrap">
+            <OutlineBtn onClick={() => setModal("invoice")} disabled={customers.length === 0}><Plus size={14} /> New invoice</OutlineBtn>
+            <SearchBox value={q} onChange={setQ} placeholder="Search invoices…" />
+          </div>
           <Panel title="Invoices">
-            {invoices.length === 0 ? <Empty>No invoices yet.</Empty> : (
+            {invoicesF.length === 0 ? <Empty>{invoices.length === 0 ? "No invoices yet." : "No invoices match your search."}</Empty> : (
               <table>
                 <thead><tr><th>Invoice #</th><th>Date</th><th>Due</th><th>Customer</th><th className="text-right">Total</th><th className="text-right">Balance</th><th>Status</th><th></th></tr></thead>
                 <tbody>
-                  {invoices.map((o) => {
+                  {invoicesF.map((o) => {
                     const paid = paidFor(o.id);
                     const status = computePaymentStatus(o.status, o.total, paid, o.due_date);
                     return (

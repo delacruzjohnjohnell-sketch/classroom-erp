@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Plus, X, Loader2, Pencil, Trash2, Paperclip } from "lucide-react";
 import AppShell from "@/components/AppShell";
-import { Panel, Empty, Modal, Label, GoldBtn, OutlineBtn, TinyBtn, FormStyles } from "@/components/ui";
+import { Panel, Empty, Modal, Label, GoldBtn, OutlineBtn, TinyBtn, SearchBox, FormStyles } from "@/components/ui";
 import Attachments from "@/components/Attachments";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
@@ -20,6 +20,7 @@ export default function FinancialsPage() {
 function FinancialsBody() {
   const { effectiveTenantId } = useSession();
   const [tab, setTab] = useState<"journal" | "accounts" | "recurring">("journal");
+  const [q, setQ] = useState("");
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [entries, setEntries] = useState<EntryWithLines[]>([]);
   const [recurring, setRecurring] = useState<any[]>([]);
@@ -59,6 +60,14 @@ function FinancialsBody() {
 
   const balances = useMemo(() => computeAccountBalances(entries), [entries]);
   const accountsById = Object.fromEntries(accounts.map((a) => [a.id, a]));
+  const entriesF = (entries as any[]).filter((e) => {
+    if (!q) return true;
+    const needle = q.trim().toLowerCase();
+    if ((e.memo ?? "").toLowerCase().includes(needle)) return true;
+    if ((e.entry_date ?? "").includes(needle)) return true;
+    if ((postedByNames[e.created_by] ?? "").toLowerCase().includes(needle)) return true;
+    return e.journal_lines.some((l: any) => (accountsById[l.account_id]?.name ?? "").toLowerCase().includes(needle));
+  });
 
   const postEntry = async (date: string, memo: string, lines: { account_id: string; debit: number; credit: number }[]) => {
     const { data: je } = await mutate(supabase.from("journal_entries")
@@ -111,12 +120,14 @@ function FinancialsBody() {
       )}
 
       {tab === "journal" && (
-        <Panel title="Journal entries">
-          {entries.length === 0 ? <Empty>No entries yet — record a sale or expense to get started.</Empty> : (
+        <>
+          <div className="flex justify-end"><SearchBox value={q} onChange={setQ} placeholder="Search journal entries…" /></div>
+          <Panel title="Journal entries">
+          {entriesF.length === 0 ? <Empty>{entries.length === 0 ? "No entries yet — record a sale or expense to get started." : "No entries match your search."}</Empty> : (
             <table>
               <thead><tr><th>Date</th><th>Memo</th><th>Posted by</th><th>Account</th><th className="text-right">Debit</th><th className="text-right">Credit</th><th></th></tr></thead>
               <tbody>
-                {entries.map((e: any) => e.journal_lines.map((l: any, i: number) => (
+                {entriesF.map((e: any) => e.journal_lines.map((l: any, i: number) => (
                   <tr key={l.id}>
                     {i === 0 ? (
                       <>
@@ -145,7 +156,8 @@ function FinancialsBody() {
               </tbody>
             </table>
           )}
-        </Panel>
+          </Panel>
+        </>
       )}
 
       {tab === "accounts" && (

@@ -49,10 +49,13 @@ at once. Free to run and host.
 16. Open a **thirteenth** New query, paste in `supabase/migrations/0013_auth_trigger_error_handling.sql`,
    and run it. This wraps the signup trigger in exception handling, so a failed signup surfaces a clear
    message instead of a bare Postgres error, and logs the real cause for you to debug.
-17. Go to **Authentication → Providers → Email**, make sure the **Email** provider itself is enabled,
+17. Open a **fourteenth** New query, paste in `supabase/migrations/0014_payment_amount_guard.sql`, and
+   run it. This rejects (at the database level, not just in the UI) any payment that would push an
+   invoice or bill over its total — closes the "overpay via devtools" gap.
+18. Go to **Authentication → Providers → Email**, make sure the **Email** provider itself is enabled,
    and turn **off** "Confirm email" for the fastest classroom setup (students can sign up and start
    immediately). Turn it back on if you want email verification for a real deployment.
-18. Go to **Project Settings → API** and copy your **Project URL** and **Publishable key** (this is
+19. Go to **Project Settings → API** and copy your **Project URL** and **Publishable key** (this is
    what used to be called the "anon key" — it's safe to use in the browser).
 
 ## 2. Run it locally

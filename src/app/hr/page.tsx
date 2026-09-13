@@ -8,7 +8,7 @@ import {
   FileText, Clock, CalendarDays, HandCoins, Check, X, Gift,
 } from "lucide-react";
 import AppShell from "@/components/AppShell";
-import { KpiCard, Panel, Empty, Modal, ConfirmDialog, Label, GoldBtn, OutlineBtn, TinyBtn, FormStyles } from "@/components/ui";
+import { KpiCard, Panel, Empty, Modal, ConfirmDialog, Label, GoldBtn, OutlineBtn, TinyBtn, SearchBox, FormStyles } from "@/components/ui";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
@@ -34,6 +34,7 @@ function HrBody() {
   const searchParams = useSearchParams();
   const initialTab = (searchParams.get("tab") as Tab) || "payroll";
   const [tab, setTab] = useState<Tab>(TABS.some((t) => t.key === initialTab) ? initialTab : "payroll");
+  const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
   const [employees, setEmployees] = useState<any[]>([]);
   const [timeEntries, setTimeEntries] = useState<any[]>([]);
@@ -91,6 +92,8 @@ function HrBody() {
     load();
   };
 
+  const employeesF = employees.filter((e) => !q || [e.name, e.title, e.department, e.employee_number].some((v) => (v ?? "").toLowerCase().includes(q.trim().toLowerCase())));
+
   const monthlyGross = employees.reduce((s, e) => s + (e.salary || 0) / 12, 0);
   const activeLoans = loans.filter((l) => l.status === "active");
   const pendingLeave = leaveRequests.filter((l) => l.status === "pending").length;
@@ -117,12 +120,15 @@ function HrBody() {
 
       {tab === "employees" && (
         <>
-          <div className="flex gap-2"><GoldBtn onClick={() => setModal("employee")}><Plus size={14} /> New employee</GoldBtn></div>
+          <div className="flex gap-2 items-center justify-between flex-wrap">
+            <GoldBtn onClick={() => setModal("employee")}><Plus size={14} /> New employee</GoldBtn>
+            <SearchBox value={q} onChange={setQ} placeholder="Search employees…" />
+          </div>
           <Panel title="Employees">
-            {employees.length === 0 ? <Empty>No employees yet.</Empty> : (
+            {employeesF.length === 0 ? <Empty>{employees.length === 0 ? "No employees yet." : "No employees match your search."}</Empty> : (
               <table>
                 <thead><tr><th>Emp #</th><th>Name</th><th>Title</th><th>Department</th><th>Pay type</th><th className="text-right">Rate</th></tr></thead>
-                <tbody>{employees.map((e) => (
+                <tbody>{employeesF.map((e) => (
                   <tr key={e.id}>
                     <td style={{ color: "#C08A2E", fontWeight: 600 }}>{e.employee_number}</td>
                     <td>{e.name}</td><td>{e.title}</td><td>{e.department}</td>

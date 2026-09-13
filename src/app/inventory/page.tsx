@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Plus, Loader2, Package, Wallet, AlertTriangle } from "lucide-react";
 import AppShell from "@/components/AppShell";
-import { KpiCard, Panel, Empty, Modal, Label, GoldBtn, FormStyles } from "@/components/ui";
+import { KpiCard, Panel, Empty, Modal, Label, GoldBtn, SearchBox, FormStyles } from "@/components/ui";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
@@ -22,6 +22,7 @@ function InventoryBody() {
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<any[]>([]);
   const [modal, setModal] = useState(false);
+  const [q, setQ] = useState("");
 
   const load = async () => {
     if (!effectiveTenantId) return;
@@ -37,12 +38,16 @@ function InventoryBody() {
   const totalValue = items.reduce((s, i) => s + i.qty_on_hand * i.unit_cost, 0);
   const lowStock = items.filter((i) => i.qty_on_hand <= i.reorder_point);
   const chartData = items.slice(0, 8).map((i) => ({ name: i.name.length > 12 ? i.name.slice(0, 11) + "…" : i.name, Value: round2(i.qty_on_hand * i.unit_cost) }));
+  const itemsF = items.filter((i) => !q || i.name.toLowerCase().includes(q.trim().toLowerCase()) || (i.sku ?? "").toLowerCase().includes(q.trim().toLowerCase()));
 
   if (loading) return <div className="py-16 flex justify-center"><Loader2 className="animate-spin" size={20} color={TEAL} /></div>;
 
   return (
     <>
-      <div className="flex gap-2"><GoldBtn onClick={() => setModal(true)}><Plus size={14} /> New item</GoldBtn></div>
+      <div className="flex gap-2 items-center justify-between flex-wrap">
+        <GoldBtn onClick={() => setModal(true)}><Plus size={14} /> New item</GoldBtn>
+        <SearchBox value={q} onChange={setQ} placeholder="Search items…" />
+      </div>
 
       <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}>
         <KpiCard icon={<Package size={16} />} label="SKUs" value={items.length} />
@@ -65,11 +70,11 @@ function InventoryBody() {
       )}
 
       <Panel title="Items">
-        {items.length === 0 ? <Empty>No inventory items yet — add one, or receive a purchase order.</Empty> : (
+        {itemsF.length === 0 ? <Empty>{items.length === 0 ? "No inventory items yet — add one, or receive a purchase order." : "No items match your search."}</Empty> : (
           <table>
             <thead><tr><th>SKU</th><th>Name</th><th className="text-right">Qty on hand</th><th className="text-right">Unit cost</th><th className="text-right">Value</th><th></th></tr></thead>
             <tbody>
-              {items.map((i) => (
+              {itemsF.map((i) => (
                 <tr key={i.id}>
                   <td style={{ color: GOLD, fontWeight: 600 }}>{i.sku}</td>
                   <td>{i.name}</td>

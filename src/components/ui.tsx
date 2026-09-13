@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Loader2 } from "lucide-react";
+import { X, Loader2, Search } from "lucide-react";
 
 const BADGE_COLORS = ["#12524F", "#C08A2E", "#A6402F", "#3E5C76"];
 
@@ -87,6 +87,33 @@ export function ConfirmDialog({
         </GoldBtn>
       </div>
     </Modal>
+  );
+}
+
+export function SearchBox({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+  return (
+    <div className="relative" style={{ width: 220 }}>
+      <Search size={13} className="absolute top-1/2 -translate-y-1/2 left-2.5 text-[#8a8172] pointer-events-none" />
+      <input
+        className="input"
+        style={{ paddingLeft: 28 }}
+        placeholder={placeholder ?? "Search…"}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      {value && (
+        <button
+          type="button"
+          onClick={() => onChange("")}
+          className="absolute top-1/2 -translate-y-1/2 right-2 text-[#8a8172]"
+        >
+          <X size={13} />
+        </button>
+      )}
+      {/* .input's CSS normally only loads while a modal (FormStyles) is open — SearchBox
+          lives in the main toolbar, so it carries its own copy. Harmless if duplicated. */}
+      <FormStyles />
+    </div>
   );
 }
 
