@@ -4,11 +4,12 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Plus, Check, Loader2, Truck, Receipt, Package, ArrowRight, PackageCheck } from "lucide-react";
 import AppShell from "@/components/AppShell";
-import { KpiCard, Panel, Empty, Modal, Label, GoldBtn, OutlineBtn, TinyBtn, StatusPill, FormStyles } from "@/components/ui";
+import { KpiCard, Panel, Empty, Modal, ConfirmDialog, Label, GoldBtn, OutlineBtn, TinyBtn, StatusPill, FormStyles } from "@/components/ui";
 import { PaymentStatusPill, RecordPaymentForm, computePaymentStatus } from "@/components/PaymentUI";
 import Attachments from "@/components/Attachments";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
+import { mutate, ok } from "@/lib/mutate";
 import { money, todayStr } from "@/lib/types";
 import LineItemForm from "@/components/LineItemForm";
 
@@ -41,6 +42,8 @@ function ProcurementBody() {
   const [modal, setModal] = useState<null | "vendor" | "order" | "bill">(null);
   const [openBill, setOpenBill] = useState<any | null>(null);
   const [receivingOrder, setReceivingOrder] = useState<any | null>(null);
+  const [postingBill, setPostingBill] = useState<any | null>(null);
+  const [posting, setPosting] = useState(false);
 
   const load = async () => {
     if (!effectiveTenantId) return;
@@ -67,9 +70,19 @@ function ProcurementBody() {
   const totalOwed = bills.filter((b) => b.status === "received").reduce((s, b) => s + Math.max(0, b.total - paidFor(b.id)), 0);
   const pendingCount = bills.filter((b) => b.status === "pending_approval").length;
 
-  const postBill = async (id: string) => { await supabase.rpc("post_bill", { target_bill_id: id }); load(); };
-  const sendOrder = async (id: string) => { await supabase.from("purchase_orders").update({ status: "sent" }).eq("id", id); load(); };
-  const createBillFromPO = async (poId: string) => { await supabase.rpc("create_bill_from_po", { target_po_id: poId }); load(); setTab("bills"); };
+  const doPostBill = async (id: string) => {
+    setPosting(true);
+    const res = await mutate(supabase.rpc("post_bill", { target_bill_id: id }), { successMessage: "Bill posted." });
+    setPosting(false);
+    if (ok(res)) setPostingBill(null);
+    load();
+  };
+  const sendOrder = async (id: string) => { await mutate(supabase.from("purchase_orders").update({ status: "sent" }).eq("id", id)); load(); };
+  const createBillFromPO = async (poId: string) => {
+    const res = await mutate(supabase.rpc("create_bill_from_po", { target_po_id: poId }), { successMessage: "Bill created from purchase order." });
+    load();
+    if (ok(res)) setTab("bills");
+  };
 
   if (loading) return <div className="py-16 flex justify-center"><Loader2 className="animate-spin" size={20} color={TEAL} /></div>;
 
@@ -98,8 +111,8 @@ function ProcurementBody() {
             <input className="input" type="number" style={{ width: 160 }} defaultValue={threshold ?? ""} placeholder="e.g. 50000"
               onBlur={async (e) => {
                 const val = e.target.value ? parseFloat(e.target.value) : null;
-                await supabase.from("tenants").update({ approval_threshold: val }).eq("id", effectiveTenantId);
-                setThreshold(val);
+                const res = await mutate(supabase.from("tenants").update({ approval_threshold: val }).eq("id", effectiveTenantId));
+                if (ok(res)) setThreshold(val);
               }} />
           </div>
         </Panel>
@@ -186,8 +199,8 @@ function ProcurementBody() {
                         <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{money(Math.max(0, b.total - paid))}</td>
                         <td><PaymentStatusPill status={status} /></td>
                         <td>
-                          {b.status === "draft" && <TinyBtn onClick={() => postBill(b.id)}><Check size={12} /> Mark received</TinyBtn>}
-                          {b.status === "pending_approval" && profile?.role === "teacher" && <TinyBtn onClick={() => postBill(b.id)}><Check size={12} /> Approve</TinyBtn>}
+                          {b.status === "draft" && <TinyBtn onClick={() => setPostingBill(b)}><Check size={12} /> Mark received</TinyBtn>}
+                          {b.status === "pending_approval" && profile?.role === "teacher" && <TinyBtn onClick={() => setPostingBill(b)}><Check size={12} /> Approve</TinyBtn>}
                           {b.status === "pending_approval" && profile?.role !== "teacher" && <span className="text-[11px] text-[#8a8172]">Awaiting teacher approval</span>}
                           {b.status === "received" && <TinyBtn onClick={() => setOpenBill(b)}>Details</TinyBtn>}
                         </td>
@@ -213,9 +226,11 @@ function ProcurementBody() {
             partyLabel="Vendor" parties={vendors} priceLabel="Unit cost"
             onClose={() => setModal(null)}
             onSubmit={async (vendorId, date, lines, total) => {
-              const { data: po } = await supabase.from("purchase_orders").insert({ tenant_id: effectiveTenantId, vendor_id: vendorId, order_date: date, total, status: "draft" }).select().single();
-              if (po) await supabase.from("purchase_order_lines").insert(lines.map((l) => ({ purchase_order_id: po.id, description: l.desc, qty: l.qty, unit_cost: l.price })));
-              setModal(null); load();
+              const { data: po } = await mutate(supabase.from("purchase_orders").insert({ tenant_id: effectiveTenantId, vendor_id: vendorId, order_date: date, total, status: "draft" }).select().single());
+              if (!po) return;
+              const linesRes = await mutate(supabase.from("purchase_order_lines").insert(lines.map((l) => ({ purchase_order_id: po.id, description: l.desc, qty: l.qty, unit_cost: l.price }))), { successMessage: "Purchase order saved." });
+              if (ok(linesRes)) setModal(null);
+              load();
             }}
           />
         </Modal>
@@ -227,9 +242,11 @@ function ProcurementBody() {
             partyLabel="Vendor" parties={vendors} priceLabel="Unit cost" dueDate
             onClose={() => setModal(null)}
             onSubmit={async (vendorId, date, lines, total, dueDate) => {
-              const { data: b } = await supabase.from("bills").insert({ tenant_id: effectiveTenantId, vendor_id: vendorId, order_date: date, due_date: dueDate, total, status: "draft" }).select().single();
-              if (b) await supabase.from("bill_lines").insert(lines.map((l) => ({ bill_id: b.id, description: l.desc, qty: l.qty, unit_cost: l.price })));
-              setModal(null); load();
+              const { data: b } = await mutate(supabase.from("bills").insert({ tenant_id: effectiveTenantId, vendor_id: vendorId, order_date: date, due_date: dueDate, total, status: "draft" }).select().single());
+              if (!b) return;
+              const linesRes = await mutate(supabase.from("bill_lines").insert(lines.map((l) => ({ bill_id: b.id, description: l.desc, qty: l.qty, unit_cost: l.price }))), { successMessage: "Bill saved." });
+              if (ok(linesRes)) setModal(null);
+              load();
             }}
           />
         </Modal>
@@ -246,6 +263,22 @@ function ProcurementBody() {
           <BillDetail bill={openBill} paid={paidFor(openBill.id)} onPaid={() => { load(); setOpenBill(null); }} />
         </Modal>
       )}
+
+      {postingBill && (
+        <ConfirmDialog
+          title={postingBill.status === "pending_approval" ? "Approve bill?" : "Mark bill received?"}
+          message={
+            <>
+              This posts a journal entry (Dr Inventory or Expense / Cr Accounts Payable) for <strong>{money(postingBill.total)}</strong>.
+              It can&rsquo;t be undone from here.
+            </>
+          }
+          confirmLabel={postingBill.status === "pending_approval" ? "Approve" : "Mark received"}
+          busy={posting}
+          onCancel={() => setPostingBill(null)}
+          onConfirm={() => doPostBill(postingBill.id)}
+        />
+      )}
     </>
   );
 }
@@ -255,10 +288,11 @@ function ReceiptForm({ order, onClose, onSaved }: { order: any; onClose: () => v
   const [notes, setNotes] = useState("");
   const [lines, setLines] = useState<{ description: string; qty_received: string }[]>([{ description: "", qty_received: "" }]);
   const [poLines, setPoLines] = useState<any[]>([]);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase.from("purchase_order_lines").select("*").eq("purchase_order_id", order.id);
+      const { data } = await mutate(supabase.from("purchase_order_lines").select("*").eq("purchase_order_id", order.id));
       setPoLines(data ?? []);
       if (data && data.length > 0) setLines(data.map((l) => ({ description: l.description, qty_received: String(l.qty) })));
     })();
@@ -268,12 +302,14 @@ function ReceiptForm({ order, onClose, onSaved }: { order: any; onClose: () => v
   return (
     <form onSubmit={async (e) => {
       e.preventDefault();
-      const { data: gr } = await supabase.from("goods_receipts").insert({ tenant_id: effectiveTenantId, purchase_order_id: order.id, receipt_date: todayStr(), notes }).select().single();
-      if (gr) {
-        const validLines = lines.filter((l) => l.description && parseFloat(l.qty_received) > 0);
-        await supabase.from("goods_receipt_lines").insert(validLines.map((l) => ({ goods_receipt_id: gr.id, description: l.description, qty_received: parseFloat(l.qty_received) })));
-      }
-      onClose(); onSaved();
+      if (submitting) return;
+      setSubmitting(true);
+      const { data: gr } = await mutate(supabase.from("goods_receipts").insert({ tenant_id: effectiveTenantId, purchase_order_id: order.id, receipt_date: todayStr(), notes }).select().single());
+      if (!gr) { setSubmitting(false); return; }
+      const validLines = lines.filter((l) => l.description && parseFloat(l.qty_received) > 0);
+      const linesRes = await mutate(supabase.from("goods_receipt_lines").insert(validLines.map((l) => ({ goods_receipt_id: gr.id, description: l.description, qty_received: parseFloat(l.qty_received) }))), { successMessage: "Receipt recorded." });
+      setSubmitting(false);
+      if (ok(linesRes)) { onClose(); onSaved(); }
     }}>
       <div className="text-[12.5px] text-[#6b6357] mb-2">Confirm quantities actually received — edit if this is a partial delivery.</div>
       {lines.map((l, i) => (
@@ -284,7 +320,7 @@ function ReceiptForm({ order, onClose, onSaved }: { order: any; onClose: () => v
       ))}
       <Label>Notes (optional)</Label>
       <input className="input" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="e.g. Delivered by courier, 2 boxes damaged" />
-      <button type="submit" className="primary-btn mt-4">Save receipt</button>
+      <button type="submit" disabled={submitting} className="primary-btn mt-4">{submitting ? "Saving…" : "Save receipt"}</button>
       <FormStyles />
     </form>
   );
@@ -299,8 +335,8 @@ function BillDetail({ bill, paid, onPaid }: { bill: any; paid: number; onPaid: (
       </div>
       {balance > 0 ? (
         <RecordPaymentForm balance={balance} onSubmit={async (amount, date, method) => {
-          await supabase.rpc("record_bill_payment", { po_id: bill.id, pay_amount: amount, pay_date: date, pay_method: method });
-          onPaid();
+          const res = await mutate(supabase.rpc("record_bill_payment", { po_id: bill.id, pay_amount: amount, pay_date: date, pay_method: method }), { successMessage: "Payment recorded." });
+          if (ok(res)) onPaid();
         }} />
       ) : (
         <div className="text-[13px] font-semibold" style={{ color: "#12524F" }}>Paid in full ✓</div>
@@ -314,13 +350,21 @@ function BillDetail({ bill, paid, onPaid }: { bill: any; paid: number; onPaid: (
 function VendorForm({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
   const { effectiveTenantId } = useSession();
   const [name, setName] = useState(""); const [contact, setContact] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   return (
-    <form onSubmit={async (e) => { e.preventDefault(); await supabase.from("vendors").insert({ tenant_id: effectiveTenantId, name, contact }); onClose(); onSaved(); }}>
+    <form onSubmit={async (e) => {
+      e.preventDefault();
+      if (submitting) return;
+      setSubmitting(true);
+      const res = await mutate(supabase.from("vendors").insert({ tenant_id: effectiveTenantId, name, contact }), { successMessage: "Vendor added." });
+      setSubmitting(false);
+      if (ok(res)) { onClose(); onSaved(); }
+    }}>
       <Label>Vendor name</Label>
       <input className="input" value={name} onChange={(e) => setName(e.target.value)} required />
       <Label>Contact email</Label>
       <input className="input" value={contact} onChange={(e) => setContact(e.target.value)} />
-      <button type="submit" className="primary-btn mt-4">Save</button>
+      <button type="submit" disabled={submitting} className="primary-btn mt-4">{submitting ? "Saving…" : "Save"}</button>
       <FormStyles />
     </form>
   );

@@ -7,6 +7,7 @@ import AppShell from "@/components/AppShell";
 import { KpiCard, Panel, Empty, Modal, Label, GoldBtn, FormStyles } from "@/components/ui";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
+import { mutate, ok } from "@/lib/mutate";
 import { money, round2 } from "@/lib/types";
 
 const TEAL = "#12524F", GOLD = "#C08A2E", RED = "#A6402F", LINE = "#DDD8CC", INK = "#1B2430";
@@ -94,20 +95,24 @@ function ItemForm({ onClose, onSaved }: { onClose: () => void; onSaved: () => vo
   const { effectiveTenantId } = useSession();
   const [name, setName] = useState(""); const [sku, setSku] = useState("");
   const [qty, setQty] = useState(""); const [cost, setCost] = useState(""); const [reorder, setReorder] = useState("5");
+  const [submitting, setSubmitting] = useState(false);
   return (
     <form onSubmit={async (e) => {
       e.preventDefault();
-      await supabase.from("items").insert({
+      if (submitting) return;
+      setSubmitting(true);
+      const res = await mutate(supabase.from("items").insert({
         tenant_id: effectiveTenantId, name, sku, qty_on_hand: parseFloat(qty) || 0, unit_cost: parseFloat(cost) || 0, reorder_point: parseFloat(reorder) || 5,
-      });
-      onClose(); onSaved();
+      }), { successMessage: "Item added." });
+      setSubmitting(false);
+      if (ok(res)) { onClose(); onSaved(); }
     }}>
       <Label>Item name</Label><input className="input" value={name} onChange={(e) => setName(e.target.value)} required />
       <Label>SKU</Label><input className="input" value={sku} onChange={(e) => setSku(e.target.value)} required />
       <Label>Starting quantity</Label><input className="input" type="number" value={qty} onChange={(e) => setQty(e.target.value)} required />
       <Label>Unit cost</Label><input className="input" type="number" step="0.01" value={cost} onChange={(e) => setCost(e.target.value)} required />
       <Label>Reorder point</Label><input className="input" type="number" value={reorder} onChange={(e) => setReorder(e.target.value)} />
-      <button type="submit" className="primary-btn mt-4">Save</button>
+      <button type="submit" disabled={submitting} className="primary-btn mt-4">{submitting ? "Saving…" : "Save"}</button>
       <FormStyles />
     </form>
   );

@@ -6,6 +6,7 @@ import AppShell from "@/components/AppShell";
 import { KpiCard, Panel, Empty, Modal, Label, GoldBtn, OutlineBtn, FormStyles } from "@/components/ui";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
+import { mutate, ok } from "@/lib/mutate";
 import { money, todayStr } from "@/lib/types";
 
 const TEAL = "#12524F", RED = "#A6402F";
@@ -50,7 +51,7 @@ function BankingBody() {
   const bankBalance = txns.reduce((s, t) => s + t.amount, 0);
 
   const toggleReconciled = async (id: string, current: boolean) => {
-    await supabase.from("bank_transactions").update({ reconciled: !current }).eq("id", id);
+    await mutate(supabase.from("bank_transactions").update({ reconciled: !current }).eq("id", id));
     loadAccountDetail(selectedAccountId);
   };
 
@@ -130,18 +131,22 @@ function BankAccountForm({ onClose, onSaved }: { onClose: () => void; onSaved: (
   const { effectiveTenantId } = useSession();
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   return (
     <form onSubmit={async (e) => {
       e.preventDefault();
-      await supabase.from("accounts").insert({ tenant_id: effectiveTenantId, code: code || String(1000 + Math.floor(Math.random() * 900)), name, type: "asset", is_bank: true });
-      onClose(); onSaved();
+      if (submitting) return;
+      setSubmitting(true);
+      const res = await mutate(supabase.from("accounts").insert({ tenant_id: effectiveTenantId, code: code || String(1000 + Math.floor(Math.random() * 900)), name, type: "asset", is_bank: true }), { successMessage: "Bank account added." });
+      setSubmitting(false);
+      if (ok(res)) { onClose(); onSaved(); }
     }}>
       <Label>Account name</Label>
       <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. BDO Checking" required />
       <Label>Account code (optional)</Label>
       <input className="input" value={code} onChange={(e) => setCode(e.target.value)} placeholder="e.g. 1010 — auto-assigned if blank" />
-      <button type="submit" className="primary-btn mt-4">Save</button>
+      <button type="submit" disabled={submitting} className="primary-btn mt-4">{submitting ? "Saving…" : "Save"}</button>
       <FormStyles />
     </form>
   );
@@ -153,16 +158,19 @@ function BankTxnForm({ accountId, onClose, onSaved }: { accountId: string; onClo
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [kind, setKind] = useState<"deposit" | "withdrawal">("deposit");
+  const [submitting, setSubmitting] = useState(false);
 
   return (
     <form onSubmit={async (e) => {
       e.preventDefault();
       const n = parseFloat(amount);
-      if (!n) return;
-      await supabase.from("bank_transactions").insert({
+      if (!n || submitting) return;
+      setSubmitting(true);
+      const res = await mutate(supabase.from("bank_transactions").insert({
         tenant_id: effectiveTenantId, account_id: accountId, txn_date: date, description, amount: kind === "withdrawal" ? -Math.abs(n) : Math.abs(n),
-      });
-      onClose(); onSaved();
+      }), { successMessage: "Transaction added." });
+      setSubmitting(false);
+      if (ok(res)) { onClose(); onSaved(); }
     }}>
       <Label>Date</Label><input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
       <Label>Description</Label><input className="input" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="e.g. Wire from customer" required />
@@ -174,7 +182,7 @@ function BankTxnForm({ accountId, onClose, onSaved }: { accountId: string; onClo
         </div>
         <div><Label>Amount</Label><input className="input" type="number" min="0.01" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} required /></div>
       </div>
-      <button type="submit" className="primary-btn mt-4">Save</button>
+      <button type="submit" disabled={submitting} className="primary-btn mt-4">{submitting ? "Saving…" : "Save"}</button>
       <FormStyles />
     </form>
   );

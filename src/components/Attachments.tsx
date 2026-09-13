@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { Paperclip, Upload, Loader2, FileText } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useSession } from "@/lib/session";
+import { mutate, ok } from "@/lib/mutate";
+import { toast } from "@/lib/toast";
 
 export default function Attachments({ relatedTable, relatedId }: { relatedTable: string; relatedId: string }) {
   const { effectiveTenantId } = useSession();
@@ -25,18 +27,21 @@ export default function Attachments({ relatedTable, relatedId }: { relatedTable:
     setUploading(true);
     const path = `${effectiveTenantId}/${relatedTable}/${relatedId}/${Date.now()}-${file.name}`;
     const { error } = await supabase.storage.from("attachments").upload(path, file);
-    if (!error) {
-      await supabase.from("attachments").insert({
+    if (error) {
+      toast.error(error.message || "Upload failed — the file was not attached.");
+    } else {
+      const res = await mutate(supabase.from("attachments").insert({
         tenant_id: effectiveTenantId, related_table: relatedTable, related_id: relatedId, file_path: path, file_name: file.name,
-      });
-      await load();
+      }), { successMessage: "File attached." });
+      if (ok(res)) await load();
     }
     setUploading(false);
     e.target.value = "";
   };
 
   const openFile = async (path: string) => {
-    const { data } = await supabase.storage.from("attachments").createSignedUrl(path, 60);
+    const { data, error } = await supabase.storage.from("attachments").createSignedUrl(path, 60);
+    if (error) { toast.error(error.message || "Couldn't open that file."); return; }
     if (data?.signedUrl) window.open(data.signedUrl, "_blank");
   };
 

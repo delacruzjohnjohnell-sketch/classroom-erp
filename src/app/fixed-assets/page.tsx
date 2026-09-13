@@ -6,6 +6,7 @@ import AppShell from "@/components/AppShell";
 import { KpiCard, Panel, Empty, Modal, Label, GoldBtn, TinyBtn, FormStyles } from "@/components/ui";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
+import { mutate, ok } from "@/lib/mutate";
 import { money, round2, todayStr } from "@/lib/types";
 
 const TEAL = "#12524F";
@@ -40,7 +41,7 @@ function FixedAssetsBody() {
   const recordDepreciation = async (asset: any) => {
     const amount = Math.min(monthlyDep(asset), asset.cost - asset.salvage_value - asset.accumulated_depreciation);
     if (amount <= 0) return;
-    await supabase.rpc("record_depreciation", { asset_id: asset.id, dep_amount: amount, dep_date: todayStr() });
+    await mutate(supabase.rpc("record_depreciation", { asset_id: asset.id, dep_amount: amount, dep_date: todayStr() }), { successMessage: "Depreciation recorded." });
     load();
   };
 
@@ -103,15 +104,19 @@ function AssetForm({ onClose, onSaved }: { onClose: () => void; onSaved: () => v
   const [cost, setCost] = useState("");
   const [salvage, setSalvage] = useState("0");
   const [usefulLife, setUsefulLife] = useState("36");
+  const [submitting, setSubmitting] = useState(false);
 
   return (
     <form onSubmit={async (e) => {
       e.preventDefault();
-      await supabase.from("fixed_assets").insert({
+      if (submitting) return;
+      setSubmitting(true);
+      const res = await mutate(supabase.from("fixed_assets").insert({
         tenant_id: effectiveTenantId, name, purchase_date: purchaseDate,
         cost: parseFloat(cost) || 0, salvage_value: parseFloat(salvage) || 0, useful_life_months: parseInt(usefulLife) || 36,
-      });
-      onClose(); onSaved();
+      }), { successMessage: "Asset added." });
+      setSubmitting(false);
+      if (ok(res)) { onClose(); onSaved(); }
     }}>
       <Label>Asset name</Label><input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Delivery van" required />
       <Label>Purchase date</Label><input className="input" type="date" value={purchaseDate} onChange={(e) => setPurchaseDate(e.target.value)} required />
@@ -122,7 +127,7 @@ function AssetForm({ onClose, onSaved }: { onClose: () => void; onSaved: () => v
       <Label>Useful life (months)</Label>
       <input className="input" type="number" value={usefulLife} onChange={(e) => setUsefulLife(e.target.value)} required />
       <div className="text-[12px] text-[#8a8172] mt-1">Straight-line: (cost − salvage) ÷ useful life months</div>
-      <button type="submit" className="primary-btn mt-4">Save</button>
+      <button type="submit" disabled={submitting} className="primary-btn mt-4">{submitting ? "Saving…" : "Save"}</button>
       <FormStyles />
     </form>
   );

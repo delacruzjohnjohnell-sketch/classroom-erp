@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 
 export function KpiCard({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: string | number; accent?: string }) {
   return (
@@ -38,6 +38,42 @@ export function Modal({ title, onClose, children, wide }: { title: string; onClo
         {children}
       </div>
     </div>
+  );
+}
+
+export function ConfirmDialog({
+  title,
+  message,
+  confirmLabel = "Confirm",
+  danger,
+  busy,
+  onConfirm,
+  onCancel,
+}: {
+  title: string;
+  message: React.ReactNode;
+  confirmLabel?: string;
+  danger?: boolean;
+  busy?: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <Modal title={title} onClose={onCancel}>
+      <div className="text-[13px] text-[#6b6357] leading-relaxed mt-2 mb-5">{message}</div>
+      <div className="flex gap-2 justify-end">
+        <OutlineBtn onClick={onCancel} disabled={busy}>
+          Cancel
+        </OutlineBtn>
+        <GoldBtn
+          onClick={onConfirm}
+          disabled={busy}
+          style={danger ? { background: "#A6402F" } : undefined}
+        >
+          {busy ? <Loader2 size={13} className="animate-spin" /> : null} {confirmLabel}
+        </GoldBtn>
+      </div>
+    </Modal>
   );
 }
 

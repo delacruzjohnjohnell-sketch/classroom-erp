@@ -5,11 +5,12 @@ import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { Plus, Check, Loader2, Users, ShoppingCart, Receipt, ArrowRight } from "lucide-react";
 import AppShell from "@/components/AppShell";
-import { KpiCard, Panel, Empty, Modal, Label, GoldBtn, OutlineBtn, TinyBtn, StatusPill, FormStyles } from "@/components/ui";
+import { KpiCard, Panel, Empty, Modal, ConfirmDialog, Label, GoldBtn, OutlineBtn, TinyBtn, StatusPill, FormStyles } from "@/components/ui";
 import { PaymentStatusPill, RecordPaymentForm, computePaymentStatus } from "@/components/PaymentUI";
 import Attachments from "@/components/Attachments";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
+import { mutate, ok } from "@/lib/mutate";
 import { money } from "@/lib/types";
 import LineItemForm from "@/components/LineItemForm";
 
@@ -44,6 +45,8 @@ function SalesBody() {
   const [openInvoice, setOpenInvoice] = useState<any | null>(null);
   const [convertingQuote, setConvertingQuote] = useState<any | null>(null);
   const [convertingOrder, setConvertingOrder] = useState<any | null>(null);
+  const [postingInvoice, setPostingInvoice] = useState<any | null>(null);
+  const [posting, setPosting] = useState(false);
 
   const load = async () => {
     if (!effectiveTenantId) return;
@@ -73,10 +76,16 @@ function SalesBody() {
   const totalOutstanding = invoices.filter((o) => o.status === "fulfilled").reduce((s, o) => s + Math.max(0, o.total - paidFor(o.id)), 0);
   const pendingCount = invoices.filter((o) => o.status === "pending_approval").length;
 
-  const postInvoice = async (id: string) => { await supabase.rpc("post_invoice", { target_invoice_id: id }); load(); };
-  const confirmOrder = async (id: string) => { await supabase.from("sales_orders").update({ status: "confirmed" }).eq("id", id); load(); };
-  const acceptQuote = async (id: string) => { await supabase.from("quotes").update({ status: "accepted" }).eq("id", id); load(); };
-  const declineQuote = async (id: string) => { await supabase.from("quotes").update({ status: "declined" }).eq("id", id); load(); };
+  const doPostInvoice = async (id: string) => {
+    setPosting(true);
+    const res = await mutate(supabase.rpc("post_invoice", { target_invoice_id: id }), { successMessage: "Invoice posted." });
+    setPosting(false);
+    if (ok(res)) setPostingInvoice(null);
+    load();
+  };
+  const confirmOrder = async (id: string) => { await mutate(supabase.from("sales_orders").update({ status: "confirmed" }).eq("id", id)); load(); };
+  const acceptQuote = async (id: string) => { await mutate(supabase.from("quotes").update({ status: "accepted" }).eq("id", id)); load(); };
+  const declineQuote = async (id: string) => { await mutate(supabase.from("quotes").update({ status: "declined" }).eq("id", id)); load(); };
 
   if (loading) return <div className="py-16 flex justify-center"><Loader2 className="animate-spin" size={20} color={TEAL} /></div>;
 
@@ -105,8 +114,8 @@ function SalesBody() {
             <input className="input" type="number" style={{ width: 160 }} defaultValue={threshold ?? ""} placeholder="e.g. 50000"
               onBlur={async (e) => {
                 const val = e.target.value ? parseFloat(e.target.value) : null;
-                await supabase.from("tenants").update({ approval_threshold: val }).eq("id", effectiveTenantId);
-                setThreshold(val);
+                const res = await mutate(supabase.from("tenants").update({ approval_threshold: val }).eq("id", effectiveTenantId));
+                if (ok(res)) setThreshold(val);
               }} />
           </div>
         </Panel>
@@ -201,8 +210,8 @@ function SalesBody() {
                         <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{money(Math.max(0, o.total - paid))}</td>
                         <td><PaymentStatusPill status={status} /></td>
                         <td className="flex gap-1.5">
-                          {o.status === "draft" && <TinyBtn onClick={() => postInvoice(o.id)}><Check size={12} /> Send invoice</TinyBtn>}
-                          {o.status === "pending_approval" && profile?.role === "teacher" && <TinyBtn onClick={() => postInvoice(o.id)}><Check size={12} /> Approve</TinyBtn>}
+                          {o.status === "draft" && <TinyBtn onClick={() => setPostingInvoice(o)}><Check size={12} /> Send invoice</TinyBtn>}
+                          {o.status === "pending_approval" && profile?.role === "teacher" && <TinyBtn onClick={() => setPostingInvoice(o)}><Check size={12} /> Approve</TinyBtn>}
                           {o.status === "pending_approval" && profile?.role !== "teacher" && <span className="text-[11px] text-[#8a8172]">Awaiting teacher approval</span>}
                           {o.status === "fulfilled" && <TinyBtn onClick={() => setOpenInvoice(o)}>Details</TinyBtn>}
                         </td>
@@ -228,9 +237,11 @@ function SalesBody() {
             partyLabel="Customer" parties={customers} priceLabel="Unit price" itemOptions={items}
             onClose={() => setModal(null)}
             onSubmit={async (customerId, date, lines, total) => {
-              const { data: q } = await supabase.from("quotes").insert({ tenant_id: effectiveTenantId, customer_id: customerId, quote_date: date, total, status: "draft" }).select().single();
-              if (q) await supabase.from("quote_lines").insert(lines.map((l) => ({ quote_id: q.id, item_id: l.item_id ?? null, description: l.desc, qty: l.qty, unit_price: l.price })));
-              setModal(null); load();
+              const { data: q } = await mutate(supabase.from("quotes").insert({ tenant_id: effectiveTenantId, customer_id: customerId, quote_date: date, total, status: "draft" }).select().single());
+              if (!q) return;
+              const linesRes = await mutate(supabase.from("quote_lines").insert(lines.map((l) => ({ quote_id: q.id, item_id: l.item_id ?? null, description: l.desc, qty: l.qty, unit_price: l.price }))), { successMessage: "Quote saved." });
+              if (ok(linesRes)) setModal(null);
+              load();
             }}
           />
         </Modal>
@@ -242,9 +253,11 @@ function SalesBody() {
             partyLabel="Customer" parties={customers} priceLabel="Unit price" itemOptions={items}
             onClose={() => setModal(null)}
             onSubmit={async (customerId, date, lines, total) => {
-              const { data: o } = await supabase.from("sales_orders").insert({ tenant_id: effectiveTenantId, customer_id: customerId, order_date: date, total, status: "draft" }).select().single();
-              if (o) await supabase.from("sales_order_lines").insert(lines.map((l) => ({ sales_order_id: o.id, item_id: l.item_id ?? null, description: l.desc, qty: l.qty, unit_price: l.price })));
-              setModal(null); load();
+              const { data: o } = await mutate(supabase.from("sales_orders").insert({ tenant_id: effectiveTenantId, customer_id: customerId, order_date: date, total, status: "draft" }).select().single());
+              if (!o) return;
+              const linesRes = await mutate(supabase.from("sales_order_lines").insert(lines.map((l) => ({ sales_order_id: o.id, item_id: l.item_id ?? null, description: l.desc, qty: l.qty, unit_price: l.price }))), { successMessage: "Sales order saved." });
+              if (ok(linesRes)) setModal(null);
+              load();
             }}
           />
         </Modal>
@@ -256,9 +269,11 @@ function SalesBody() {
             partyLabel="Customer" parties={customers} priceLabel="Unit price" itemOptions={items} dueDate
             onClose={() => setModal(null)}
             onSubmit={async (customerId, date, lines, total, dueDate) => {
-              const { data: inv } = await supabase.from("invoices").insert({ tenant_id: effectiveTenantId, customer_id: customerId, order_date: date, due_date: dueDate, total, status: "draft" }).select().single();
-              if (inv) await supabase.from("invoice_lines").insert(lines.map((l) => ({ invoice_id: inv.id, item_id: l.item_id ?? null, description: l.desc, qty: l.qty, unit_price: l.price })));
-              setModal(null); load();
+              const { data: inv } = await mutate(supabase.from("invoices").insert({ tenant_id: effectiveTenantId, customer_id: customerId, order_date: date, due_date: dueDate, total, status: "draft" }).select().single());
+              if (!inv) return;
+              const linesRes = await mutate(supabase.from("invoice_lines").insert(lines.map((l) => ({ invoice_id: inv.id, item_id: l.item_id ?? null, description: l.desc, qty: l.qty, unit_price: l.price }))), { successMessage: "Invoice saved." });
+              if (ok(linesRes)) setModal(null);
+              load();
             }}
           />
         </Modal>
@@ -268,8 +283,9 @@ function SalesBody() {
         <Modal title={`Convert ${convertingQuote.document_number} to Sales Order`} onClose={() => setConvertingQuote(null)}>
           <ConvertForm label="Expected date (optional)" onClose={() => setConvertingQuote(null)}
             onSubmit={async (date) => {
-              await supabase.rpc("convert_quote_to_sales_order", { target_quote_id: convertingQuote.id, expected_date: date || null });
-              setConvertingQuote(null); load(); setTab("orders");
+              const res = await mutate(supabase.rpc("convert_quote_to_sales_order", { target_quote_id: convertingQuote.id, expected_date: date || null }), { successMessage: "Converted to sales order." });
+              load();
+              if (ok(res)) { setConvertingQuote(null); setTab("orders"); }
             }} />
         </Modal>
       )}
@@ -278,8 +294,9 @@ function SalesBody() {
         <Modal title={`Convert ${convertingOrder.document_number} to Invoice`} onClose={() => setConvertingOrder(null)}>
           <ConvertForm label="Invoice due date (optional)" onClose={() => setConvertingOrder(null)}
             onSubmit={async (date) => {
-              await supabase.rpc("convert_sales_order_to_invoice", { so_id: convertingOrder.id, due_date: date || null });
-              setConvertingOrder(null); load(); setTab("invoices");
+              const res = await mutate(supabase.rpc("convert_sales_order_to_invoice", { so_id: convertingOrder.id, due_date: date || null }), { successMessage: "Converted to invoice." });
+              load();
+              if (ok(res)) { setConvertingOrder(null); setTab("invoices"); }
             }} />
         </Modal>
       )}
@@ -289,17 +306,39 @@ function SalesBody() {
           <InvoiceDetail invoice={openInvoice} paid={paidFor(openInvoice.id)} onPaid={() => { load(); setOpenInvoice(null); }} />
         </Modal>
       )}
+
+      {postingInvoice && (
+        <ConfirmDialog
+          title={postingInvoice.status === "pending_approval" ? "Approve invoice?" : "Send invoice?"}
+          message={
+            <>
+              This posts a journal entry (Dr Accounts Receivable / Cr Revenue) for <strong>{money(postingInvoice.total)}</strong> and
+              decrements inventory for the line items. It can&rsquo;t be undone from here.
+            </>
+          }
+          confirmLabel={postingInvoice.status === "pending_approval" ? "Approve" : "Send invoice"}
+          busy={posting}
+          onCancel={() => setPostingInvoice(null)}
+          onConfirm={() => doPostInvoice(postingInvoice.id)}
+        />
+      )}
     </>
   );
 }
 
-function ConvertForm({ label, onClose, onSubmit }: { label: string; onClose: () => void; onSubmit: (date: string) => void }) {
+function ConvertForm({ label, onClose, onSubmit }: { label: string; onClose: () => void; onSubmit: (date: string) => void | Promise<void> }) {
   const [date, setDate] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   return (
-    <form onSubmit={(e) => { e.preventDefault(); onSubmit(date); }}>
+    <form onSubmit={async (e) => {
+      e.preventDefault();
+      if (submitting) return;
+      setSubmitting(true);
+      try { await onSubmit(date); } finally { setSubmitting(false); }
+    }}>
       <Label>{label}</Label>
       <input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-      <button type="submit" className="primary-btn mt-4">Convert</button>
+      <button type="submit" disabled={submitting} className="primary-btn mt-4">{submitting ? "Converting…" : "Convert"}</button>
       <FormStyles />
     </form>
   );
@@ -314,8 +353,8 @@ function InvoiceDetail({ invoice, paid, onPaid }: { invoice: any; paid: number; 
       </div>
       {balance > 0 ? (
         <RecordPaymentForm balance={balance} onSubmit={async (amount, date, method) => {
-          await supabase.rpc("record_invoice_payment", { so_id: invoice.id, pay_amount: amount, pay_date: date, pay_method: method });
-          onPaid();
+          const res = await mutate(supabase.rpc("record_invoice_payment", { so_id: invoice.id, pay_amount: amount, pay_date: date, pay_method: method }), { successMessage: "Payment recorded." });
+          if (ok(res)) onPaid();
         }} />
       ) : (
         <div className="text-[13px] font-semibold" style={{ color: "#12524F" }}>Paid in full ✓</div>
@@ -329,11 +368,19 @@ function InvoiceDetail({ invoice, paid, onPaid }: { invoice: any; paid: number; 
 function CustomerForm({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
   const { effectiveTenantId } = useSession();
   const [name, setName] = useState(""); const [email, setEmail] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   return (
-    <form onSubmit={async (e) => { e.preventDefault(); await supabase.from("customers").insert({ tenant_id: effectiveTenantId, name, email }); onClose(); onSaved(); }}>
+    <form onSubmit={async (e) => {
+      e.preventDefault();
+      if (submitting) return;
+      setSubmitting(true);
+      const res = await mutate(supabase.from("customers").insert({ tenant_id: effectiveTenantId, name, email }), { successMessage: "Customer added." });
+      setSubmitting(false);
+      if (ok(res)) { onClose(); onSaved(); }
+    }}>
       <Label>Customer name</Label><input className="input" value={name} onChange={(e) => setName(e.target.value)} required />
       <Label>Email</Label><input className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
-      <button type="submit" className="primary-btn mt-4">Save</button>
+      <button type="submit" disabled={submitting} className="primary-btn mt-4">{submitting ? "Saving…" : "Save"}</button>
       <FormStyles />
     </form>
   );

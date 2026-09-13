@@ -8,9 +8,10 @@ import {
   FileText, Clock, CalendarDays, HandCoins, Check, X, Gift,
 } from "lucide-react";
 import AppShell from "@/components/AppShell";
-import { KpiCard, Panel, Empty, Modal, Label, GoldBtn, OutlineBtn, TinyBtn, FormStyles } from "@/components/ui";
+import { KpiCard, Panel, Empty, Modal, ConfirmDialog, Label, GoldBtn, OutlineBtn, TinyBtn, FormStyles } from "@/components/ui";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
+import { mutate, ok } from "@/lib/mutate";
 import { money, todayStr } from "@/lib/types";
 import { computePayrollForPeriod, computeHourlyPayrollForPeriod, getPeriodDateRange, type PayrollBreakdown, type PayPeriod } from "@/lib/philippinePayroll";
 
@@ -42,6 +43,7 @@ function HrBody() {
 
   const [modal, setModal] = useState<null | "employee" | "time" | "leave" | "loan">(null);
   const [previewing, setPreviewing] = useState(false);
+  const [confirming13th, setConfirming13th] = useState(false);
   const [posting13th, setPosting13th] = useState(false);
   const [expandedRun, setExpandedRun] = useState<string | null>(null);
   const [runLines, setRunLines] = useState<Record<string, any[]>>({});
@@ -75,14 +77,15 @@ function HrBody() {
   };
 
   const setLeaveStatus = async (id: string, status: "approved" | "denied") => {
-    await supabase.from("leave_requests").update({ status }).eq("id", id);
+    await mutate(supabase.from("leave_requests").update({ status }).eq("id", id));
     load();
   };
 
   const post13thMonth = async () => {
     setPosting13th(true);
-    await supabase.rpc("post_13th_month_pay", { target_tenant: effectiveTenantId, pay_year: new Date().getFullYear() });
+    const res = await mutate(supabase.rpc("post_13th_month_pay", { target_tenant: effectiveTenantId, pay_year: new Date().getFullYear() }), { successMessage: "13th month pay posted." });
     setPosting13th(false);
+    if (ok(res)) setConfirming13th(false);
     load();
   };
 
@@ -214,7 +217,7 @@ function HrBody() {
         <>
           <div className="flex gap-2 flex-wrap">
             <OutlineBtn onClick={() => setPreviewing(true)} disabled={employees.length === 0}><PhilippinePeso size={14} /> Run payroll</OutlineBtn>
-            <OutlineBtn onClick={post13thMonth} disabled={posting13th || employees.length === 0}>
+            <OutlineBtn onClick={() => setConfirming13th(true)} disabled={posting13th || employees.length === 0}>
               <Gift size={14} /> {posting13th ? "Posting…" : `Post 13th month pay (${new Date().getFullYear()})`}
             </OutlineBtn>
           </div>
@@ -286,6 +289,16 @@ function HrBody() {
         <PayrollPreviewModal employees={employees} activeLoans={activeLoans} tenantId={effectiveTenantId!}
           onClose={() => setPreviewing(false)} onPosted={() => { setPreviewing(false); load(); }} />
       )}
+      {confirming13th && (
+        <ConfirmDialog
+          title="Post 13th month pay?"
+          message={`This posts one payroll expense entry per employee for ${new Date().getFullYear()}'s 13th month pay. It can't be undone from here.`}
+          confirmLabel="Post 13th month pay"
+          busy={posting13th}
+          onCancel={() => setConfirming13th(false)}
+          onConfirm={post13thMonth}
+        />
+      )}
     </>
   );
 }
@@ -298,17 +311,21 @@ function EmployeeForm({ onClose, onSaved }: { onClose: () => void; onSaved: () =
   const [hourlyRate, setHourlyRate] = useState("");
   const [tin, setTin] = useState(""); const [sss, setSss] = useState("");
   const [philhealth, setPhilhealth] = useState(""); const [pagibig, setPagibig] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   return (
     <form onSubmit={async (e) => {
       e.preventDefault();
-      await supabase.from("employees").insert({
+      if (submitting) return;
+      setSubmitting(true);
+      const res = await mutate(supabase.from("employees").insert({
         tenant_id: effectiveTenantId, name, title, department,
         salary: payType === "monthly" ? (parseFloat(salary) || 0) : 0,
         pay_type: payType, hourly_rate: payType === "hourly" ? (parseFloat(hourlyRate) || 0) : null,
         tin: tin || null, sss_number: sss || null, philhealth_number: philhealth || null, pagibig_number: pagibig || null,
-      });
-      onClose(); onSaved();
+      }), { successMessage: "Employee added." });
+      setSubmitting(false);
+      if (ok(res)) { onClose(); onSaved(); }
     }}>
       <Label>Full name</Label><input className="input" value={name} onChange={(e) => setName(e.target.value)} required />
       <Label>Job title</Label><input className="input" value={title} onChange={(e) => setTitle(e.target.value)} required />
@@ -335,7 +352,7 @@ function EmployeeForm({ onClose, onSaved }: { onClose: () => void; onSaved: () =
         <div><Label>Pag-IBIG No.</Label><input className="input" value={pagibig} onChange={(e) => setPagibig(e.target.value)} placeholder="0000-0000-0000" /></div>
       </div>
 
-      <button type="submit" className="primary-btn mt-4">Save</button>
+      <button type="submit" disabled={submitting} className="primary-btn mt-4">{submitting ? "Saving…" : "Save"}</button>
       <FormStyles />
     </form>
   );
@@ -347,12 +364,16 @@ function TimeEntryForm({ employees, onClose, onSaved }: { employees: any[]; onCl
   const [date, setDate] = useState(todayStr());
   const [hours, setHours] = useState("");
   const [notes, setNotes] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   return (
     <form onSubmit={async (e) => {
       e.preventDefault();
-      await supabase.from("time_entries").insert({ tenant_id: effectiveTenantId, employee_id: employeeId, work_date: date, hours_worked: parseFloat(hours) || 0, notes });
-      onClose(); onSaved();
+      if (submitting) return;
+      setSubmitting(true);
+      const res = await mutate(supabase.from("time_entries").insert({ tenant_id: effectiveTenantId, employee_id: employeeId, work_date: date, hours_worked: parseFloat(hours) || 0, notes }), { successMessage: "Time logged." });
+      setSubmitting(false);
+      if (ok(res)) { onClose(); onSaved(); }
     }}>
       <Label>Employee</Label>
       <select className="input" value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} required>
@@ -364,7 +385,7 @@ function TimeEntryForm({ employees, onClose, onSaved }: { employees: any[]; onCl
       </div>
       <Label>Notes (optional)</Label>
       <input className="input" value={notes} onChange={(e) => setNotes(e.target.value)} />
-      <button type="submit" className="primary-btn mt-4">Save</button>
+      <button type="submit" disabled={submitting} className="primary-btn mt-4">{submitting ? "Saving…" : "Save"}</button>
       <FormStyles />
     </form>
   );
@@ -377,17 +398,21 @@ function LeaveForm({ employees, onClose, onSaved }: { employees: any[]; onClose:
   const [start, setStart] = useState(todayStr());
   const [end, setEnd] = useState(todayStr());
   const [reason, setReason] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const days = Math.max(1, Math.round((new Date(end).getTime() - new Date(start).getTime()) / 86400000) + 1);
 
   return (
     <form onSubmit={async (e) => {
       e.preventDefault();
-      await supabase.from("leave_requests").insert({
+      if (submitting) return;
+      setSubmitting(true);
+      const res = await mutate(supabase.from("leave_requests").insert({
         tenant_id: effectiveTenantId, employee_id: employeeId, leave_type: leaveType,
         start_date: start, end_date: end, days, reason, status: "pending",
-      });
-      onClose(); onSaved();
+      }), { successMessage: "Leave request submitted." });
+      setSubmitting(false);
+      if (ok(res)) { onClose(); onSaved(); }
     }}>
       <Label>Employee</Label>
       <select className="input" value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} required>
@@ -405,7 +430,7 @@ function LeaveForm({ employees, onClose, onSaved }: { employees: any[]; onClose:
       <div className="text-[12px] text-[#8a8172] mt-1">{days} day{days !== 1 ? "s" : ""}</div>
       <Label>Reason (optional)</Label>
       <input className="input" value={reason} onChange={(e) => setReason(e.target.value)} />
-      <button type="submit" className="primary-btn mt-4">Submit request</button>
+      <button type="submit" disabled={submitting} className="primary-btn mt-4">{submitting ? "Submitting…" : "Submit request"}</button>
       <FormStyles />
     </form>
   );
@@ -417,15 +442,19 @@ function LoanForm({ employees, onClose, onSaved }: { employees: any[]; onClose: 
   const [principal, setPrincipal] = useState("");
   const [monthlyDeduction, setMonthlyDeduction] = useState("");
   const [date, setDate] = useState(todayStr());
+  const [submitting, setSubmitting] = useState(false);
 
   return (
     <form onSubmit={async (e) => {
       e.preventDefault();
-      await supabase.rpc("issue_employee_loan", {
+      if (submitting) return;
+      setSubmitting(true);
+      const res = await mutate(supabase.rpc("issue_employee_loan", {
         target_tenant: effectiveTenantId, target_employee_id: employeeId,
         loan_principal: parseFloat(principal) || 0, loan_monthly_deduction: parseFloat(monthlyDeduction) || 0, loan_date: date,
-      });
-      onClose(); onSaved();
+      }), { successMessage: "Loan issued." });
+      setSubmitting(false);
+      if (ok(res)) { onClose(); onSaved(); }
     }}>
       <Label>Employee</Label>
       <select className="input" value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} required>
@@ -438,7 +467,7 @@ function LoanForm({ employees, onClose, onSaved }: { employees: any[]; onClose: 
       <Label>Date issued</Label>
       <input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
       <div className="text-[12px] text-[#8a8172] mt-1">Posts Dr Employee Loans Receivable / Cr Cash immediately.</div>
-      <button type="submit" className="primary-btn mt-4">Issue loan</button>
+      <button type="submit" disabled={submitting} className="primary-btn mt-4">{submitting ? "Issuing…" : "Issue loan"}</button>
       <FormStyles />
     </form>
   );
@@ -485,9 +514,9 @@ function PayrollPreviewModal({ employees, activeLoans, tenantId, onClose, onPost
 
   const post = async () => {
     setPosting(true);
-    await supabase.rpc("run_payroll_ph", { target_tenant: tenantId, run_date: todayStr(), lines: breakdown, pay_period: payPeriod });
+    const res = await mutate(supabase.rpc("run_payroll_ph", { target_tenant: tenantId, run_date: todayStr(), lines: breakdown, pay_period: payPeriod }), { successMessage: "Payroll posted." });
     setPosting(false);
-    onPosted();
+    if (ok(res)) onPosted();
   };
 
   return (

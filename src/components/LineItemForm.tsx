@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Loader2 } from "lucide-react";
 import { Label } from "./ui";
 import { money, todayStr, round2 } from "@/lib/types";
 
@@ -17,11 +17,12 @@ export default function LineItemForm({
   itemOptions?: ItemOption[];
   dueDate?: boolean;
   onClose: () => void;
-  onSubmit: (partyId: string, date: string, lines: { desc: string; qty: number; price: number; item_id?: string }[], total: number, dueDate: string | null) => void;
+  onSubmit: (partyId: string, date: string, lines: { desc: string; qty: number; price: number; item_id?: string }[], total: number, dueDate: string | null) => void | Promise<void>;
 }) {
   const [partyId, setPartyId] = useState(parties[0]?.id ?? "");
   const [date, setDate] = useState(todayStr());
   const [due, setDue] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [lines, setLines] = useState([
     { desc: itemOptions?.[0]?.name ?? "", item_id: itemOptions?.[0]?.id, qty: "1", price: String(itemOptions?.[0]?.unit_cost ?? "") },
   ]);
@@ -32,10 +33,15 @@ export default function LineItemForm({
 
   return (
     <form
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault();
-        if (!partyId || total <= 0) return;
-        onSubmit(partyId, date, lines.map((l) => ({ desc: l.desc, qty: parseFloat(l.qty) || 0, price: parseFloat(l.price) || 0, item_id: l.item_id })), round2(total), due || null);
+        if (!partyId || total <= 0 || submitting) return;
+        setSubmitting(true);
+        try {
+          await onSubmit(partyId, date, lines.map((l) => ({ desc: l.desc, qty: parseFloat(l.qty) || 0, price: parseFloat(l.price) || 0, item_id: l.item_id })), round2(total), due || null);
+        } finally {
+          setSubmitting(false);
+        }
       }}
     >
       <div className="grid grid-cols-2 gap-2.5">
@@ -77,7 +83,9 @@ export default function LineItemForm({
       </div>
 
       <div className="text-[12.5px] font-semibold mt-2.5">Total: {money(total)}</div>
-      <button type="submit" disabled={!partyId || total <= 0} className="primary-btn mt-2">Save</button>
+      <button type="submit" disabled={!partyId || total <= 0 || submitting} className="primary-btn mt-2">
+        {submitting ? <Loader2 size={14} className="animate-spin" /> : null} {submitting ? "Saving…" : "Save"}
+      </button>
       <style jsx global>{`
         .input { font-size: 14px; padding: 9px 11px; border-radius: 8px; border: 1px solid #DDD8CC; background: #F5F3EE; color: #1B2430; outline: none; width: 100%; }
         .primary-btn { display: flex; align-items: center; justify-content: center; gap: 6px; background: #12524F; color: #fff; border: none; padding: 11px 14px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; }

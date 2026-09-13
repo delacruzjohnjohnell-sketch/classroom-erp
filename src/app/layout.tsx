@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { SessionProvider } from "@/lib/session";
+import { ToastHost } from "@/lib/toast";
 
 export const metadata: Metadata = {
   title: "JJ and Co. — Classroom ERP",
@@ -12,6 +13,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <SessionProvider>{children}</SessionProvider>
+        <ToastHost />
       </body>
     </html>
   );

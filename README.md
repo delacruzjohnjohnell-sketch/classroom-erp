@@ -46,10 +46,13 @@ at once. Free to run and host.
    run it. This adds an hourly pay type, so time tracking actually feeds into pay for those employees.
 15. Open a **twelfth** New query, paste in `supabase/migrations/0012_recurring_entries.sql`, and run
    it. This adds recurring journal entry templates.
-16. Go to **Authentication → Providers → Email**, make sure the **Email** provider itself is enabled,
+16. Open a **thirteenth** New query, paste in `supabase/migrations/0013_auth_trigger_error_handling.sql`,
+   and run it. This wraps the signup trigger in exception handling, so a failed signup surfaces a clear
+   message instead of a bare Postgres error, and logs the real cause for you to debug.
+17. Go to **Authentication → Providers → Email**, make sure the **Email** provider itself is enabled,
    and turn **off** "Confirm email" for the fastest classroom setup (students can sign up and start
    immediately). Turn it back on if you want email verification for a real deployment.
-17. Go to **Project Settings → API** and copy your **Project URL** and **Publishable key** (this is
+18. Go to **Project Settings → API** and copy your **Project URL** and **Publishable key** (this is
    what used to be called the "anon key" — it's safe to use in the browser).
 
 ## 2. Run it locally

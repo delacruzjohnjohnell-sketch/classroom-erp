@@ -7,6 +7,7 @@ import { Panel, Empty, Modal, Label, GoldBtn, OutlineBtn, TinyBtn, FormStyles } 
 import Attachments from "@/components/Attachments";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
+import { mutate, ok } from "@/lib/mutate";
 import { money, todayStr, type Account } from "@/lib/types";
 import { computeAccountBalances, type EntryWithLines } from "@/lib/metrics";
 
@@ -57,30 +58,26 @@ function FinancialsBody() {
   const balances = useMemo(() => computeAccountBalances(entries), [entries]);
   const accountsById = Object.fromEntries(accounts.map((a) => [a.id, a]));
 
-  const [postError, setPostError] = useState("");
-
   const postEntry = async (date: string, memo: string, lines: { account_id: string; debit: number; credit: number }[]) => {
-    setPostError("");
-    const { data: je, error } = await supabase.from("journal_entries")
-      .insert({ tenant_id: effectiveTenantId, entry_date: date, memo }).select().single();
-    if (error || !je) { setPostError(error?.message || "Could not post entry."); return; }
-    const { error: lineErr } = await supabase.from("journal_lines").insert(lines.map((l) => ({ ...l, journal_entry_id: je.id })));
-    if (lineErr) { setPostError(lineErr.message); return; }
-    setModal(null);
+    const { data: je } = await mutate(supabase.from("journal_entries")
+      .insert({ tenant_id: effectiveTenantId, entry_date: date, memo }).select().single());
+    if (!je) return;
+    const linesRes = await mutate(supabase.from("journal_lines").insert(lines.map((l) => ({ ...l, journal_entry_id: je.id }))), { successMessage: "Entry posted." });
+    if (ok(linesRes)) setModal(null);
     load();
   };
 
   const reverseEntry = async (entryId: string) => {
     setReversing(entryId);
-    const { error } = await supabase.rpc("reverse_journal_entry", { original_id: entryId, reversal_date: todayStr() });
+    const res = await mutate(supabase.rpc("reverse_journal_entry", { original_id: entryId, reversal_date: todayStr() }), { successMessage: "Entry reversed." });
     setReversing(null);
-    if (error) { setPostError(error.message); return; }
+    if (!ok(res)) return;
     load();
   };
 
   const saveLock = async (date: string) => {
-    const { error } = await supabase.from("tenants").update({ books_locked_through: date || null }).eq("id", effectiveTenantId);
-    if (!error) setLockedThrough(date || null);
+    const res = await mutate(supabase.from("tenants").update({ books_locked_through: date || null }).eq("id", effectiveTenantId));
+    if (ok(res)) setLockedThrough(date || null);
   };
 
   if (loading) return <div className="py-16 flex justify-center"><Loader2 className="animate-spin" size={20} color={TEAL} /></div>;
@@ -88,7 +85,6 @@ function FinancialsBody() {
   return (
     <>
       <ModalStyles />
-      {postError && <div className="text-[12.5px] font-semibold px-4 py-2.5 rounded-lg" style={{ background: "#F6E7E3", color: RED }}>{postError}</div>}
 
       <div className="flex gap-2 flex-wrap">
         <button onClick={() => setTab("journal")} className={`text-[13px] font-semibold px-3 py-1.5 rounded-md ${tab === "journal" ? "bg-panel border border-hairline" : "text-[#8a8172]"}`}>Journal entries</button>
@@ -167,7 +163,7 @@ function FinancialsBody() {
                   <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{money(balances[a.id] || 0)}</td>
                   <td className="flex gap-2">
                     <button onClick={() => setAccountModal(a)} className="text-[#8a8172]"><Pencil size={13} /></button>
-                    <button onClick={async () => { if (confirm(`Delete ${a.name}? This cannot be undone.`)) { await supabase.from("accounts").delete().eq("id", a.id); load(); } }} className="text-red-700" style={{ color: "#A6402F" }}><Trash2 size={13} /></button>
+                    <button onClick={async () => { if (confirm(`Delete ${a.name}? This cannot be undone.`)) { await mutate(supabase.from("accounts").delete().eq("id", a.id), { successMessage: "Account deleted." }); load(); } }} className="text-red-700" style={{ color: "#A6402F" }}><Trash2 size={13} /></button>
                   </td>
                 </tr>
               ))}
@@ -196,7 +192,7 @@ function FinancialsBody() {
                         <td>{!r.active ? <span className="text-[11px] text-[#8a8172]">Ended</span> : due ? <span className="text-[11px] font-semibold" style={{ color: RED }}>Due</span> : <span className="text-[11px] text-teal">Scheduled</span>}</td>
                         <td>
                           {r.active && (
-                            <TinyBtn onClick={async () => { await supabase.rpc("post_recurring_entry", { target_recurring_id: r.id, post_date: todayStr() }); load(); }}>
+                            <TinyBtn onClick={async () => { await mutate(supabase.rpc("post_recurring_entry", { target_recurring_id: r.id, post_date: todayStr() }), { successMessage: "Recurring entry posted." }); load(); }}>
                               Post now
                             </TinyBtn>
                           )}
@@ -216,12 +212,10 @@ function FinancialsBody() {
           account={accountModal === "new" ? null : accountModal}
           onClose={() => setAccountModal(null)}
           onSave={async (vals) => {
-            if (accountModal === "new") {
-              await supabase.from("accounts").insert({ tenant_id: effectiveTenantId, code: vals.code, name: vals.name, type: vals.type, is_bank: vals.is_bank });
-            } else {
-              await supabase.from("accounts").update({ code: vals.code, name: vals.name, type: vals.type, is_bank: vals.is_bank }).eq("id", (accountModal as Account).id);
-            }
-            setAccountModal(null);
+            const res = accountModal === "new"
+              ? await mutate(supabase.from("accounts").insert({ tenant_id: effectiveTenantId, code: vals.code, name: vals.name, type: vals.type, is_bank: vals.is_bank }), { successMessage: "Account added." })
+              : await mutate(supabase.from("accounts").update({ code: vals.code, name: vals.name, type: vals.type, is_bank: vals.is_bank }).eq("id", (accountModal as Account).id), { successMessage: "Account updated." });
+            if (ok(res)) setAccountModal(null);
             load();
           }}
         />
@@ -241,11 +235,13 @@ function FinancialsBody() {
       {modal === "recurring" && (
         <RecurringEntryModal accounts={accounts} onClose={() => setModal(null)}
           onSubmit={async (memo, frequency, startDate, endDate, lines) => {
-            const { data: rec } = await supabase.from("recurring_entries")
+            const { data: rec } = await mutate(supabase.from("recurring_entries")
               .insert({ tenant_id: effectiveTenantId, memo, frequency, start_date: startDate, next_run_date: startDate, end_date: endDate || null })
-              .select().single();
-            if (rec) await supabase.from("recurring_entry_lines").insert(lines.map((l) => ({ recurring_entry_id: rec.id, account_id: l.account_id, debit: l.debit, credit: l.credit })));
-            setModal(null); load();
+              .select().single());
+            if (!rec) return;
+            const linesRes = await mutate(supabase.from("recurring_entry_lines").insert(lines.map((l) => ({ recurring_entry_id: rec.id, account_id: l.account_id, debit: l.debit, credit: l.credit }))), { successMessage: "Recurring entry saved." });
+            if (ok(linesRes)) setModal(null);
+            load();
           }} />
       )}
       {attachEntry && (
@@ -259,12 +255,19 @@ function FinancialsBody() {
 
 function QuickModal({ title, debitDefault, creditDefault, debitLabel, creditLabel, accounts, onClose, onSubmit }:
   { title: string; debitDefault?: string; creditDefault?: string; debitLabel: string; creditLabel: string; accounts: Account[]; onClose: () => void;
-    onSubmit: (amount: number, date: string, memo: string, debit: string, credit: string) => void }) {
+    onSubmit: (amount: number, date: string, memo: string, debit: string, credit: string) => void | Promise<void> }) {
   const [amount, setAmount] = useState(""); const [date, setDate] = useState(todayStr()); const [memo, setMemo] = useState("");
   const [debit, setDebit] = useState(debitDefault || ""); const [credit, setCredit] = useState(creditDefault || "");
+  const [submitting, setSubmitting] = useState(false);
   return (
     <Modal title={title} onClose={onClose}>
-      <form onSubmit={(e) => { e.preventDefault(); const n = parseFloat(amount); if (!n || n <= 0) return; onSubmit(n, date, memo, debit, credit); }}>
+      <form onSubmit={async (e) => {
+        e.preventDefault();
+        const n = parseFloat(amount);
+        if (!n || n <= 0 || submitting) return;
+        setSubmitting(true);
+        try { await onSubmit(n, date, memo, debit, credit); } finally { setSubmitting(false); }
+      }}>
         <Label>Amount</Label>
         <input className="input" type="number" min="0.01" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} required autoFocus />
         <Label>Date</Label>
@@ -277,7 +280,7 @@ function QuickModal({ title, debitDefault, creditDefault, debitLabel, creditLabe
           <div><Label>{creditLabel}</Label>
             <select className="input" value={credit} onChange={(e) => setCredit(e.target.value)}>{accounts.map((a) => <option key={a.id} value={a.id}>{a.code} · {a.name}</option>)}</select></div>
         </div>
-        <button type="submit" className="primary-btn mt-4">Save entry</button>
+        <button type="submit" disabled={submitting} className="primary-btn mt-4">{submitting ? "Saving…" : "Save entry"}</button>
       </form>
       <ModalStyles />
     </Modal>
@@ -285,9 +288,10 @@ function QuickModal({ title, debitDefault, creditDefault, debitLabel, creditLabe
 }
 
 function ManualModal({ accounts, onClose, onSubmit }:
-  { accounts: Account[]; onClose: () => void; onSubmit: (date: string, memo: string, lines: { account_id: string; debit: number; credit: number }[]) => void }) {
+  { accounts: Account[]; onClose: () => void; onSubmit: (date: string, memo: string, lines: { account_id: string; debit: number; credit: number }[]) => void | Promise<void> }) {
   const [date, setDate] = useState(todayStr()); const [memo, setMemo] = useState("");
   const [lines, setLines] = useState([{ account_id: accounts[0]?.id ?? "", debit: "", credit: "" }, { account_id: accounts[1]?.id ?? "", debit: "", credit: "" }]);
+  const [submitting, setSubmitting] = useState(false);
   const totalDebit = lines.reduce((s, l) => s + (parseFloat(l.debit) || 0), 0);
   const totalCredit = lines.reduce((s, l) => s + (parseFloat(l.credit) || 0), 0);
   const balanced = totalDebit > 0 && Math.abs(totalDebit - totalCredit) < 0.005;
@@ -295,7 +299,12 @@ function ManualModal({ accounts, onClose, onSubmit }:
 
   return (
     <Modal title="Manual journal entry" onClose={onClose} wide>
-      <form onSubmit={(e) => { e.preventDefault(); if (!balanced) return; onSubmit(date, memo || "Manual entry", lines.map((l) => ({ account_id: l.account_id, debit: parseFloat(l.debit) || 0, credit: parseFloat(l.credit) || 0 }))); }}>
+      <form onSubmit={async (e) => {
+        e.preventDefault();
+        if (!balanced || submitting) return;
+        setSubmitting(true);
+        try { await onSubmit(date, memo || "Manual entry", lines.map((l) => ({ account_id: l.account_id, debit: parseFloat(l.debit) || 0, credit: parseFloat(l.credit) || 0 }))); } finally { setSubmitting(false); }
+      }}>
         <div className="grid grid-cols-2 gap-2.5">
           <div><Label>Date</Label><input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} required /></div>
           <div><Label>Memo</Label><input className="input" value={memo} onChange={(e) => setMemo(e.target.value)} placeholder="Describe this transaction" /></div>
@@ -315,7 +324,7 @@ function ManualModal({ accounts, onClose, onSubmit }:
         <div className="text-[12.5px] font-semibold mt-2.5" style={{ color: balanced ? TEAL : RED }}>
           Debits {money(totalDebit)} · Credits {money(totalCredit)} {balanced ? "· Balanced" : "· Must balance to save"}
         </div>
-        <button type="submit" disabled={!balanced} className="primary-btn mt-3" style={{ opacity: balanced ? 1 : 0.5 }}>Save entry</button>
+        <button type="submit" disabled={!balanced || submitting} className="primary-btn mt-3" style={{ opacity: balanced ? 1 : 0.5 }}>{submitting ? "Saving…" : "Save entry"}</button>
       </form>
       <ModalStyles />
     </Modal>
@@ -324,10 +333,11 @@ function ManualModal({ accounts, onClose, onSubmit }:
 
 function RecurringEntryModal({ accounts, onClose, onSubmit }:
   { accounts: Account[]; onClose: () => void;
-    onSubmit: (memo: string, frequency: "weekly" | "monthly", startDate: string, endDate: string, lines: { account_id: string; debit: number; credit: number }[]) => void }) {
+    onSubmit: (memo: string, frequency: "weekly" | "monthly", startDate: string, endDate: string, lines: { account_id: string; debit: number; credit: number }[]) => void | Promise<void> }) {
   const [memo, setMemo] = useState(""); const [frequency, setFrequency] = useState<"weekly" | "monthly">("monthly");
   const [startDate, setStartDate] = useState(todayStr()); const [endDate, setEndDate] = useState("");
   const [lines, setLines] = useState([{ account_id: accounts[0]?.id ?? "", debit: "", credit: "" }, { account_id: accounts[1]?.id ?? "", debit: "", credit: "" }]);
+  const [submitting, setSubmitting] = useState(false);
   const totalDebit = lines.reduce((s, l) => s + (parseFloat(l.debit) || 0), 0);
   const totalCredit = lines.reduce((s, l) => s + (parseFloat(l.credit) || 0), 0);
   const balanced = totalDebit > 0 && Math.abs(totalDebit - totalCredit) < 0.005;
@@ -335,10 +345,11 @@ function RecurringEntryModal({ accounts, onClose, onSubmit }:
 
   return (
     <Modal title="New recurring entry" onClose={onClose} wide>
-      <form onSubmit={(e) => {
+      <form onSubmit={async (e) => {
         e.preventDefault();
-        if (!balanced || !memo) return;
-        onSubmit(memo, frequency, startDate, endDate, lines.map((l) => ({ account_id: l.account_id, debit: parseFloat(l.debit) || 0, credit: parseFloat(l.credit) || 0 })));
+        if (!balanced || !memo || submitting) return;
+        setSubmitting(true);
+        try { await onSubmit(memo, frequency, startDate, endDate, lines.map((l) => ({ account_id: l.account_id, debit: parseFloat(l.debit) || 0, credit: parseFloat(l.credit) || 0 }))); } finally { setSubmitting(false); }
       }}>
         <Label>Memo</Label>
         <input className="input" value={memo} onChange={(e) => setMemo(e.target.value)} placeholder="e.g. Monthly office rent" required />
@@ -365,22 +376,28 @@ function RecurringEntryModal({ accounts, onClose, onSubmit }:
         <div className="text-[12.5px] font-semibold mt-2.5" style={{ color: balanced ? TEAL : RED }}>
           Debits {money(totalDebit)} · Credits {money(totalCredit)} {balanced ? "· Balanced" : "· Must balance to save"}
         </div>
-        <button type="submit" disabled={!balanced || !memo} className="primary-btn mt-3" style={{ opacity: balanced && memo ? 1 : 0.5 }}>Save template</button>
+        <button type="submit" disabled={!balanced || !memo || submitting} className="primary-btn mt-3" style={{ opacity: balanced && memo ? 1 : 0.5 }}>{submitting ? "Saving…" : "Save template"}</button>
       </form>
       <ModalStyles />
     </Modal>
   );
 }
 
-function AccountModal({ account, onClose, onSave }: { account: Account | null; onClose: () => void; onSave: (vals: { code: string; name: string; type: string; is_bank: boolean }) => void }) {
+function AccountModal({ account, onClose, onSave }: { account: Account | null; onClose: () => void; onSave: (vals: { code: string; name: string; type: string; is_bank: boolean }) => void | Promise<void> }) {
   const [code, setCode] = useState(account?.code ?? "");
   const [name, setName] = useState(account?.name ?? "");
   const [type, setType] = useState<Account["type"]>(account?.type ?? "asset");
   const [isBank, setIsBank] = useState((account as any)?.is_bank ?? false);
+  const [submitting, setSubmitting] = useState(false);
 
   return (
     <Modal title={account ? "Edit account" : "New account"} onClose={onClose}>
-      <form onSubmit={(e) => { e.preventDefault(); onSave({ code, name, type, is_bank: isBank }); }}>
+      <form onSubmit={async (e) => {
+        e.preventDefault();
+        if (submitting) return;
+        setSubmitting(true);
+        try { await onSave({ code, name, type, is_bank: isBank }); } finally { setSubmitting(false); }
+      }}>
         <Label>Code</Label>
         <input className="input" value={code} onChange={(e) => setCode(e.target.value)} placeholder="e.g. 1050" required />
         <Label>Name</Label>
@@ -396,7 +413,7 @@ function AccountModal({ account, onClose, onSave }: { account: Account | null; o
             This is a bank account (shows up in Banking)
           </label>
         )}
-        <button type="submit" className="primary-btn mt-4">Save</button>
+        <button type="submit" disabled={submitting} className="primary-btn mt-4">{submitting ? "Saving…" : "Save"}</button>
       </form>
       <ModalStyles />
     </Modal>
