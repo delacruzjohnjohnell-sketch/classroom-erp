@@ -1,13 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Loader2, Landmark, CheckCircle2, Circle } from "lucide-react";
+import { Plus, Loader2, Landmark, CheckCircle2, Circle, Wand2 } from "lucide-react";
 import AppShell from "@/components/AppShell";
 import { KpiCard, Panel, Empty, Modal, Label, GoldBtn, OutlineBtn, FormStyles } from "@/components/ui";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
+import { toast } from "@/lib/toast";
 import { money, todayStr } from "@/lib/types";
+
+const MATCH_WINDOW_DAYS = 3;
 
 const TEAL = "#12524F", RED = "#A6402F";
 
@@ -21,8 +24,10 @@ function BankingBody() {
   const [bankAccounts, setBankAccounts] = useState<any[]>([]);
   const [selectedAccountId, setSelectedAccountId] = useState<string>("");
   const [txns, setTxns] = useState<any[]>([]);
+  const [journalLines, setJournalLines] = useState<any[]>([]);
   const [ledgerBalance, setLedgerBalance] = useState(0);
   const [modal, setModal] = useState<null | "txn" | "account">(null);
+  const [matching, setMatching] = useState(false);
 
   const load = async () => {
     if (!effectiveTenantId) return;
@@ -41,9 +46,10 @@ function BankingBody() {
     if (!accountId) return;
     const [t, lines] = await Promise.all([
       supabase.from("bank_transactions").select("*").eq("tenant_id", effectiveTenantId).eq("account_id", accountId).order("txn_date", { ascending: false }),
-      supabase.from("journal_lines").select("debit, credit").eq("account_id", accountId),
+      supabase.from("journal_lines").select("id, journal_entry_id, debit, credit, journal_entries(entry_date)").eq("account_id", accountId),
     ]);
     setTxns(t.data ?? []);
+    setJournalLines(lines.data ?? []);
     const bal = (lines.data ?? []).reduce((s: number, l: any) => s + (l.debit || 0) - (l.credit || 0), 0);
     setLedgerBalance(bal);
   };
@@ -55,7 +61,41 @@ function BankingBody() {
   const bankBalance = txns.reduce((s, t) => s + t.amount, 0);
 
   const toggleReconciled = async (id: string, current: boolean) => {
-    await mutate(supabase.from("bank_transactions").update({ reconciled: !current }).eq("id", id));
+    const patch: any = { reconciled: !current };
+    if (current) patch.matched_journal_entry_id = null; // un-reconciling — drop any auto-match link
+    await mutate(supabase.from("bank_transactions").update(patch).eq("id", id));
+    loadAccountDetail(selectedAccountId);
+  };
+
+  // Matches unreconciled transactions to a journal line on this same account by
+  // equal amount (bank_transactions.amount === debit - credit) and a nearby date
+  // (within MATCH_WINDOW_DAYS). Doesn't guess across a whole company's ledger —
+  // just this bank account's own postings, which is what a real reconciliation
+  // is checking in the first place.
+  const autoMatch = async () => {
+    setMatching(true);
+    const usedEntryIds = new Set(txns.filter((t) => t.matched_journal_entry_id).map((t) => t.matched_journal_entry_id));
+    const candidates = journalLines
+      .filter((l) => !usedEntryIds.has(l.journal_entry_id))
+      .map((l) => ({ journal_entry_id: l.journal_entry_id, amount: (l.debit || 0) - (l.credit || 0), date: l.journal_entries?.entry_date }));
+
+    let matchedCount = 0;
+    for (const t of txns) {
+      if (t.reconciled || t.matched_journal_entry_id) continue;
+      const match = candidates.find((c) =>
+        !usedEntryIds.has(c.journal_entry_id) &&
+        Math.abs(c.amount - t.amount) < 0.01 &&
+        c.date && Math.abs(new Date(c.date).getTime() - new Date(t.txn_date).getTime()) <= MATCH_WINDOW_DAYS * 86400000
+      );
+      if (!match) continue;
+      usedEntryIds.add(match.journal_entry_id);
+      const res = await mutate(supabase.from("bank_transactions").update({ reconciled: true, matched_journal_entry_id: match.journal_entry_id }).eq("id", t.id));
+      if (ok(res)) matchedCount++;
+    }
+
+    setMatching(false);
+    if (matchedCount > 0) toast.success(`Auto-matched ${matchedCount} transaction${matchedCount === 1 ? "" : "s"}.`);
+    else toast.error(`No matches found — looking for the same amount within ${MATCH_WINDOW_DAYS} days.`);
     loadAccountDetail(selectedAccountId);
   };
 
@@ -66,7 +106,12 @@ function BankingBody() {
       <div className="flex gap-2 flex-wrap items-center">
         <GoldBtn onClick={() => setModal("account")}><Plus size={14} /> New bank account</GoldBtn>
         {bankAccounts.length > 0 && (
-          <OutlineBtn onClick={() => setModal("txn")}><Plus size={14} /> Add transaction</OutlineBtn>
+          <>
+            <OutlineBtn onClick={() => setModal("txn")}><Plus size={14} /> Add transaction</OutlineBtn>
+            <OutlineBtn onClick={autoMatch} disabled={matching || unreconciledCount === 0}>
+              <Wand2 size={14} /> {matching ? "Matching…" : "Auto-match"}
+            </OutlineBtn>
+          </>
         )}
         <div className="flex-1" />
         {bankAccounts.length > 0 && (
@@ -104,9 +149,16 @@ function BankingBody() {
                       <td>{t.txn_date}</td><td>{t.description}</td>
                       <td className="text-right" style={{ fontVariantNumeric: "tabular-nums", color: t.amount < 0 ? RED : TEAL }}>{money(t.amount)}</td>
                       <td>
-                        <button onClick={() => toggleReconciled(t.id, t.reconciled)} className="flex items-center gap-1.5 text-[12px] font-semibold" style={{ color: t.reconciled ? TEAL : "#8a8172" }}>
-                          {t.reconciled ? <CheckCircle2 size={14} /> : <Circle size={14} />} {t.reconciled ? "Reconciled" : "Mark reconciled"}
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => toggleReconciled(t.id, t.reconciled)} className="flex items-center gap-1.5 text-[12px] font-semibold" style={{ color: t.reconciled ? TEAL : "#8a8172" }}>
+                            {t.reconciled ? <CheckCircle2 size={14} /> : <Circle size={14} />} {t.reconciled ? "Reconciled" : "Mark reconciled"}
+                          </button>
+                          {t.reconciled && t.matched_journal_entry_id && (
+                            <span className="text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded" style={{ color: TEAL, background: "#E4EEEC" }}>
+                              Auto-matched
+                            </span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
