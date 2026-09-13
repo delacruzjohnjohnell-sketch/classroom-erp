@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { Plus, Loader2, Package, Wallet, AlertTriangle } from "lucide-react";
+import { Plus, Loader2, Package, Wallet, AlertTriangle, Upload } from "lucide-react";
 import AppShell from "@/components/AppShell";
-import { KpiCard, Panel, Empty, Modal, Label, GoldBtn, SearchBox, FormStyles } from "@/components/ui";
+import { KpiCard, Panel, Empty, Modal, Label, GoldBtn, OutlineBtn, SearchBox, FormStyles } from "@/components/ui";
+import { CsvImportModal } from "@/components/CsvImport";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
@@ -22,6 +23,7 @@ function InventoryBody() {
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<any[]>([]);
   const [modal, setModal] = useState(false);
+  const [csvModal, setCsvModal] = useState(false);
   const [q, setQ] = useState("");
 
   const load = async () => {
@@ -45,7 +47,10 @@ function InventoryBody() {
   return (
     <>
       <div className="flex gap-2 items-center justify-between flex-wrap">
-        <GoldBtn onClick={() => setModal(true)}><Plus size={14} /> New item</GoldBtn>
+        <div className="flex gap-2">
+          <GoldBtn onClick={() => setModal(true)}><Plus size={14} /> New item</GoldBtn>
+          <OutlineBtn onClick={() => setCsvModal(true)}><Upload size={14} /> Import CSV</OutlineBtn>
+        </div>
         <SearchBox value={q} onChange={setQ} placeholder="Search items…" />
       </div>
 
@@ -93,6 +98,23 @@ function InventoryBody() {
         <Modal title="New inventory item" onClose={() => setModal(false)}>
           <ItemForm onClose={() => setModal(false)} onSaved={load} />
         </Modal>
+      )}
+
+      {csvModal && effectiveTenantId && (
+        <CsvImportModal
+          title="Import items from CSV"
+          table="items"
+          tenantId={effectiveTenantId}
+          columns={[
+            { key: "sku", label: "SKU" },
+            { key: "name", label: "Name", required: true },
+            { key: "qty_on_hand", label: "Qty on hand", type: "number" },
+            { key: "unit_cost", label: "Unit cost", type: "number" },
+            { key: "reorder_point", label: "Reorder point", type: "number" },
+          ]}
+          onClose={() => setCsvModal(false)}
+          onImported={load}
+        />
       )}
     </>
   );

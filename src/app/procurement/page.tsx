@@ -2,11 +2,12 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Plus, Check, Loader2, Truck, Receipt, Package, ArrowRight, PackageCheck } from "lucide-react";
+import { Plus, Check, Loader2, Truck, Receipt, Package, ArrowRight, PackageCheck, Upload } from "lucide-react";
 import AppShell from "@/components/AppShell";
 import { KpiCard, Panel, Empty, Modal, ConfirmDialog, Label, GoldBtn, OutlineBtn, TinyBtn, StatusPill, SearchBox, FormStyles } from "@/components/ui";
 import { PaymentStatusPill, RecordPaymentForm, computePaymentStatus } from "@/components/PaymentUI";
 import Attachments from "@/components/Attachments";
+import { CsvImportModal } from "@/components/CsvImport";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
@@ -40,7 +41,7 @@ function ProcurementBody() {
   const [payments, setPayments] = useState<any[]>([]);
   const [threshold, setThreshold] = useState<number | null>(null);
 
-  const [modal, setModal] = useState<null | "vendor" | "order" | "bill">(null);
+  const [modal, setModal] = useState<null | "vendor" | "order" | "bill" | "vendorCsv">(null);
   const [openBill, setOpenBill] = useState<any | null>(null);
   const [receivingOrder, setReceivingOrder] = useState<any | null>(null);
   const [postingBill, setPostingBill] = useState<any | null>(null);
@@ -130,7 +131,10 @@ function ProcurementBody() {
       {tab === "vendors" && (
         <>
           <div className="flex gap-2 items-center justify-between flex-wrap">
-            <GoldBtn onClick={() => setModal("vendor")}><Plus size={14} /> New vendor</GoldBtn>
+            <div className="flex gap-2">
+              <GoldBtn onClick={() => setModal("vendor")}><Plus size={14} /> New vendor</GoldBtn>
+              <OutlineBtn onClick={() => setModal("vendorCsv")}><Upload size={14} /> Import CSV</OutlineBtn>
+            </div>
             <SearchBox value={q} onChange={setQ} placeholder="Search vendors…" />
           </div>
           <Panel title="Vendors">
@@ -241,6 +245,20 @@ function ProcurementBody() {
         <Modal title="New vendor" onClose={() => setModal(null)}>
           <VendorForm onClose={() => setModal(null)} onSaved={load} />
         </Modal>
+      )}
+
+      {modal === "vendorCsv" && effectiveTenantId && (
+        <CsvImportModal
+          title="Import vendors from CSV"
+          table="vendors"
+          tenantId={effectiveTenantId}
+          columns={[
+            { key: "name", label: "Name", required: true },
+            { key: "contact", label: "Contact" },
+          ]}
+          onClose={() => setModal(null)}
+          onImported={load}
+        />
       )}
 
       {modal === "order" && (

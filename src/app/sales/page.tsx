@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
-import { Plus, Check, Loader2, Users, ShoppingCart, Receipt, ArrowRight } from "lucide-react";
+import { Plus, Check, Loader2, Users, ShoppingCart, Receipt, ArrowRight, Upload } from "lucide-react";
 import AppShell from "@/components/AppShell";
 import { KpiCard, Panel, Empty, Modal, ConfirmDialog, Label, GoldBtn, OutlineBtn, TinyBtn, StatusPill, SearchBox, FormStyles } from "@/components/ui";
 import { PaymentStatusPill, RecordPaymentForm, computePaymentStatus } from "@/components/PaymentUI";
 import Attachments from "@/components/Attachments";
+import { CsvImportModal } from "@/components/CsvImport";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
@@ -42,7 +43,7 @@ function SalesBody() {
   const [payments, setPayments] = useState<any[]>([]);
   const [threshold, setThreshold] = useState<number | null>(null);
 
-  const [modal, setModal] = useState<null | "customer" | "quote" | "order" | "invoice">(null);
+  const [modal, setModal] = useState<null | "customer" | "quote" | "order" | "invoice" | "customerCsv">(null);
   const [openInvoice, setOpenInvoice] = useState<any | null>(null);
   const [convertingQuote, setConvertingQuote] = useState<any | null>(null);
   const [convertingOrder, setConvertingOrder] = useState<any | null>(null);
@@ -133,7 +134,10 @@ function SalesBody() {
       {tab === "customers" && (
         <>
           <div className="flex gap-2 items-center justify-between flex-wrap">
-            <GoldBtn onClick={() => setModal("customer")}><Plus size={14} /> New customer</GoldBtn>
+            <div className="flex gap-2">
+              <GoldBtn onClick={() => setModal("customer")}><Plus size={14} /> New customer</GoldBtn>
+              <OutlineBtn onClick={() => setModal("customerCsv")}><Upload size={14} /> Import CSV</OutlineBtn>
+            </div>
             <SearchBox value={q} onChange={setQ} placeholder="Search customers…" />
           </div>
           <Panel title="Customers">
@@ -250,6 +254,20 @@ function SalesBody() {
         <Modal title="New customer" onClose={() => setModal(null)}>
           <CustomerForm onClose={() => setModal(null)} onSaved={load} />
         </Modal>
+      )}
+
+      {modal === "customerCsv" && effectiveTenantId && (
+        <CsvImportModal
+          title="Import customers from CSV"
+          table="customers"
+          tenantId={effectiveTenantId}
+          columns={[
+            { key: "name", label: "Name", required: true },
+            { key: "email", label: "Email" },
+          ]}
+          onClose={() => setModal(null)}
+          onImported={load}
+        />
       )}
 
       {modal === "quote" && (
