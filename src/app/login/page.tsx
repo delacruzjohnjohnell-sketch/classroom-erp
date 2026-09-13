@@ -116,7 +116,7 @@ export default function LoginPage() {
       </div>
       {role === "teacher" && (
         <div className="text-[11.5px] text-[#8a8172] mb-3 -mt-3">
-          Teacher access is restricted to the class instructor's email. If that's not you, use Student instead.
+          Teacher access is restricted to the class instructor&rsquo;s email. If that&rsquo;s not you, use Student instead.
         </div>
       )}
 

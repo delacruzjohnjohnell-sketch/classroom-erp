@@ -99,7 +99,7 @@ export default function TeacherPage() {
             )}
 
             <Panel title="Companies">
-              {tenants.length === 0 ? <Empty>No student companies yet. They'll appear here once students sign in and create one.</Empty> : (
+              {tenants.length === 0 ? <Empty>No student companies yet. They&rsquo;ll appear here once students sign in and create one.</Empty> : (
                 <div className="flex flex-col gap-1.5">
                   {summaries.map(({ tenant, metrics }) => (
                     <button key={tenant.id} onClick={() => { setViewTenantId(tenant.id); router.push("/dashboard"); }}

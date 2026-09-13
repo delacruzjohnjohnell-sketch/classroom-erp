@@ -64,7 +64,9 @@ function ProcurementBody() {
     setThreshold((t.data as any)?.approval_threshold ?? null);
     setLoading(false);
   };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [effectiveTenantId]);
+  // load() sets state synchronously before its first await (fetch-on-mount) — intentional.
+  // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/set-state-in-effect
+  useEffect(() => { load(); }, [effectiveTenantId]);
 
   const paidFor = (billId: string) => payments.filter((p) => p.bill_id === billId).reduce((s, p) => s + p.amount, 0);
   const totalOwed = bills.filter((b) => b.status === "received").reduce((s, b) => s + Math.max(0, b.total - paidFor(b.id)), 0);
@@ -296,7 +298,6 @@ function ReceiptForm({ order, onClose, onSaved }: { order: any; onClose: () => v
       setPoLines(data ?? []);
       if (data && data.length > 0) setLines(data.map((l) => ({ description: l.description, qty_received: String(l.qty) })));
     })();
-    // eslint-disable-next-line
   }, [order.id]);
 
   return (

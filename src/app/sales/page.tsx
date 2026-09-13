@@ -69,7 +69,9 @@ function SalesBody() {
     setThreshold((t.data as any)?.approval_threshold ?? null);
     setLoading(false);
   };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [effectiveTenantId]);
+  // load() sets state synchronously before its first await (fetch-on-mount) — intentional.
+  // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/set-state-in-effect
+  useEffect(() => { load(); }, [effectiveTenantId]);
 
   const paidFor = (invId: string) => payments.filter((p) => p.invoice_id === invId).reduce((s, p) => s + p.amount, 0);
   const totalInvoiced = invoices.reduce((s, o) => s + o.total, 0);

@@ -65,7 +65,9 @@ function HrBody() {
     setRuns(r.data ?? []);
     setLoading(false);
   };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [effectiveTenantId]);
+  // load() sets state synchronously before its first await (fetch-on-mount) — intentional.
+  // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/set-state-in-effect
+  useEffect(() => { load(); }, [effectiveTenantId]);
 
   const toggleRun = async (runId: string) => {
     if (expandedRun === runId) { setExpandedRun(null); return; }
@@ -142,7 +144,7 @@ function HrBody() {
           <Panel title="Time entries">
             <div className="text-[12px] text-[#8a8172] mb-3">
               Wired into pay for <strong>hourly</strong> employees — their gross pay each run comes directly from hours logged here.
-              Monthly-salaried employees' pay stays fixed regardless of logged hours (their entries are attendance records only).
+              Monthly-salaried employees&rsquo; pay stays fixed regardless of logged hours (their entries are attendance records only).
             </div>
             {timeEntries.length === 0 ? <Empty>No time entries logged yet.</Empty> : (
               <table>
@@ -533,7 +535,7 @@ function PayrollPreviewModal({ employees, activeLoans, tenantId, onClose, onPost
 
       {hourlyEmployees.length > 0 && (
         <div className="text-[12px] text-[#6b6357] mb-3">
-          Hourly employees' gross is pulled from Time &amp; Attendance entries between <strong>{range.start}</strong> and <strong>{range.end}</strong>.
+          Hourly employees&rsquo; gross is pulled from Time &amp; Attendance entries between <strong>{range.start}</strong> and <strong>{range.end}</strong>.
           {loadingHours && " Loading logged hours…"}
         </div>
       )}

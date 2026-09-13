@@ -27,7 +27,7 @@ export default function PayslipPage() {
   }, [lineId]);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" size={20} color="#12524F" /></div>;
-  if (notFound || !line) return <div className="min-h-screen flex items-center justify-center text-[#8a8172]">Payslip not found, or you don't have access to it.</div>;
+  if (notFound || !line) return <div className="min-h-screen flex items-center justify-center text-[#8a8172]">Payslip not found, or you don&rsquo;t have access to it.</div>;
 
   const emp = line.employees;
   const totalDeductions = line.sss_ee + line.philhealth_ee + line.pagibig_ee + line.withholding_tax + (line.loan_deduction || 0);

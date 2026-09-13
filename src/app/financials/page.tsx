@@ -53,7 +53,9 @@ function FinancialsBody() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [effectiveTenantId]);
+  // load() sets state synchronously before its first await (fetch-on-mount) — intentional.
+  // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/set-state-in-effect
+  useEffect(() => { load(); }, [effectiveTenantId]);
 
   const balances = useMemo(() => computeAccountBalances(entries), [entries]);
   const accountsById = Object.fromEntries(accounts.map((a) => [a.id, a]));
@@ -100,7 +102,7 @@ function FinancialsBody() {
         <Panel title="Books lock">
           <div className="flex items-center gap-3 flex-wrap">
             <span className="text-[12.5px] text-[#6b6357]">
-              {lockedThrough ? <>Entries dated on or before <strong>{lockedThrough}</strong> can't be posted.</> : "No lock set — entries can be posted to any date."}
+              {lockedThrough ? <>Entries dated on or before <strong>{lockedThrough}</strong> can&rsquo;t be posted.</> : "No lock set — entries can be posted to any date."}
             </span>
             <input className="input" style={{ width: 160 }} type="date" defaultValue={lockedThrough ?? ""} onBlur={(e) => saveLock(e.target.value)} />
             {lockedThrough && <button onClick={() => saveLock("")} className="text-[12px] text-teal font-semibold">Clear lock</button>}
@@ -177,7 +179,7 @@ function FinancialsBody() {
           <div className="flex justify-end"><GoldBtn onClick={() => setModal("recurring")}><Plus size={14} /> New recurring entry</GoldBtn></div>
           <Panel title="Recurring entries">
             <div className="text-[12px] text-[#8a8172] mb-3">
-              Posting isn't automatic — this tracks what's due and lets you post it in one click. Open this page to check for anything due.
+              Posting isn&rsquo;t automatic — this tracks what&rsquo;s due and lets you post it in one click. Open this page to check for anything due.
             </div>
             {recurring.length === 0 ? <Empty>No recurring entries yet — e.g. monthly rent or a subscription.</Empty> : (
               <table>

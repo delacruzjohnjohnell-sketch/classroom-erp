@@ -24,6 +24,8 @@ export default function GlobalSearch() {
   }, []);
 
   useEffect(() => {
+    // Synchronously clearing stale results when the query is cleared/too short is intentional.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!effectiveTenantId || query.trim().length < 2) { setGroups([]); return; }
     const t = setTimeout(async () => {
       setLoading(true);
@@ -79,7 +81,7 @@ export default function GlobalSearch() {
       {open && query.trim().length >= 2 && (
         <div className="absolute top-full left-0 right-0 mt-1.5 bg-panel border border-hairline rounded-md shadow-lg z-50 max-h-[420px] overflow-y-auto">
           {totalResults === 0 && !loading ? (
-            <div className="px-4 py-6 text-center text-[12.5px] text-[#8a8172]">No matches for "{query}"</div>
+            <div className="px-4 py-6 text-center text-[12.5px] text-[#8a8172]">No matches for &ldquo;{query}&rdquo;</div>
           ) : (
             groups.map((g) => (
               <div key={g.label} className="py-2">

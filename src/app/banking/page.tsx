@@ -33,7 +33,9 @@ function BankingBody() {
     setSelectedAccountId(activeId);
     setLoading(false);
   };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [effectiveTenantId]);
+  // load() sets state synchronously before its first await (fetch-on-mount) — intentional.
+  // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/set-state-in-effect
+  useEffect(() => { load(); }, [effectiveTenantId]);
 
   const loadAccountDetail = async (accountId: string) => {
     if (!accountId) return;
@@ -45,7 +47,9 @@ function BankingBody() {
     const bal = (lines.data ?? []).reduce((s: number, l: any) => s + (l.debit || 0) - (l.credit || 0), 0);
     setLedgerBalance(bal);
   };
-  useEffect(() => { if (selectedAccountId) loadAccountDetail(selectedAccountId); /* eslint-disable-next-line */ }, [selectedAccountId]);
+  // loadAccountDetail sets state synchronously before its first await (fetch-on-select) — intentional.
+  // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/set-state-in-effect
+  useEffect(() => { if (selectedAccountId) loadAccountDetail(selectedAccountId); }, [selectedAccountId]);
 
   const unreconciledCount = txns.filter((t) => !t.reconciled).length;
   const bankBalance = txns.reduce((s, t) => s + t.amount, 0);
@@ -74,7 +78,7 @@ function BankingBody() {
 
       {bankAccounts.length === 0 ? (
         <Panel title="No bank accounts yet">
-          <Empty>Add a bank account (e.g. "BDO Checking", "Cash on hand") to start logging and reconciling transactions.</Empty>
+          <Empty>Add a bank account (e.g. &ldquo;BDO Checking&rdquo;, &ldquo;Cash on hand&rdquo;) to start logging and reconciling transactions.</Empty>
         </Panel>
       ) : (
         <>
@@ -86,7 +90,7 @@ function BankingBody() {
 
           {Math.abs(ledgerBalance - bankBalance) > 0.01 && (
             <div className="text-[12.5px] font-semibold px-4 py-3 rounded-lg" style={{ background: "#FBF0E4", color: "#8a5a1e" }}>
-              Ledger and bank statement don't match — off by {money(ledgerBalance - bankBalance)}. Normal until every line below is entered and reconciled.
+              Ledger and bank statement don&rsquo;t match — off by {money(ledgerBalance - bankBalance)}. Normal until every line below is entered and reconciled.
             </div>
           )}
 

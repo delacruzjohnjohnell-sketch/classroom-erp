@@ -30,7 +30,9 @@ function InventoryBody() {
     setItems(data ?? []);
     setLoading(false);
   };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [effectiveTenantId]);
+  // load() sets state synchronously before its first await (fetch-on-mount) — intentional.
+  // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/set-state-in-effect
+  useEffect(() => { load(); }, [effectiveTenantId]);
 
   const totalValue = items.reduce((s, i) => s + i.qty_on_hand * i.unit_cost, 0);
   const lowStock = items.filter((i) => i.qty_on_hand <= i.reorder_point);

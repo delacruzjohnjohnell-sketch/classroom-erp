@@ -19,7 +19,9 @@ export default function Attachments({ relatedTable, relatedId }: { relatedTable:
     setFiles(data ?? []);
     setLoading(false);
   };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [relatedId]);
+  // load() sets state synchronously before its first await (fetch-on-mount) — intentional.
+  // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/set-state-in-effect
+  useEffect(() => { load(); }, [relatedId]);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
