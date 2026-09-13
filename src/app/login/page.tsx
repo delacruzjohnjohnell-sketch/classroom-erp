@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { GraduationCap, Users, ChevronRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -74,10 +74,20 @@ export default function LoginPage() {
     }
   };
 
-  // Authenticated already — route or show onboarding
+  // Authenticated already — route to the right place. Navigation has to happen in an
+  // effect, not during render, or React errors with "Cannot update a component while
+  // rendering a different component."
+  useEffect(() => {
+    if (!loading && userId && profile) {
+      if (profile.role === "teacher") { router.replace("/teacher"); return; }
+      if (profile.tenant_id) { router.replace("/dashboard"); }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, userId, profile]);
+
   if (!loading && userId && profile) {
-    if (profile.role === "teacher") { router.replace("/teacher"); return null; }
-    if (profile.tenant_id) { router.replace("/dashboard"); return null; }
+    // Redirecting via the effect above — render nothing while that happens.
+    if (profile.role === "teacher" || profile.tenant_id) return null;
 
     return (
       <Shell>
