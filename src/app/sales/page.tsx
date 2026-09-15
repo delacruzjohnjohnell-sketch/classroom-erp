@@ -12,7 +12,7 @@ import { CsvImportModal } from "@/components/CsvImport";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
-import { money } from "@/lib/types";
+import { money, round2 } from "@/lib/types";
 import LineItemForm from "@/components/LineItemForm";
 
 const TEAL = "#12524F";
@@ -287,8 +287,8 @@ function SalesBody() {
           <LineItemForm
             partyLabel="Customer" parties={customers} priceLabel="Unit price" itemOptions={items}
             onClose={() => setModal(null)}
-            onSubmit={async (customerId, date, lines, total) => {
-              const { data: q } = await mutate(supabase.from("quotes").insert({ tenant_id: effectiveTenantId, customer_id: customerId, quote_date: date, total, status: "draft" }).select().single());
+            onSubmit={async (customerId, date, lines, subtotal, _due, taxRate, taxAmount) => {
+              const { data: q } = await mutate(supabase.from("quotes").insert({ tenant_id: effectiveTenantId, customer_id: customerId, quote_date: date, total: round2(subtotal + taxAmount), tax_rate: taxRate, tax_amount: taxAmount, status: "draft" }).select().single());
               if (!q) return;
               const linesRes = await mutate(supabase.from("quote_lines").insert(lines.map((l) => ({ quote_id: q.id, item_id: l.item_id ?? null, description: l.desc, qty: l.qty, unit_price: l.price }))), { successMessage: "Quote saved." });
               if (ok(linesRes)) setModal(null);
@@ -303,8 +303,8 @@ function SalesBody() {
           <LineItemForm
             partyLabel="Customer" parties={customers} priceLabel="Unit price" itemOptions={items}
             onClose={() => setModal(null)}
-            onSubmit={async (customerId, date, lines, total) => {
-              const { data: o } = await mutate(supabase.from("sales_orders").insert({ tenant_id: effectiveTenantId, customer_id: customerId, order_date: date, total, status: "draft" }).select().single());
+            onSubmit={async (customerId, date, lines, subtotal, _due, taxRate, taxAmount) => {
+              const { data: o } = await mutate(supabase.from("sales_orders").insert({ tenant_id: effectiveTenantId, customer_id: customerId, order_date: date, total: round2(subtotal + taxAmount), tax_rate: taxRate, tax_amount: taxAmount, status: "draft" }).select().single());
               if (!o) return;
               const linesRes = await mutate(supabase.from("sales_order_lines").insert(lines.map((l) => ({ sales_order_id: o.id, item_id: l.item_id ?? null, description: l.desc, qty: l.qty, unit_price: l.price }))), { successMessage: "Sales order saved." });
               if (ok(linesRes)) setModal(null);
@@ -319,8 +319,8 @@ function SalesBody() {
           <LineItemForm
             partyLabel="Customer" parties={customers} priceLabel="Unit price" itemOptions={items} dueDate
             onClose={() => setModal(null)}
-            onSubmit={async (customerId, date, lines, total, dueDate) => {
-              const { data: inv } = await mutate(supabase.from("invoices").insert({ tenant_id: effectiveTenantId, customer_id: customerId, order_date: date, due_date: dueDate, total, status: "draft" }).select().single());
+            onSubmit={async (customerId, date, lines, subtotal, dueDate, taxRate, taxAmount) => {
+              const { data: inv } = await mutate(supabase.from("invoices").insert({ tenant_id: effectiveTenantId, customer_id: customerId, order_date: date, due_date: dueDate, total: round2(subtotal + taxAmount), tax_rate: taxRate, tax_amount: taxAmount, status: "draft" }).select().single());
               if (!inv) return;
               const linesRes = await mutate(supabase.from("invoice_lines").insert(lines.map((l) => ({ invoice_id: inv.id, item_id: l.item_id ?? null, description: l.desc, qty: l.qty, unit_price: l.price }))), { successMessage: "Invoice saved." });
               if (ok(linesRes)) setModal(null);
@@ -418,6 +418,7 @@ function InvoiceDetail({ invoice, paid, onPaid }: { invoice: any; paid: number; 
   return (
     <div>
       <div className="text-[13px] text-[#6b6357] mb-3">
+        {invoice.tax_amount > 0 && <>Subtotal {money(invoice.total - invoice.tax_amount)} · Tax ({invoice.tax_rate}%) {money(invoice.tax_amount)} · </>}
         Total {money(invoice.total)} · Paid {money(paid)} · Due {invoice.due_date || "on receipt"}
       </div>
       {balance > 0 ? (

@@ -11,7 +11,7 @@ import { CsvImportModal } from "@/components/CsvImport";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
-import { money, todayStr } from "@/lib/types";
+import { money, todayStr, round2 } from "@/lib/types";
 import LineItemForm from "@/components/LineItemForm";
 
 const TEAL = "#12524F";
@@ -278,8 +278,8 @@ function ProcurementBody() {
           <LineItemForm
             partyLabel="Vendor" parties={vendors} priceLabel="Unit cost"
             onClose={() => setModal(null)}
-            onSubmit={async (vendorId, date, lines, total) => {
-              const { data: po } = await mutate(supabase.from("purchase_orders").insert({ tenant_id: effectiveTenantId, vendor_id: vendorId, order_date: date, total, status: "draft" }).select().single());
+            onSubmit={async (vendorId, date, lines, subtotal, _due, taxRate, taxAmount) => {
+              const { data: po } = await mutate(supabase.from("purchase_orders").insert({ tenant_id: effectiveTenantId, vendor_id: vendorId, order_date: date, total: round2(subtotal + taxAmount), tax_rate: taxRate, tax_amount: taxAmount, status: "draft" }).select().single());
               if (!po) return;
               const linesRes = await mutate(supabase.from("purchase_order_lines").insert(lines.map((l) => ({ purchase_order_id: po.id, description: l.desc, qty: l.qty, unit_cost: l.price }))), { successMessage: "Purchase order saved." });
               if (ok(linesRes)) setModal(null);
@@ -294,8 +294,8 @@ function ProcurementBody() {
           <LineItemForm
             partyLabel="Vendor" parties={vendors} priceLabel="Unit cost" dueDate
             onClose={() => setModal(null)}
-            onSubmit={async (vendorId, date, lines, total, dueDate) => {
-              const { data: b } = await mutate(supabase.from("bills").insert({ tenant_id: effectiveTenantId, vendor_id: vendorId, order_date: date, due_date: dueDate, total, status: "draft" }).select().single());
+            onSubmit={async (vendorId, date, lines, subtotal, dueDate, taxRate, taxAmount) => {
+              const { data: b } = await mutate(supabase.from("bills").insert({ tenant_id: effectiveTenantId, vendor_id: vendorId, order_date: date, due_date: dueDate, total: round2(subtotal + taxAmount), tax_rate: taxRate, tax_amount: taxAmount, status: "draft" }).select().single());
               if (!b) return;
               const linesRes = await mutate(supabase.from("bill_lines").insert(lines.map((l) => ({ bill_id: b.id, description: l.desc, qty: l.qty, unit_cost: l.price }))), { successMessage: "Bill saved." });
               if (ok(linesRes)) setModal(null);
@@ -401,6 +401,7 @@ function BillDetail({ bill, paid, onPaid }: { bill: any; paid: number; onPaid: (
   return (
     <div>
       <div className="text-[13px] text-[#6b6357] mb-3">
+        {bill.tax_amount > 0 && <>Subtotal {money(bill.total - bill.tax_amount)} · Tax ({bill.tax_rate}%) {money(bill.tax_amount)} · </>}
         Total {money(bill.total)} · Paid {money(paid)} · Due {bill.due_date || "on receipt"}
       </div>
       {balance > 0 ? (

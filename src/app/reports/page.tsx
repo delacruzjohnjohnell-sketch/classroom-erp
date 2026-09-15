@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { FileText, Scale, Receipt, Package, Truck, ShoppingCart, Briefcase, Download, Loader2 } from "lucide-react";
+import { FileText, Scale, Receipt, Package, Truck, ShoppingCart, Briefcase, Download, Loader2, Waves } from "lucide-react";
 import AppShell from "@/components/AppShell";
 import { Panel, Empty } from "@/components/ui";
 import { useSession } from "@/lib/session";
@@ -15,9 +15,10 @@ const TEAL = "#12524F", GOLD = "#C08A2E", RED = "#A6402F", LINE = "#DDD8CC", INK
 const PIE_COLORS = ["#12524F", "#C08A2E", "#A6402F", "#5B7B93", "#8A8172", "#7A9E8E"];
 const tooltipStyle = { background: "#fff", border: `1px solid ${LINE}`, borderRadius: 8, fontSize: 12 };
 
-type ReportKey = "pnl" | "balance" | "trial" | "arAging" | "apAging" | "inventory" | "procurement" | "sales" | "hr";
+type ReportKey = "pnl" | "cashflow" | "balance" | "trial" | "arAging" | "apAging" | "inventory" | "procurement" | "sales" | "hr";
 const REPORTS: { key: ReportKey; label: string; icon: React.ReactNode }[] = [
   { key: "pnl", label: "Income statement", icon: <FileText size={14} /> },
+  { key: "cashflow", label: "Cash flow", icon: <Waves size={14} /> },
   { key: "balance", label: "Balance sheet", icon: <Scale size={14} /> },
   { key: "trial", label: "Trial balance", icon: <Receipt size={14} /> },
   { key: "arAging", label: "A/R aging", icon: <ShoppingCart size={14} /> },
@@ -90,6 +91,35 @@ function ReportsBody() {
   const totalEquity = equityLines.reduce((s, l) => s + l.amount, 0) + netIncome;
   const balanceCheck = Math.abs(totalAssets - (totalLiabilities + totalEquity)) < 0.01;
 
+  // Cash flow statement — indirect method. Reuses the same entries data as every
+  // other report (no new query): net income for the period, plus a depreciation
+  // add-back, plus the cash effect of every other balance-sheet account's change
+  // over the period (an asset going up is a use of cash; a liability or equity
+  // account going up is a source of cash — both reduce to "cash effect = -(raw
+  // debit-positive balance change)" under this schema's sign convention).
+  const cashAccountIds = useMemo(() => new Set(accounts.filter((a) => a.is_bank).map((a) => a.id)), [accounts]);
+  const cfBeginBal = useMemo(() => computeAccountBalances(entries.filter((e) => from && e.entry_date < from)), [entries, from]);
+  const cfEndBal = useMemo(() => computeAccountBalances(entries.filter((e) => !to || e.entry_date <= to)), [entries, to]);
+  const cashEffect = (acctId: string) => round2(-(((cfEndBal[acctId] || 0)) - (cfBeginBal[acctId] || 0)));
+
+  const depreciationExpense = expenseLines.find((l) => l.code === "5400")?.amount ?? 0;
+  const operatingWCAccounts = accounts.filter((a) => (a.type === "asset" || a.type === "liability") && !cashAccountIds.has(a.id) && a.code !== "1500" && a.code !== "1590");
+  const wcRows = operatingWCAccounts.map((a) => ({ code: a.code, name: a.name, amount: cashEffect(a.id) })).filter((r) => Math.abs(r.amount) > 0.005);
+  const totalWCEffect = round2(wcRows.reduce((s, r) => s + r.amount, 0));
+  const operatingCash = round2(netIncome + depreciationExpense + totalWCEffect);
+
+  const fixedAssetsAcct = accounts.find((a) => a.code === "1500");
+  const investingCash = fixedAssetsAcct ? cashEffect(fixedAssetsAcct.id) : 0;
+  const investingRows = fixedAssetsAcct && Math.abs(investingCash) > 0.005 ? [{ code: fixedAssetsAcct.code, name: "Purchase of fixed assets", amount: investingCash }] : [];
+
+  const equityAccounts = accounts.filter((a) => a.type === "equity");
+  const financingRows = equityAccounts.map((a) => ({ code: a.code, name: a.name, amount: cashEffect(a.id) })).filter((r) => Math.abs(r.amount) > 0.005);
+  const financingCash = round2(financingRows.reduce((s, r) => s + r.amount, 0));
+
+  const netChangeInCash = round2(operatingCash + investingCash + financingCash);
+  const actualCashChange = round2(Array.from(cashAccountIds).reduce((s, id) => s + ((cfEndBal[id] || 0) - (cfBeginBal[id] || 0)), 0));
+  const cfBalanced = Math.abs(netChangeInCash - actualCashChange) < 0.02;
+
   const trialRows = accounts.map((a) => {
     const v = bal[a.id] || 0;
     const debitNormal = a.type === "asset" || a.type === "expense";
@@ -139,6 +169,15 @@ function ReportsBody() {
     if (report === "pnl") {
       rows = [["Income Statement"], ["Account", "Amount"], ...revenueLines.map((l) => [l.name, l.amount.toFixed(2)]), ["Total Revenue", totalRevenue.toFixed(2)],
         ...expenseLines.map((l) => [l.name, l.amount.toFixed(2)]), ["Total Expenses", totalExpenses.toFixed(2)], ["Net Income", netIncome.toFixed(2)]];
+    } else if (report === "cashflow") {
+      rows = [["Cash Flow Statement"], ["Item", "Amount"],
+        ["Operating activities"], ["Net income", netIncome.toFixed(2)],
+        ...(depreciationExpense > 0 ? [["Depreciation (non-cash add-back)", depreciationExpense.toFixed(2)]] : []),
+        ...wcRows.map((r) => [`Change in ${r.name}`, r.amount.toFixed(2)]),
+        ["Net cash from operations", operatingCash.toFixed(2)],
+        ["Investing activities"], ...investingRows.map((r) => [r.name, r.amount.toFixed(2)]), ["Net cash from investing", investingCash.toFixed(2)],
+        ["Financing activities"], ...financingRows.map((r) => [r.name, r.amount.toFixed(2)]), ["Net cash from financing", financingCash.toFixed(2)],
+        ["Net change in cash", netChangeInCash.toFixed(2)]];
     } else if (report === "balance") {
       rows = [["Balance Sheet"], ["Account", "Amount"], ...assetLines.map((l) => [l.name, l.amount.toFixed(2)]), ["Total Assets", totalAssets.toFixed(2)],
         ...liabilityLines.map((l) => [l.name, l.amount.toFixed(2)]), ...equityLines.map((l) => [l.name, l.amount.toFixed(2)]),
@@ -181,7 +220,7 @@ function ReportsBody() {
         <button onClick={exportCSV} className="flex items-center gap-1.5 bg-gold text-white rounded-md px-3 py-2 text-xs font-semibold"><Download size={14} /> Export CSV</button>
       </div>
 
-      {report === "pnl" && (
+      {(report === "pnl" || report === "cashflow") && (
         <div className="grid grid-cols-2 gap-2.5">
           <div><label className="text-xs font-semibold text-[#5c5548]">From</label><input className="input" type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></div>
           <div><label className="text-xs font-semibold text-[#5c5548]">To</label><input className="input" type="date" value={to} onChange={(e) => setTo(e.target.value)} /></div>
@@ -193,6 +232,40 @@ function ReportsBody() {
           <ReportSection heading="Revenue" lines={revenueLines} total={totalRevenue} totalLabel="Total revenue" />
           <ReportSection heading="Expenses" lines={expenseLines} total={totalExpenses} totalLabel="Total expenses" />
           <GrandTotal label="Net income" value={netIncome} color={netIncome >= 0 ? TEAL : RED} />
+        </Panel>
+      )}
+
+      {report === "cashflow" && (
+        <Panel title={`Cash flow statement ${from || to ? `(${from || "start"} – ${to || "now"})` : "(all time)"}`}>
+          <div className="mb-3.5">
+            <div className="text-[11.5px] font-bold uppercase tracking-wide text-[#8a8172] mb-1.5">Operating activities</div>
+            <div className="flex justify-between text-[13px] py-1.5"><span>Net income</span><span style={{ fontVariantNumeric: "tabular-nums" }}>{money(netIncome)}</span></div>
+            {depreciationExpense > 0 && (
+              <div className="flex justify-between text-[13px] py-1.5"><span>Depreciation (non-cash add-back)</span><span style={{ fontVariantNumeric: "tabular-nums" }}>{money(depreciationExpense)}</span></div>
+            )}
+            {wcRows.length === 0 ? <div className="text-[13px] text-[#8a8172] py-1.5">No working-capital changes this period</div> : wcRows.map((r) => (
+              <div key={r.code} className="flex justify-between text-[13px] py-1.5"><span>Change in {r.name}</span><span style={{ fontVariantNumeric: "tabular-nums" }}>{money(r.amount)}</span></div>
+            ))}
+            <div className="flex justify-between font-bold pt-1.5 mt-1 border-t border-hairline text-[13px]"><span>Net cash from operations</span><span style={{ fontVariantNumeric: "tabular-nums" }}>{money(operatingCash)}</span></div>
+          </div>
+          <div className="mb-3.5">
+            <div className="text-[11.5px] font-bold uppercase tracking-wide text-[#8a8172] mb-1.5">Investing activities</div>
+            {investingRows.length === 0 ? <div className="text-[13px] text-[#8a8172] py-1.5">None recorded</div> : investingRows.map((r) => (
+              <div key={r.code} className="flex justify-between text-[13px] py-1.5"><span>{r.name}</span><span style={{ fontVariantNumeric: "tabular-nums" }}>{money(r.amount)}</span></div>
+            ))}
+            <div className="flex justify-between font-bold pt-1.5 mt-1 border-t border-hairline text-[13px]"><span>Net cash from investing</span><span style={{ fontVariantNumeric: "tabular-nums" }}>{money(investingCash)}</span></div>
+          </div>
+          <div className="mb-3.5">
+            <div className="text-[11.5px] font-bold uppercase tracking-wide text-[#8a8172] mb-1.5">Financing activities</div>
+            {financingRows.length === 0 ? <div className="text-[13px] text-[#8a8172] py-1.5">None recorded</div> : financingRows.map((r) => (
+              <div key={r.code} className="flex justify-between text-[13px] py-1.5"><span>{r.name}</span><span style={{ fontVariantNumeric: "tabular-nums" }}>{money(r.amount)}</span></div>
+            ))}
+            <div className="flex justify-between font-bold pt-1.5 mt-1 border-t border-hairline text-[13px]"><span>Net cash from financing</span><span style={{ fontVariantNumeric: "tabular-nums" }}>{money(financingCash)}</span></div>
+          </div>
+          <GrandTotal label="Net change in cash" value={netChangeInCash} color={netChangeInCash >= 0 ? TEAL : RED} />
+          <div className="text-[11.5px] mt-1.5" style={{ color: cfBalanced ? "#8a8172" : RED }}>
+            {cfBalanced ? `Reconciles ✓ (actual cash change: ${money(actualCashChange)})` : `Off by ${money(netChangeInCash - actualCashChange)} vs. the actual cash change of ${money(actualCashChange)}`}
+          </div>
         </Panel>
       )}
 

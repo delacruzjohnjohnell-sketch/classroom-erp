@@ -17,16 +17,19 @@ export default function LineItemForm({
   itemOptions?: ItemOption[];
   dueDate?: boolean;
   onClose: () => void;
-  onSubmit: (partyId: string, date: string, lines: { desc: string; qty: number; price: number; item_id?: string }[], total: number, dueDate: string | null) => void | Promise<void>;
+  onSubmit: (partyId: string, date: string, lines: { desc: string; qty: number; price: number; item_id?: string }[], subtotal: number, dueDate: string | null, taxRate: number, taxAmount: number) => void | Promise<void>;
 }) {
   const [partyId, setPartyId] = useState(parties[0]?.id ?? "");
   const [date, setDate] = useState(todayStr());
   const [due, setDue] = useState("");
+  const [taxRate, setTaxRate] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [lines, setLines] = useState([
     { desc: itemOptions?.[0]?.name ?? "", item_id: itemOptions?.[0]?.id, qty: "1", price: String(itemOptions?.[0]?.unit_cost ?? "") },
   ]);
-  const total = lines.reduce((s, l) => s + (parseFloat(l.qty) || 0) * (parseFloat(l.price) || 0), 0);
+  const subtotal = lines.reduce((s, l) => s + (parseFloat(l.qty) || 0) * (parseFloat(l.price) || 0), 0);
+  const taxAmount = round2(subtotal * ((parseFloat(taxRate) || 0) / 100));
+  const total = subtotal + taxAmount;
 
   const update = (i: number, field: "desc" | "qty" | "price" | "item_id", value: string) =>
     setLines((prev) => prev.map((l, idx) => (idx === i ? { ...l, [field]: value } : l)));
@@ -35,10 +38,10 @@ export default function LineItemForm({
     <form
       onSubmit={async (e) => {
         e.preventDefault();
-        if (!partyId || total <= 0 || submitting) return;
+        if (!partyId || subtotal <= 0 || submitting) return;
         setSubmitting(true);
         try {
-          await onSubmit(partyId, date, lines.map((l) => ({ desc: l.desc, qty: parseFloat(l.qty) || 0, price: parseFloat(l.price) || 0, item_id: l.item_id })), round2(total), due || null);
+          await onSubmit(partyId, date, lines.map((l) => ({ desc: l.desc, qty: parseFloat(l.qty) || 0, price: parseFloat(l.price) || 0, item_id: l.item_id })), round2(subtotal), due || null, parseFloat(taxRate) || 0, taxAmount);
         } finally {
           setSubmitting(false);
         }
@@ -82,8 +85,16 @@ export default function LineItemForm({
         </button>
       </div>
 
-      <div className="text-[12.5px] font-semibold mt-2.5">Total: {money(total)}</div>
-      <button type="submit" disabled={!partyId || total <= 0 || submitting} className="primary-btn mt-2">
+      <div className="flex items-end gap-2.5 mt-2.5">
+        <div className="flex-1">
+          <Label>Tax rate % (optional — e.g. 12 for PH VAT)</Label>
+          <input className="input" type="number" min="0" max="100" step="0.01" placeholder="0" value={taxRate} onChange={(e) => setTaxRate(e.target.value)} />
+        </div>
+      </div>
+      <div className="text-[12.5px] text-[#6b6357] mt-2 flex justify-between"><span>Subtotal</span><span>{money(subtotal)}</span></div>
+      {taxAmount > 0 && <div className="text-[12.5px] text-[#6b6357] flex justify-between"><span>Tax ({taxRate}%)</span><span>{money(taxAmount)}</span></div>}
+      <div className="text-[12.5px] font-semibold flex justify-between"><span>Total</span><span>{money(total)}</span></div>
+      <button type="submit" disabled={!partyId || subtotal <= 0 || submitting} className="primary-btn mt-2">
         {submitting ? <Loader2 size={14} className="animate-spin" /> : null} {submitting ? "Saving…" : "Save"}
       </button>
       <style jsx global>{`
