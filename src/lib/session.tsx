@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "./supabase";
 import type { Profile, Tenant } from "./types";
 
@@ -19,6 +20,7 @@ type SessionState = {
 const SessionContext = createContext<SessionState | null>(null);
 
 export function SessionProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -53,7 +55,15 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       await refresh();
       setLoading(false);
     })();
-    const { data: sub } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // A password-reset link authenticates the browser via a one-time recovery
+      // token before anything else runs — catch it here (mounted on every page,
+      // unlike a single route) and send them to the one place that can actually
+      // ask for a new password, instead of letting them land on whatever page
+      // Supabase's redirect happened to resolve to.
+      if (event === "PASSWORD_RECOVERY") {
+        router.replace("/reset-password");
+      }
       const uid = session?.user.id ?? null;
       setUserId(uid);
       if (uid) {

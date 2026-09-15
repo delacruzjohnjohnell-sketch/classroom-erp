@@ -52,6 +52,17 @@ export default function LoginPage() {
     }
   };
 
+  const sendReset = async () => {
+    if (!email) { setError("Enter your email above first, then click \"Forgot password?\" again."); return; }
+    setError(""); setNotice(""); setBusy(true);
+    const { error: err } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setBusy(false);
+    if (err) { setError(err.message || "Could not send the reset email."); return; }
+    setNotice("If that email has an account, a reset link is on its way — check your inbox.");
+  };
+
   const submitCompany = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(""); setBusy(true);
@@ -146,6 +157,11 @@ export default function LoginPage() {
         <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
         <Label>Password</Label>
         <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+        {authMode === "signin" && (
+          <button type="button" onClick={sendReset} disabled={busy} className="text-xs text-teal font-semibold self-start -mt-2.5">
+            Forgot password?
+          </button>
+        )}
 
         {error && <div className="text-xs text-red mt-2">{error}</div>}
         {notice && <div className="text-xs text-teal mt-2">{notice}</div>}
