@@ -35,7 +35,12 @@ export default function LoginPage() {
         });
         if (err) throw err;
         if (!data.session) {
-          setNotice("Check your email to confirm your account, then sign in.");
+          // Supabase deliberately returns the same "no session yet" response whether this
+          // was a genuine new signup (a confirmation email really is on its way) or a
+          // repeated signup on an email that's already registered (nothing is sent) — it's
+          // an anti-enumeration measure, and the client can't tell which case it is. Don't
+          // promise an email that might not exist; point at the real fallback instead.
+          setNotice("If that's a new email, check your inbox for a confirmation link. If you already have an account, use \"Forgot password?\" below instead of signing up again.");
           setAuthMode("signin");
         } else {
           await refresh();
