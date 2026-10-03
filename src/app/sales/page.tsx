@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
-import { Plus, Check, Loader2, Users, ShoppingCart, Receipt, ArrowRight, Upload } from "lucide-react";
+import { Plus, Check, Loader2, Users, ShoppingCart, Receipt, ArrowRight, Upload, Pencil, Trash2 } from "lucide-react";
 import AppShell from "@/components/AppShell";
 import { KpiCard, Panel, Empty, Modal, ConfirmDialog, Label, GoldBtn, OutlineBtn, TinyBtn, StatusPill, SearchBox, FormStyles } from "@/components/ui";
 import { PaymentStatusPill, RecordPaymentForm, computePaymentStatus } from "@/components/PaymentUI";
@@ -12,6 +12,8 @@ import { CsvImportModal } from "@/components/CsvImport";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
+import { toast } from "@/lib/toast";
+import { countReferences } from "@/lib/references";
 import { money, round2 } from "@/lib/types";
 import LineItemForm from "@/components/LineItemForm";
 
@@ -51,6 +53,9 @@ function SalesBody() {
   const [posting, setPosting] = useState(false);
   const [voidingInvoice, setVoidingInvoice] = useState<any | null>(null);
   const [voiding, setVoiding] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState<any | null>(null);
+  const [deletingCustomer, setDeletingCustomer] = useState<any | null>(null);
+  const [delBusy, setDelBusy] = useState(false);
 
   const load = async () => {
     if (!effectiveTenantId) return;
@@ -106,6 +111,25 @@ function SalesBody() {
   const acceptQuote = async (id: string) => { await mutate(supabase.from("quotes").update({ status: "accepted" }).eq("id", id)); load(); };
   const declineQuote = async (id: string) => { await mutate(supabase.from("quotes").update({ status: "declined" }).eq("id", id)); load(); };
 
+  // A customer on any quote, order, or invoice is part of document history (voided or
+  // reversed, never rewritten), so it can't be deleted — only edited.
+  const requestDeleteCustomer = async (c: any) => {
+    const { count, error } = await countReferences([["quotes", "customer_id"], ["sales_orders", "customer_id"], ["invoices", "customer_id"]], c.id);
+    if (error) { toast.error(error); return; }
+    if (count > 0) {
+      toast.error(`"${c.name}" is on ${count} quote/order/invoice${count === 1 ? "" : "s"}. Documents can only be voided or reversed, not rewritten, so this customer can't be deleted — edit it instead.`);
+      return;
+    }
+    setDeletingCustomer(c);
+  };
+  const doDeleteCustomer = async () => {
+    if (!deletingCustomer) return;
+    setDelBusy(true);
+    const res = await mutate(supabase.from("customers").delete().eq("id", deletingCustomer.id), { successMessage: "Customer deleted." });
+    setDelBusy(false);
+    if (ok(res)) { setDeletingCustomer(null); load(); }
+  };
+
   if (loading) return <div className="py-16 flex justify-center"><Loader2 className="animate-spin" size={20} color={TEAL} /></div>;
 
   return (
@@ -126,14 +150,15 @@ function SalesBody() {
         <KpiCard icon={<Receipt size={16} />} label="Pending approval" value={pendingCount} accent={pendingCount > 0 ? "#A6402F" : TEAL} />
       </div>
 
-      {profile?.role === "teacher" && tab === "invoices" && (
+      {tab === "invoices" && (
         <Panel title="Approval threshold">
           <div className="flex items-center gap-3 flex-wrap text-[12.5px] text-[#6b6357]">
-            <span>Invoices over this amount need your approval before they post. Leave blank for no limit.</span>
+            <span>Invoices and bills over this amount need a teacher&apos;s approval before they post. Leave blank for no limit.</span>
             <input className="input" type="number" style={{ width: 160 }} defaultValue={threshold ?? ""} placeholder="e.g. 50000"
               onBlur={async (e) => {
                 const val = e.target.value ? parseFloat(e.target.value) : null;
-                const res = await mutate(supabase.from("tenants").update({ approval_threshold: val }).eq("id", effectiveTenantId));
+                if (val === threshold) return;
+                const res = await mutate(supabase.from("tenants").update({ approval_threshold: val }).eq("id", effectiveTenantId), { successMessage: val === null ? "Approval threshold cleared." : "Approval threshold updated." });
                 if (ok(res)) setThreshold(val);
               }} />
           </div>
@@ -151,8 +176,16 @@ function SalesBody() {
           </div>
           <Panel title="Customers">
             {customersF.length === 0 ? <Empty>{customers.length === 0 ? "No customers yet." : "No customers match your search."}</Empty> : (
-              <table><thead><tr><th>Name</th><th>Email</th></tr></thead>
-                <tbody>{customersF.map((c) => <tr key={c.id}><td>{c.name}</td><td>{c.email}</td></tr>)}</tbody>
+              <table><thead><tr><th>Name</th><th>Email</th><th></th></tr></thead>
+                <tbody>{customersF.map((c) => (
+                  <tr key={c.id}>
+                    <td>{c.name}</td><td>{c.email}</td>
+                    <td className="text-right whitespace-nowrap">
+                      <button onClick={() => setEditingCustomer(c)} className="text-[#8a8172] mr-2" title="Edit customer"><Pencil size={13} /></button>
+                      <button onClick={() => requestDeleteCustomer(c)} style={{ color: "#A6402F" }} title="Delete customer"><Trash2 size={13} /></button>
+                    </td>
+                  </tr>
+                ))}</tbody>
               </table>
             )}
           </Panel>
@@ -266,6 +299,24 @@ function SalesBody() {
         <Modal title="New customer" onClose={() => setModal(null)}>
           <CustomerForm onClose={() => setModal(null)} onSaved={load} />
         </Modal>
+      )}
+
+      {editingCustomer && (
+        <Modal title={`Edit customer — ${editingCustomer.name}`} onClose={() => setEditingCustomer(null)}>
+          <CustomerForm customer={editingCustomer} onClose={() => setEditingCustomer(null)} onSaved={load} />
+        </Modal>
+      )}
+
+      {deletingCustomer && (
+        <ConfirmDialog
+          title="Delete this customer?"
+          danger
+          busy={delBusy}
+          confirmLabel="Delete customer"
+          message={<><strong>{deletingCustomer.name}</strong> will be removed. This can&apos;t be undone.</>}
+          onConfirm={doDeleteCustomer}
+          onCancel={() => setDeletingCustomer(null)}
+        />
       )}
 
       {modal === "customerCsv" && effectiveTenantId && (
@@ -435,16 +486,18 @@ function InvoiceDetail({ invoice, paid, onPaid }: { invoice: any; paid: number; 
   );
 }
 
-function CustomerForm({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
+function CustomerForm({ customer, onClose, onSaved }: { customer?: any; onClose: () => void; onSaved: () => void }) {
   const { effectiveTenantId } = useSession();
-  const [name, setName] = useState(""); const [email, setEmail] = useState("");
+  const [name, setName] = useState(customer?.name ?? ""); const [email, setEmail] = useState(customer?.email ?? "");
   const [submitting, setSubmitting] = useState(false);
   return (
     <form onSubmit={async (e) => {
       e.preventDefault();
       if (submitting) return;
       setSubmitting(true);
-      const res = await mutate(supabase.from("customers").insert({ tenant_id: effectiveTenantId, name, email }), { successMessage: "Customer added." });
+      const res = customer
+        ? await mutate(supabase.from("customers").update({ name, email }).eq("id", customer.id), { successMessage: "Customer updated." })
+        : await mutate(supabase.from("customers").insert({ tenant_id: effectiveTenantId, name, email }), { successMessage: "Customer added." });
       setSubmitting(false);
       if (ok(res)) { onClose(); onSaved(); }
     }}>

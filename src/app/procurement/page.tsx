@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Plus, Check, Loader2, Truck, Receipt, Package, ArrowRight, PackageCheck, Upload } from "lucide-react";
+import { Plus, Check, Loader2, Truck, Receipt, Package, ArrowRight, PackageCheck, Upload, Pencil, Trash2 } from "lucide-react";
 import AppShell from "@/components/AppShell";
 import { KpiCard, Panel, Empty, Modal, ConfirmDialog, Label, GoldBtn, OutlineBtn, TinyBtn, StatusPill, SearchBox, FormStyles } from "@/components/ui";
 import { PaymentStatusPill, RecordPaymentForm, computePaymentStatus } from "@/components/PaymentUI";
@@ -11,6 +11,8 @@ import { CsvImportModal } from "@/components/CsvImport";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
+import { toast } from "@/lib/toast";
+import { countReferences } from "@/lib/references";
 import { money, todayStr, round2 } from "@/lib/types";
 import LineItemForm from "@/components/LineItemForm";
 
@@ -48,6 +50,9 @@ function ProcurementBody() {
   const [posting, setPosting] = useState(false);
   const [voidingBill, setVoidingBill] = useState<any | null>(null);
   const [voiding, setVoiding] = useState(false);
+  const [editingVendor, setEditingVendor] = useState<any | null>(null);
+  const [deletingVendor, setDeletingVendor] = useState<any | null>(null);
+  const [delBusy, setDelBusy] = useState(false);
 
   const load = async () => {
     if (!effectiveTenantId) return;
@@ -103,6 +108,25 @@ function ProcurementBody() {
     if (ok(res)) setTab("bills");
   };
 
+  // A vendor on any purchase order or bill is part of document history (voided or
+  // reversed, never rewritten), so it can't be deleted — only edited.
+  const requestDeleteVendor = async (v: any) => {
+    const { count, error } = await countReferences([["purchase_orders", "vendor_id"], ["bills", "vendor_id"]], v.id);
+    if (error) { toast.error(error); return; }
+    if (count > 0) {
+      toast.error(`"${v.name}" is on ${count} purchase order/bill${count === 1 ? "" : "s"}. Documents can only be voided or reversed, not rewritten, so this vendor can't be deleted — edit it instead.`);
+      return;
+    }
+    setDeletingVendor(v);
+  };
+  const doDeleteVendor = async () => {
+    if (!deletingVendor) return;
+    setDelBusy(true);
+    const res = await mutate(supabase.from("vendors").delete().eq("id", deletingVendor.id), { successMessage: "Vendor deleted." });
+    setDelBusy(false);
+    if (ok(res)) { setDeletingVendor(null); load(); }
+  };
+
   if (loading) return <div className="py-16 flex justify-center"><Loader2 className="animate-spin" size={20} color={TEAL} /></div>;
 
   return (
@@ -123,14 +147,15 @@ function ProcurementBody() {
         <KpiCard icon={<Receipt size={16} />} label="Pending approval" value={pendingCount} accent={pendingCount > 0 ? "#A6402F" : TEAL} />
       </div>
 
-      {profile?.role === "teacher" && tab === "bills" && (
+      {tab === "bills" && (
         <Panel title="Approval threshold">
           <div className="flex items-center gap-3 flex-wrap text-[12.5px] text-[#6b6357]">
-            <span>Bills over this amount need your approval before they post. Leave blank for no limit.</span>
+            <span>Invoices and bills over this amount need a teacher&apos;s approval before they post. Leave blank for no limit.</span>
             <input className="input" type="number" style={{ width: 160 }} defaultValue={threshold ?? ""} placeholder="e.g. 50000"
               onBlur={async (e) => {
                 const val = e.target.value ? parseFloat(e.target.value) : null;
-                const res = await mutate(supabase.from("tenants").update({ approval_threshold: val }).eq("id", effectiveTenantId));
+                if (val === threshold) return;
+                const res = await mutate(supabase.from("tenants").update({ approval_threshold: val }).eq("id", effectiveTenantId), { successMessage: val === null ? "Approval threshold cleared." : "Approval threshold updated." });
                 if (ok(res)) setThreshold(val);
               }} />
           </div>
@@ -148,8 +173,16 @@ function ProcurementBody() {
           </div>
           <Panel title="Vendors">
             {vendorsF.length === 0 ? <Empty>{vendors.length === 0 ? "No vendors yet." : "No vendors match your search."}</Empty> : (
-              <table><thead><tr><th>Name</th><th>Contact</th></tr></thead>
-                <tbody>{vendorsF.map((v) => <tr key={v.id}><td>{v.name}</td><td>{v.contact}</td></tr>)}</tbody>
+              <table><thead><tr><th>Name</th><th>Contact</th><th></th></tr></thead>
+                <tbody>{vendorsF.map((v) => (
+                  <tr key={v.id}>
+                    <td>{v.name}</td><td>{v.contact}</td>
+                    <td className="text-right whitespace-nowrap">
+                      <button onClick={() => setEditingVendor(v)} className="text-[#8a8172] mr-2" title="Edit vendor"><Pencil size={13} /></button>
+                      <button onClick={() => requestDeleteVendor(v)} style={{ color: "#A6402F" }} title="Delete vendor"><Trash2 size={13} /></button>
+                    </td>
+                  </tr>
+                ))}</tbody>
               </table>
             )}
           </Panel>
@@ -257,6 +290,24 @@ function ProcurementBody() {
         <Modal title="New vendor" onClose={() => setModal(null)}>
           <VendorForm onClose={() => setModal(null)} onSaved={load} />
         </Modal>
+      )}
+
+      {editingVendor && (
+        <Modal title={`Edit vendor — ${editingVendor.name}`} onClose={() => setEditingVendor(null)}>
+          <VendorForm vendor={editingVendor} onClose={() => setEditingVendor(null)} onSaved={load} />
+        </Modal>
+      )}
+
+      {deletingVendor && (
+        <ConfirmDialog
+          title="Delete this vendor?"
+          danger
+          busy={delBusy}
+          confirmLabel="Delete vendor"
+          message={<><strong>{deletingVendor.name}</strong> will be removed. This can&apos;t be undone.</>}
+          onConfirm={doDeleteVendor}
+          onCancel={() => setDeletingVendor(null)}
+        />
       )}
 
       {modal === "vendorCsv" && effectiveTenantId && (
@@ -418,16 +469,18 @@ function BillDetail({ bill, paid, onPaid }: { bill: any; paid: number; onPaid: (
   );
 }
 
-function VendorForm({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
+function VendorForm({ vendor, onClose, onSaved }: { vendor?: any; onClose: () => void; onSaved: () => void }) {
   const { effectiveTenantId } = useSession();
-  const [name, setName] = useState(""); const [contact, setContact] = useState("");
+  const [name, setName] = useState(vendor?.name ?? ""); const [contact, setContact] = useState(vendor?.contact ?? "");
   const [submitting, setSubmitting] = useState(false);
   return (
     <form onSubmit={async (e) => {
       e.preventDefault();
       if (submitting) return;
       setSubmitting(true);
-      const res = await mutate(supabase.from("vendors").insert({ tenant_id: effectiveTenantId, name, contact }), { successMessage: "Vendor added." });
+      const res = vendor
+        ? await mutate(supabase.from("vendors").update({ name, contact }).eq("id", vendor.id), { successMessage: "Vendor updated." })
+        : await mutate(supabase.from("vendors").insert({ tenant_id: effectiveTenantId, name, contact }), { successMessage: "Vendor added." });
       setSubmitting(false);
       if (ok(res)) { onClose(); onSaved(); }
     }}>
