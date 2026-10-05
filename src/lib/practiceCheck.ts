@@ -49,6 +49,7 @@ export type PracticeSet = {
   summary: string;
   balances: { code: string; side: Side; amount: number; hint?: string }[];
   expectedNetIncome: number;          // negative = a loss, by design
+  threshold: number | null;           // approval threshold the set tells students to use; null = leave blank
   customers: string[];
   vendors: string[];
   employees: EmployeeSpec[];
@@ -136,6 +137,7 @@ const NOV_DEC_2026: PracticeSet = {
     { code: "5400", side: "dr", amount: 2166.66, hint: "Two monthly depreciation clicks of 1,083.33." },
   ],
   expectedNetIncome: 29306.67,
+  threshold: null,
   customers: CUSTOMERS,
   vendors: VENDORS,
   employees: [{ payType: "monthly", annualSalary: 144000 }, { payType: "monthly", annualSalary: 120000 }],
@@ -167,8 +169,8 @@ const NOV_DEC_2026: PracticeSet = {
 // ---------- Practice set: three-month (final revision, no approvals) ----------
 const THREE_MONTH: PracticeSet = {
   id: "three-month",
-  name: "Three-month set (final revision, no approvals)",
-  summary: "Ends in a net LOSS of ₱117,709.99 by design (payroll outweighs sales). Employee B is hourly, no 13th month pay, bank reconciliation is not checked, any lock date counts.",
+  name: "Three-month set (PDF as issued, Revision 2)",
+  summary: "Follows Classroom-ERP-3-Month-Practice-Set.pdf. Ends in a net LOSS of ₱117,709.99 by design (payroll outweighs sales). Approval threshold ₱20,000, with the teacher approving Bill-002 and Invoice-006. Employee B is hourly, no 13th month pay, bank reconciliation is not checked, any lock date counts.",
   balances: [
     { code: "1000", side: "dr", amount: 35891.4 },
     { code: "1100", side: "dr", amount: 0, hint: "Every invoice should be fully collected. Check the final payments on Invoice-001 and Invoice-006." },
@@ -193,6 +195,7 @@ const THREE_MONTH: PracticeSet = {
     { code: "5400", side: "dr", amount: 3249.99, hint: "Three monthly depreciation clicks of 1,083.33." },
   ],
   expectedNetIncome: -117709.99,
+  threshold: 20000,
   customers: CUSTOMERS,
   vendors: VENDORS,
   employees: [{ payType: "monthly", annualSalary: 180000 }, { payType: "hourly", hourlyRate: 95 }],
@@ -293,8 +296,12 @@ export function runPracticeChecks(d: PracticeData, set: PracticeSet): CheckResul
     `${haveSpecs.length} employee(s): ${haveSpecs.map(specText).join("; ") || "none"}`,
     wantEmp.length === haveEmp.length && wantEmp.every((k, i) => k === haveEmp[i]),
     "The monthly salary field is ANNUAL (the system divides by 12). Check each employee's pay type and amount against the practice set.");
-  add("Company setup", "Approval threshold left blank", "blank (no limit)", d.tenant.approval_threshold == null ? "blank" : peso(d.tenant.approval_threshold),
-    d.tenant.approval_threshold == null, "Clear the approval threshold on the Sales page so nothing waits for approval.");
+  const thresholdNow = d.tenant.approval_threshold;
+  const thresholdOk = set.threshold == null ? thresholdNow == null : thresholdNow != null && sameCents(thresholdNow, set.threshold);
+  add("Company setup", set.threshold == null ? "Approval threshold left blank" : `Approval threshold set to ${peso(set.threshold)}`,
+    set.threshold == null ? "blank (no limit)" : peso(set.threshold), thresholdNow == null ? "blank" : peso(thresholdNow), thresholdOk,
+    set.threshold == null ? "Clear the approval threshold on the Sales page so nothing waits for approval."
+      : `Set the approval threshold on the Sales page to ${peso(set.threshold)}, as the practice set says.`);
 
   for (const want of set.items) {
     const found = d.items.find((i) => norm(i.name) === norm(want.name));
@@ -320,7 +327,9 @@ export function runPracticeChecks(d: PracticeData, set: PracticeSet): CheckResul
   add("Documents", "Voided duplicate invoice", `${set.voidTotals.length} void: ${listPesos(set.voidTotals)}`, `${voided.length} void: ${listPesos(voided)}`, sameList(voided, set.voidTotals),
     "Create the duplicate invoice exactly as the practice set describes, post it, then use Void.");
   const held = d.invoices.filter((i) => i.status === "pending_approval").length + d.bills.filter((b) => b.status === "pending_approval").length;
-  add("Documents", "Nothing held for approval", "0", String(held), held === 0, "A document is waiting for approval because a threshold amount is set. Clear the threshold and post it again.");
+  add("Documents", "Nothing held for approval", "0", String(held), held === 0,
+    set.threshold == null ? "A document is waiting for approval because a threshold amount is set. Clear the threshold and post it again."
+      : "A document is still waiting for the teacher's approval. Bill-002 and Invoice-006 are above the threshold and must be approved before they post.");
   const billsPosted = d.bills.filter((b) => b.status === "received").map((b) => b.total);
   add("Documents", "Posted bills", `${set.billTotals.length} bills: ${listPesos(set.billTotals)}`, `${billsPosted.length} bill(s): ${listPesos(billsPosted)}`,
     sameList(billsPosted, set.billTotals), "Compare each bill total with the practice set, including 12% tax.");
