@@ -8,6 +8,7 @@ import {
 import { TrendingUp, TrendingDown, Wallet, Receipt, Package, Briefcase, Truck, ShoppingCart, AlertTriangle, Loader2 } from "lucide-react";
 import AppShell from "@/components/AppShell";
 import { KpiCard, Panel, Empty } from "@/components/ui";
+import PracticeReportPanel from "@/components/PracticeReportPanel";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { money, round2 } from "@/lib/types";
@@ -100,6 +101,7 @@ function DashboardBody() {
 
   return (
     <>
+      <PracticeReportPanel />
       <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}>
         <KpiCard badge={0} icon={<TrendingUp size={16} />} label="Total revenue" value={money(metrics.revenue)} accent={TEAL} />
         <KpiCard badge={1} icon={<TrendingDown size={16} />} label="Total expenses" value={money(metrics.expenses)} accent={RED} />

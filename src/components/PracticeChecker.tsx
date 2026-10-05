@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { Modal } from "@/components/ui";
 import { supabase } from "@/lib/supabase";
+import { toast } from "@/lib/toast";
 import {
   runPracticeChecks, summarize, computeNetIncome, PRACTICE_SETS, DEFAULT_PRACTICE_SET_ID,
   type CheckResult, type PracticeData,
@@ -77,6 +78,9 @@ export default function PracticeCheckModal({ tenant, onClose }: { tenant: { id: 
   const [error, setError] = useState("");
   const [showPassed, setShowPassed] = useState(false);
   const [setId, setSetId] = useState(DEFAULT_PRACTICE_SET_ID);
+  const [includeDetails, setIncludeDetails] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [sentAt, setSentAt] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -98,6 +102,24 @@ export default function PracticeCheckModal({ tenant, onClose }: { tenant: { id: 
   const s = results ? summarize(results) : null;
   const failed = results?.filter((r) => !r.pass) ?? [];
   const passed = results?.filter((r) => r.pass) ?? [];
+
+  // Saves a snapshot the company's students can read and download. When the teacher
+  // leaves details out, expected figures and hints are stripped before they are stored.
+  const sendReport = async () => {
+    if (!results || !s || sending) return;
+    setSending(true);
+    const rows = results.map((r) => includeDetails
+      ? { group: r.group, label: r.label, pass: r.pass, expected: r.expected, actual: r.actual, hint: r.hint }
+      : { group: r.group, label: r.label, pass: r.pass });
+    const { error: err } = await supabase.from("practice_reports").insert({
+      tenant_id: tenant.id, set_id: practiceSet.id, set_name: practiceSet.name,
+      passed: s.passed, total: s.total, net_income: netIncome, include_details: includeDetails, results: rows,
+    });
+    setSending(false);
+    if (err) { toast.error(err.message || "Could not send the report."); return; }
+    setSentAt(new Date().toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit" }));
+    toast.success("Report sent. The company's students will see it on their Dashboard.");
+  };
 
   return (
     <Modal title={`Practice set check — ${tenant.name}`} onClose={onClose} wide>
@@ -135,6 +157,20 @@ export default function PracticeCheckModal({ tenant, onClose }: { tenant: { id: 
               {rows.map((r) => <Row key={r.group + r.label} r={r} />)}
             </div>
           ))}
+
+          <div className="mt-5 pt-4 border-t border-hairline">
+            <div className="text-[11px] font-bold uppercase tracking-wide text-[#8a8172] mb-2">Share with the student</div>
+            <label className="flex items-start gap-2 text-[12.5px] cursor-pointer" htmlFor="include-details">
+              <input id="include-details" type="checkbox" checked={includeDetails} onChange={(e) => setIncludeDetails(e.target.checked)} className="mt-0.5" />
+              <span>Include expected figures and hints. Leave this off to share only pass or fail; the expected figures are then never saved.</span>
+            </label>
+            <div className="flex items-center gap-3 mt-3 flex-wrap">
+              <button onClick={sendReport} disabled={sending} className="rounded-md px-3 py-2 text-xs font-semibold text-white disabled:opacity-50" style={{ background: TEAL }}>
+                {sending ? "Sending…" : "Send report to student"}
+              </button>
+              {sentAt && <span className="text-[12px] text-[#6b6357]">Sent at {sentAt}. Sending again replaces what students see.</span>}
+            </div>
+          </div>
         </>
       )}
     </Modal>
