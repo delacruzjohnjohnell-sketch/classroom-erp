@@ -331,7 +331,7 @@ export function runPracticeChecks(d: PracticeData, set: PracticeSet): CheckResul
   add("Documents", "Exactly one unpaid bill (Bill-004), with a due date", `1 unpaid: ${peso(set.openBillTotal)}, due date set`,
     openBills.length === 0 ? "none unpaid" : `${openBills.length} unpaid: ${listPesos(openBills.map((b) => b.total - paidFor(b.id)))}${openBill && !openBill.due_date ? ", no due date" : ""}`,
     !!openBill && sameCents(openBill.total - paidFor(openBill.id), set.openBillTotal) && !!openBill.due_date,
-    "Bill-004 must be created with the New bill button (not Create bill from PO) so it has a due date, and must stay unpaid. Pay the other bills.");
+    "Bill-004 must be created with the New bill button (not the Create bill button on a purchase order) so it has a due date, and must stay unpaid. Pay the other bills.");
 
   const declined = d.quotes.filter((q) => q.status === "declined").length;
   const converted = d.quotes.filter((q) => q.status === "converted").length;
@@ -356,7 +356,7 @@ export function runPracticeChecks(d: PracticeData, set: PracticeSet): CheckResul
     "Void the duplicate invoice (2 entries) and Reverse the double-counted expense (1 entry).");
   const recurringPosted = d.entries.filter((e) => (e.memo ?? "").includes("(recurring)")).length;
   add("Month-end tasks", "Rent posted from the recurring entry", `${set.recurringPosted} (one per month)`, String(recurringPosted), recurringPosted === set.recurringPosted,
-    "Recurring entries never post themselves. Click Post once for each month.");
+    "Recurring entries never post themselves. Click Post now once for each month.");
   const regular = d.payrollRuns.filter((r) => r.run_type === "regular");
   add("Month-end tasks", "Payroll runs", `${set.payroll.runs} runs of ${peso(set.payroll.gross)} gross`, `${regular.length} run(s): ${listPesos(regular.map((r) => r.total))}`,
     regular.length === set.payroll.runs && regular.every((r) => sameCents(r.total, set.payroll.gross)), set.payroll.hint);
@@ -379,7 +379,7 @@ export function runPracticeChecks(d: PracticeData, set: PracticeSet): CheckResul
   add("Month-end tasks", "Leave request filed", "at least 1", String(d.leaveRequests), d.leaveRequests >= 1, "File a leave request in the HR module.");
   const lockedOk = set.lock ? d.tenant.books_locked_through === set.lock : d.tenant.books_locked_through != null;
   add("Month-end tasks", set.lock ? `Books locked through ${set.lock}` : "Books locked", set.lock ?? "locked through any date", d.tenant.books_locked_through ?? "not locked", lockedOk,
-    set.lock ? `Lock the books through ${set.lock} as the very last step.` : "Lock the books as the last step.");
+    set.lock ? `Set the Books lock date to ${set.lock} (Financials, Journal entries tab) as the very last step.` : "Set the Books lock date (Financials, Journal entries tab) as the last step.");
 
   return out;
 }
