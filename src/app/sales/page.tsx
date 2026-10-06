@@ -14,8 +14,11 @@ import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
 import { toast } from "@/lib/toast";
 import { countReferences } from "@/lib/references";
-import { money, round2 } from "@/lib/types";
+import { money, round2, todayStr } from "@/lib/types";
 import LineItemForm from "@/components/LineItemForm";
+import DueDateField from "@/components/DueDateField";
+import { EditDocumentModal, DeleteDocumentDialog, DueDateEditor, canChange, type DocKind } from "@/components/DocActions";
+import { DEFAULT_TERMS, dueFromTerms } from "@/lib/terms";
 
 const TEAL = "#12524F";
 const TABS = [
@@ -53,6 +56,8 @@ function SalesBody() {
   const [posting, setPosting] = useState(false);
   const [voidingInvoice, setVoidingInvoice] = useState<any | null>(null);
   const [voiding, setVoiding] = useState(false);
+  const [editingDoc, setEditingDoc] = useState<{ kind: DocKind; row: any } | null>(null);
+  const [deletingDoc, setDeletingDoc] = useState<{ kind: DocKind; row: any } | null>(null);
   const [editingCustomer, setEditingCustomer] = useState<any | null>(null);
   const [deletingCustomer, setDeletingCustomer] = useState<any | null>(null);
   const [delBusy, setDelBusy] = useState(false);
@@ -129,6 +134,14 @@ function SalesBody() {
     setDelBusy(false);
     if (ok(res)) { setDeletingCustomer(null); load(); }
   };
+
+  // Edit / delete for documents that haven't been booked to the ledger yet.
+  const docButtons = (kind: DocKind, row: any) => canChange(kind, row.status) && (
+    <>
+      <button onClick={() => setEditingDoc({ kind, row })} className="text-[#8a8172]" title="Edit"><Pencil size={13} /></button>
+      <button onClick={() => setDeletingDoc({ kind, row })} style={{ color: "#A6402F" }} title="Delete"><Trash2 size={13} /></button>
+    </>
+  );
 
   if (loading) return <div className="py-16 flex justify-center"><Loader2 className="animate-spin" size={20} color={TEAL} /></div>;
 
@@ -215,6 +228,7 @@ function SalesBody() {
                           <button onClick={() => declineQuote(q.id)} className="text-[11px] text-[#8a8172]">Decline</button>
                         </>}
                         {q.status === "accepted" && <TinyBtn onClick={() => setConvertingQuote(q)}><ArrowRight size={12} /> Convert to Sales Order</TinyBtn>}
+                        {docButtons("quote", q)}
                       </td>
                     </tr>
                   ))}
@@ -245,6 +259,7 @@ function SalesBody() {
                       <td className="flex gap-1.5">
                         {o.status === "draft" && <TinyBtn onClick={() => confirmOrder(o.id)}><Check size={12} /> Confirm</TinyBtn>}
                         {o.status === "confirmed" && <TinyBtn onClick={() => setConvertingOrder(o)}><ArrowRight size={12} /> Convert to Invoice</TinyBtn>}
+                        {docButtons("order", o)}
                       </td>
                     </tr>
                   ))}
@@ -281,7 +296,8 @@ function SalesBody() {
                           {o.status === "pending_approval" && profile?.role === "teacher" && <TinyBtn onClick={() => setPostingInvoice(o)}><Check size={12} /> Approve</TinyBtn>}
                           {o.status === "pending_approval" && profile?.role !== "teacher" && <span className="text-[11px] text-[#8a8172]">Awaiting teacher approval</span>}
                           {o.status === "fulfilled" && <TinyBtn onClick={() => setOpenInvoice(o)}>Details</TinyBtn>}
-                          {o.status === "fulfilled" && paid === 0 && (
+                          {docButtons("invoice", o)}
+                          {o.status === "fulfilled" && (
                             <button onClick={() => setVoidingInvoice(o)} className="text-[11px] text-[#8a8172] hover:text-red">Void</button>
                           )}
                         </td>
@@ -381,10 +397,20 @@ function SalesBody() {
         </Modal>
       )}
 
+      {editingDoc && (
+        <EditDocumentModal kind={editingDoc.kind} row={editingDoc.row} parties={customers} itemOptions={items}
+          onClose={() => setEditingDoc(null)} onSaved={load} />
+      )}
+
+      {deletingDoc && (
+        <DeleteDocumentDialog kind={deletingDoc.kind} row={deletingDoc.row}
+          onClose={() => setDeletingDoc(null)} onDeleted={load} />
+      )}
+
       {convertingQuote && (
         <Modal title={`Convert ${convertingQuote.document_number} to Sales Order`} onClose={() => setConvertingQuote(null)}>
           <ConvertForm label="Expected date (optional)" onClose={() => setConvertingQuote(null)}
-            onSubmit={async (date) => {
+            onSubmit={async ({ date }) => {
               const res = await mutate(supabase.rpc("convert_quote_to_sales_order", { target_quote_id: convertingQuote.id, expected_date: date || null }), { successMessage: "Converted to sales order." });
               load();
               if (ok(res)) { setConvertingQuote(null); setTab("orders"); }
@@ -394,9 +420,9 @@ function SalesBody() {
 
       {convertingOrder && (
         <Modal title={`Convert ${convertingOrder.document_number} to Invoice`} onClose={() => setConvertingOrder(null)}>
-          <ConvertForm label="Invoice due date (optional)" onClose={() => setConvertingOrder(null)}
-            onSubmit={async (date) => {
-              const res = await mutate(supabase.rpc("convert_sales_order_to_invoice", { so_id: convertingOrder.id, due_date: date || null }), { successMessage: "Converted to invoice." });
+          <ConvertForm label="Invoice date" withTerms onClose={() => setConvertingOrder(null)}
+            onSubmit={async ({ date, due }) => {
+              const res = await mutate(supabase.rpc("convert_sales_order_to_invoice", { so_id: convertingOrder.id, due_date: due, invoice_date: date }), { successMessage: "Converted to invoice." });
               load();
               if (ok(res)) { setConvertingOrder(null); setTab("invoices"); }
             }} />
@@ -405,7 +431,7 @@ function SalesBody() {
 
       {openInvoice && (
         <Modal title={`Invoice ${openInvoice.document_number} — ${openInvoice.customers?.name}`} onClose={() => setOpenInvoice(null)} wide>
-          <InvoiceDetail invoice={openInvoice} paid={paidFor(openInvoice.id)} onPaid={() => { load(); setOpenInvoice(null); }} />
+          <InvoiceDetail invoice={openInvoice} paid={paidFor(openInvoice.id)} onPaid={() => { load(); setOpenInvoice(null); }} onDueSaved={() => { load(); setOpenInvoice(null); }} />
         </Modal>
       )}
 
@@ -431,8 +457,9 @@ function SalesBody() {
           message={
             <>
               This posts a reversing journal entry for <strong>{money(voidingInvoice.total)}</strong> and restores any inventory
-              it decremented. The original entry stays in the ledger — nothing is deleted, just offset. This can&rsquo;t be undone
-              from here.
+              it decremented. The original entry stays in the ledger — nothing is deleted, just offset.
+              {paidFor(voidingInvoice.id) > 0 && <> The <strong>{money(paidFor(voidingInvoice.id))}</strong> already received is refunded to the customer (Dr Accounts Receivable / Cr Cash).</>}
+              {" "}This can&rsquo;t be undone from here.
             </>
           }
           confirmLabel="Void invoice"
@@ -446,25 +473,31 @@ function SalesBody() {
   );
 }
 
-function ConvertForm({ label, onClose, onSubmit }: { label: string; onClose: () => void; onSubmit: (date: string) => void | Promise<void> }) {
-  const [date, setDate] = useState("");
+// withTerms: asks for the invoice date and payment terms (date defaults to today,
+// terms to Net 30); otherwise a single optional date.
+function ConvertForm({ label, withTerms, onClose, onSubmit }: { label: string; withTerms?: boolean; onClose: () => void; onSubmit: (v: { date: string; due: string | null }) => void | Promise<void> }) {
+  const [date, setDate] = useState(withTerms ? todayStr() : "");
+  const [terms, setTerms] = useState(DEFAULT_TERMS);
+  const [due, setDue] = useState(dueFromTerms(todayStr(), DEFAULT_TERMS));
   const [submitting, setSubmitting] = useState(false);
   return (
     <form onSubmit={async (e) => {
       e.preventDefault();
       if (submitting) return;
       setSubmitting(true);
-      try { await onSubmit(date); } finally { setSubmitting(false); }
+      try { await onSubmit({ date, due: withTerms ? due || null : null }); } finally { setSubmitting(false); }
     }}>
       <Label>{label}</Label>
-      <input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+      <input className="input" type="date" value={date} required={withTerms}
+        onChange={(e) => { setDate(e.target.value); if (withTerms && terms !== "custom") setDue(dueFromTerms(e.target.value, terms)); }} />
+      {withTerms && <DueDateField baseDate={date} terms={terms} due={due} onChange={(t, d) => { setTerms(t); setDue(d); }} />}
       <button type="submit" disabled={submitting} className="primary-btn mt-4">{submitting ? "Converting…" : "Convert"}</button>
       <FormStyles />
     </form>
   );
 }
 
-function InvoiceDetail({ invoice, paid, onPaid }: { invoice: any; paid: number; onPaid: () => void }) {
+function InvoiceDetail({ invoice, paid, onPaid, onDueSaved }: { invoice: any; paid: number; onPaid: () => void; onDueSaved: () => void }) {
   const balance = Math.max(0, invoice.total - paid);
   return (
     <div>
@@ -472,6 +505,7 @@ function InvoiceDetail({ invoice, paid, onPaid }: { invoice: any; paid: number; 
         {invoice.tax_amount > 0 && <>Subtotal {money(invoice.total - invoice.tax_amount)} · Tax ({invoice.tax_rate}%) {money(invoice.tax_amount)} · </>}
         Total {money(invoice.total)} · Paid {money(paid)} · Due {invoice.due_date || "on receipt"}
       </div>
+      <DueDateEditor table="invoices" id={invoice.id} baseDate={invoice.order_date} due={invoice.due_date} onSaved={onDueSaved} />
       {balance > 0 ? (
         <RecordPaymentForm balance={balance} onSubmit={async (amount, date, method) => {
           const res = await mutate(supabase.rpc("record_invoice_payment", { so_id: invoice.id, pay_amount: amount, pay_date: date, pay_method: method }), { successMessage: "Payment recorded." });

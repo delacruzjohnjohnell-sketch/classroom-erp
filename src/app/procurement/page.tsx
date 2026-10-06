@@ -15,6 +15,9 @@ import { toast } from "@/lib/toast";
 import { countReferences } from "@/lib/references";
 import { money, todayStr, round2 } from "@/lib/types";
 import LineItemForm from "@/components/LineItemForm";
+import DueDateField from "@/components/DueDateField";
+import { EditDocumentModal, DeleteDocumentDialog, DueDateEditor, canChange, type DocKind } from "@/components/DocActions";
+import { DEFAULT_TERMS, dueFromTerms } from "@/lib/terms";
 
 const TEAL = "#12524F";
 const TABS = [
@@ -50,6 +53,9 @@ function ProcurementBody() {
   const [posting, setPosting] = useState(false);
   const [voidingBill, setVoidingBill] = useState<any | null>(null);
   const [voiding, setVoiding] = useState(false);
+  const [editingDoc, setEditingDoc] = useState<{ kind: DocKind; row: any } | null>(null);
+  const [deletingDoc, setDeletingDoc] = useState<{ kind: DocKind; row: any } | null>(null);
+  const [billingOrder, setBillingOrder] = useState<any | null>(null);
   const [editingVendor, setEditingVendor] = useState<any | null>(null);
   const [deletingVendor, setDeletingVendor] = useState<any | null>(null);
   const [delBusy, setDelBusy] = useState(false);
@@ -102,11 +108,19 @@ function ProcurementBody() {
     load();
   };
   const sendOrder = async (id: string) => { await mutate(supabase.from("purchase_orders").update({ status: "sent" }).eq("id", id)); load(); };
-  const createBillFromPO = async (poId: string) => {
-    const res = await mutate(supabase.rpc("create_bill_from_po", { target_po_id: poId }), { successMessage: "Bill created from purchase order." });
+  const createBillFromPO = async (poId: string, billDate: string, dueDate: string | null) => {
+    const res = await mutate(supabase.rpc("create_bill_from_po", { target_po_id: poId, bill_date: billDate, due_date: dueDate }), { successMessage: "Bill created from purchase order." });
     load();
-    if (ok(res)) setTab("bills");
+    if (ok(res)) { setBillingOrder(null); setTab("bills"); }
   };
+
+  // Edit / delete for documents that haven't been booked to the ledger yet.
+  const docButtons = (kind: DocKind, row: any) => canChange(kind, row.status) && (
+    <>
+      <button onClick={() => setEditingDoc({ kind, row })} className="text-[#8a8172]" title="Edit"><Pencil size={13} /></button>
+      <button onClick={() => setDeletingDoc({ kind, row })} style={{ color: "#A6402F" }} title="Delete"><Trash2 size={13} /></button>
+    </>
+  );
 
   // A vendor on any purchase order or bill is part of document history (voided or
   // reversed, never rewritten), so it can't be deleted — only edited.
@@ -210,8 +224,9 @@ function ProcurementBody() {
                         {o.status === "draft" && <TinyBtn onClick={() => sendOrder(o.id)}><Check size={12} /> Send to vendor</TinyBtn>}
                         {o.status === "sent" && <>
                           <TinyBtn onClick={() => setReceivingOrder(o)}><PackageCheck size={12} /> Record receipt</TinyBtn>
-                          <TinyBtn onClick={() => createBillFromPO(o.id)}><ArrowRight size={12} /> Create bill</TinyBtn>
+                          <TinyBtn onClick={() => setBillingOrder(o)}><ArrowRight size={12} /> Create bill</TinyBtn>
                         </>}
+                        {docButtons("po", o)}
                       </td>
                     </tr>
                   ))}
@@ -267,13 +282,14 @@ function ProcurementBody() {
                         <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{money(b.total)}</td>
                         <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{money(Math.max(0, b.total - paid))}</td>
                         <td><PaymentStatusPill status={status} /></td>
-                        <td>
+                        <td className="flex gap-1.5 items-center">
                           {b.status === "draft" && <TinyBtn onClick={() => setPostingBill(b)}><Check size={12} /> Mark received</TinyBtn>}
+                          {docButtons("bill", b)}
                           {b.status === "pending_approval" && profile?.role === "teacher" && <TinyBtn onClick={() => setPostingBill(b)}><Check size={12} /> Approve</TinyBtn>}
                           {b.status === "pending_approval" && profile?.role !== "teacher" && <span className="text-[11px] text-[#8a8172]">Awaiting teacher approval</span>}
                           {b.status === "received" && <TinyBtn onClick={() => setOpenBill(b)}>Details</TinyBtn>}
-                          {b.status === "received" && paid === 0 && (
-                            <button onClick={() => setVoidingBill(b)} className="text-[11px] text-[#8a8172] hover:text-red ml-1.5">Void</button>
+                          {b.status === "received" && (
+                            <button onClick={() => setVoidingBill(b)} className="text-[11px] text-[#8a8172] hover:text-red">Void</button>
                           )}
                         </td>
                       </tr>
@@ -356,6 +372,22 @@ function ProcurementBody() {
         </Modal>
       )}
 
+      {editingDoc && (
+        <EditDocumentModal kind={editingDoc.kind} row={editingDoc.row} parties={vendors}
+          onClose={() => setEditingDoc(null)} onSaved={load} />
+      )}
+
+      {deletingDoc && (
+        <DeleteDocumentDialog kind={deletingDoc.kind} row={deletingDoc.row}
+          onClose={() => setDeletingDoc(null)} onDeleted={load} />
+      )}
+
+      {billingOrder && (
+        <Modal title={`Create bill from ${billingOrder.document_number}`} onClose={() => setBillingOrder(null)}>
+          <BillFromPoForm onSubmit={(billDate, due) => createBillFromPO(billingOrder.id, billDate, due)} />
+        </Modal>
+      )}
+
       {receivingOrder && (
         <Modal title={`Record receipt — ${receivingOrder.document_number}`} onClose={() => setReceivingOrder(null)} wide>
           <ReceiptForm order={receivingOrder} onClose={() => setReceivingOrder(null)} onSaved={load} />
@@ -364,7 +396,7 @@ function ProcurementBody() {
 
       {openBill && (
         <Modal title={`Bill ${openBill.document_number} — ${openBill.vendors?.name}`} onClose={() => setOpenBill(null)} wide>
-          <BillDetail bill={openBill} paid={paidFor(openBill.id)} onPaid={() => { load(); setOpenBill(null); }} />
+          <BillDetail bill={openBill} paid={paidFor(openBill.id)} onPaid={() => { load(); setOpenBill(null); }} onDueSaved={() => { load(); setOpenBill(null); }} />
         </Modal>
       )}
 
@@ -390,8 +422,9 @@ function ProcurementBody() {
           message={
             <>
               This posts a reversing journal entry for <strong>{money(voidingBill.total)}</strong> and rolls back the inventory
-              it added. The original entry stays in the ledger — nothing is deleted, just offset. This can&rsquo;t be undone
-              from here.
+              it added. The original entry stays in the ledger — nothing is deleted, just offset.
+              {paidFor(voidingBill.id) > 0 && <> The <strong>{money(paidFor(voidingBill.id))}</strong> already paid is refunded by the vendor (Dr Cash / Cr Accounts Payable).</>}
+              {" "}This can&rsquo;t be undone from here.
             </>
           }
           confirmLabel="Void bill"
@@ -447,7 +480,29 @@ function ReceiptForm({ order, onClose, onSaved }: { order: any; onClose: () => v
   );
 }
 
-function BillDetail({ bill, paid, onPaid }: { bill: any; paid: number; onPaid: () => void }) {
+function BillFromPoForm({ onSubmit }: { onSubmit: (billDate: string, due: string | null) => void | Promise<void> }) {
+  const [date, setDate] = useState(todayStr());
+  const [terms, setTerms] = useState(DEFAULT_TERMS);
+  const [due, setDue] = useState(dueFromTerms(todayStr(), DEFAULT_TERMS));
+  const [submitting, setSubmitting] = useState(false);
+  return (
+    <form onSubmit={async (e) => {
+      e.preventDefault();
+      if (submitting) return;
+      setSubmitting(true);
+      try { await onSubmit(date, due || null); } finally { setSubmitting(false); }
+    }}>
+      <Label>Bill date</Label>
+      <input className="input" type="date" value={date} required
+        onChange={(e) => { setDate(e.target.value); if (terms !== "custom") setDue(dueFromTerms(e.target.value, terms)); }} />
+      <DueDateField baseDate={date} terms={terms} due={due} onChange={(t, d) => { setTerms(t); setDue(d); }} />
+      <button type="submit" disabled={submitting} className="primary-btn mt-4">{submitting ? "Creating…" : "Create bill"}</button>
+      <FormStyles />
+    </form>
+  );
+}
+
+function BillDetail({ bill, paid, onPaid, onDueSaved }: { bill: any; paid: number; onPaid: () => void; onDueSaved: () => void }) {
   const balance = Math.max(0, bill.total - paid);
   return (
     <div>
@@ -455,6 +510,7 @@ function BillDetail({ bill, paid, onPaid }: { bill: any; paid: number; onPaid: (
         {bill.tax_amount > 0 && <>Subtotal {money(bill.total - bill.tax_amount)} · Tax ({bill.tax_rate}%) {money(bill.tax_amount)} · </>}
         Total {money(bill.total)} · Paid {money(paid)} · Due {bill.due_date || "on receipt"}
       </div>
+      <DueDateEditor table="bills" id={bill.id} baseDate={bill.order_date} due={bill.due_date} onSaved={onDueSaved} />
       {balance > 0 ? (
         <RecordPaymentForm balance={balance} onSubmit={async (amount, date, method) => {
           const res = await mutate(supabase.rpc("record_bill_payment", { po_id: bill.id, pay_amount: amount, pay_date: date, pay_method: method }), { successMessage: "Payment recorded." });
