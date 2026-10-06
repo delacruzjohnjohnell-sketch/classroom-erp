@@ -194,10 +194,11 @@ export function computeMonthlyPayroll(employeeId: string, employeeName: string, 
   return computePayrollForPeriod(employeeId, employeeName, annualSalary, "monthly", 0);
 }
 
-// Date range for a given pay period, anchored to the current month.
-export function getPeriodDateRange(payPeriod: PayPeriod): { start: string; end: string } {
+// Date range for a given pay period in a "YYYY-MM" month (defaults to the current month).
+export function getPeriodDateRange(payPeriod: PayPeriod, month?: string): { start: string; end: string } {
   const now = new Date();
-  const y = now.getFullYear(), m = now.getMonth();
+  const [yy, mm] = (month || "").split("-").map(Number);
+  const y = yy || now.getFullYear(), m = yy && mm ? mm - 1 : now.getMonth();
   const pad = (n: number) => String(n).padStart(2, "0");
   const fmt = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   const lastDay = new Date(y, m + 1, 0).getDate();

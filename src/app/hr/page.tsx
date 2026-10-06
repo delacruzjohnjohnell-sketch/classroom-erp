@@ -294,7 +294,7 @@ function HrBody() {
         </Modal>
       )}
       {previewing && (
-        <PayrollPreviewModal employees={employees} activeLoans={activeLoans} tenantId={effectiveTenantId!}
+        <PayrollPreviewModal employees={employees} activeLoans={activeLoans} runs={runs} tenantId={effectiveTenantId!}
           onClose={() => setPreviewing(false)} onPosted={() => { setPreviewing(false); load(); }} />
       )}
       {confirming13th && (
@@ -481,14 +481,19 @@ function LoanForm({ employees, onClose, onSaved }: { employees: any[]; onClose: 
   );
 }
 
-function PayrollPreviewModal({ employees, activeLoans, tenantId, onClose, onPosted }: { employees: any[]; activeLoans: any[]; tenantId: string; onClose: () => void; onPosted: () => void }) {
+function PayrollPreviewModal({ employees, activeLoans, runs, tenantId, onClose, onPosted }: { employees: any[]; activeLoans: any[]; runs: any[]; tenantId: string; onClose: () => void; onPosted: () => void }) {
   const [posting, setPosting] = useState(false);
   const [payPeriod, setPayPeriod] = useState<PayPeriod>("monthly");
+  const [month, setMonth] = useState(todayStr().slice(0, 7));
   const [hoursByEmployee, setHoursByEmployee] = useState<Record<string, number>>({});
   const [loadingHours, setLoadingHours] = useState(true);
 
   const hourlyEmployees = employees.filter((e) => e.pay_type === "hourly");
-  const range = getPeriodDateRange(payPeriod);
+  const range = getPeriodDateRange(payPeriod, month);
+  // The payroll entry is dated the last day of the period being paid, so paying
+  // November lands in November's books.
+  const runDate = range.end;
+  const alreadyRun = runs.some((r) => r.run_type !== "13th_month" && (r.pay_period || "monthly") === payPeriod && String(r.run_date).slice(0, 7) === runDate.slice(0, 7));
 
   useEffect(() => {
     (async () => {
@@ -503,7 +508,7 @@ function PayrollPreviewModal({ employees, activeLoans, tenantId, onClose, onPost
       setLoadingHours(false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [payPeriod]);
+  }, [payPeriod, month]);
 
   const loanFor = (employeeId: string) => activeLoans.find((l) => l.employee_id === employeeId);
   const breakdown: PayrollBreakdown[] = employees.map((e) => {
@@ -522,7 +527,7 @@ function PayrollPreviewModal({ employees, activeLoans, tenantId, onClose, onPost
 
   const post = async () => {
     setPosting(true);
-    const res = await mutate(supabase.rpc("run_payroll_ph", { target_tenant: tenantId, run_date: todayStr(), lines: breakdown, pay_period: payPeriod }), { successMessage: "Payroll posted." });
+    const res = await mutate(supabase.rpc("run_payroll_ph", { target_tenant: tenantId, run_date: runDate, lines: breakdown, pay_period: payPeriod }), { successMessage: "Payroll posted." });
     setPosting(false);
     if (ok(res)) onPosted();
   };
@@ -532,12 +537,23 @@ function PayrollPreviewModal({ employees, activeLoans, tenantId, onClose, onPost
       <div className="text-[12px] text-[#8a8172] mb-3">
         Rates approximate 2023–2024 SSS/PhilHealth/Pag-IBIG/BIR tables. Verify against current issuances before real use.
       </div>
+      <Label>Pay month</Label>
+      <input className="input mb-3" type="month" value={month} onChange={(e) => e.target.value && setMonth(e.target.value)} required />
       <Label>Pay period</Label>
       <select className="input mb-3" value={payPeriod} onChange={(e) => setPayPeriod(e.target.value as PayPeriod)}>
         <option value="monthly">Monthly (full month)</option>
         <option value="semi_first">Semi-monthly — 1st half (no statutory/loan deductions)</option>
         <option value="semi_second">Semi-monthly — 2nd half (statutory + loan deductions applied)</option>
       </select>
+
+      <div className="text-[12px] text-[#6b6357] mb-3">
+        Covers <strong>{range.start}</strong> to <strong>{range.end}</strong>. The payroll entry is dated <strong>{runDate}</strong>.
+      </div>
+      {alreadyRun && (
+        <div className="text-[12.5px] mb-3 p-2.5 rounded-md" style={{ background: "#FBEFD9", color: "#7a4d00" }}>
+          Payroll for this month and period has already been run. Posting again will pay your employees twice.
+        </div>
+      )}
 
       {hourlyEmployees.length > 0 && (
         <div className="text-[12px] text-[#6b6357] mb-3">
