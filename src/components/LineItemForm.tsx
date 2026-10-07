@@ -125,21 +125,21 @@ export default function LineItemForm({
           <input className="input" type="number" min="0" max="100" step="0.01" placeholder="0" value={taxRate} onChange={(e) => setTaxRate(e.target.value)} />
         </div>
       </div>
-      <div className="text-[12.5px] text-[#6b6357] mt-2 flex justify-between"><span>Subtotal</span><span>{money(subtotal)}</span></div>
-      {taxAmount > 0 && <div className="text-[12.5px] text-[#6b6357] flex justify-between"><span>Tax ({taxRate}%)</span><span>{money(taxAmount)}</span></div>}
+      <div className="text-[12.5px] text-[#A3B1C2] mt-2 flex justify-between"><span>Subtotal</span><span>{money(subtotal)}</span></div>
+      {taxAmount > 0 && <div className="text-[12.5px] text-[#A3B1C2] flex justify-between"><span>Tax ({taxRate}%)</span><span>{money(taxAmount)}</span></div>}
       <div className="text-[12.5px] font-semibold flex justify-between"><span>Total</span><span>{money(total)}</span></div>
       {shortStock.length > 0 && (
-        <div className="text-[12px] mt-2" style={{ color: "#7a4d00" }}>
+        <div className="text-[12px] mt-2" style={{ color: "#F2B13C" }}>
           Not enough stock of {Array.from(new Set(shortStock.map((s) => s.name))).join(", ")} — posting will take it down to 0.
         </div>
       )}
       <button type="submit" disabled={!!problem || submitting} className="primary-btn mt-2">
         {submitting ? <Loader2 size={14} className="animate-spin" /> : null} {submitting ? "Saving…" : submitLabel}
       </button>
-      {problem && <div className="text-[12px] mt-1.5" style={{ color: "#A6402F" }}>{problem}</div>}
+      {problem && <div className="text-[12px] mt-1.5" style={{ color: "#FF6B7A" }}>{problem}</div>}
       <style jsx global>{`
-        .input { font-size: 14px; padding: 9px 11px; border-radius: 8px; border: 1px solid #DDD8CC; background: #F5F3EE; color: #1B2430; outline: none; width: 100%; }
-        .primary-btn { display: flex; align-items: center; justify-content: center; gap: 6px; background: #12524F; color: #fff; border: none; padding: 11px 14px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; }
+        .input { font-size: 14px; padding: 9px 11px; border-radius: 8px; border: 1px solid #243140; background: #0D1319; color: #E6EDF3; outline: none; width: 100%; }
+        .primary-btn { display: flex; align-items: center; justify-content: center; gap: 6px; background: rgba(34,211,197,0.14); color: #5EEAD4; border: 1px solid rgba(34,211,197,0.6); box-shadow: 0 0 18px rgba(34,211,197,0.12); padding: 11px 14px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; }
         .primary-btn:disabled { opacity: 0.5; }
       `}</style>
     </form>

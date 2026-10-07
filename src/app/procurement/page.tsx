@@ -19,7 +19,7 @@ import DueDateField from "@/components/DueDateField";
 import { EditDocumentModal, DeleteDocumentDialog, DueDateEditor, canChange, type DocKind } from "@/components/DocActions";
 import { DEFAULT_TERMS, dueFromTerms } from "@/lib/terms";
 
-const TEAL = "#12524F";
+const TEAL = "#22D3C5";
 const TABS = [
   { key: "vendors", label: "Vendors" },
   { key: "orders", label: "Purchase Orders" },
@@ -117,8 +117,8 @@ function ProcurementBody() {
   // Edit / delete for documents that haven't been booked to the ledger yet.
   const docButtons = (kind: DocKind, row: any) => canChange(kind, row.status) && (
     <>
-      <button onClick={() => setEditingDoc({ kind, row })} className="text-[#8a8172]" title="Edit"><Pencil size={13} /></button>
-      <button onClick={() => setDeletingDoc({ kind, row })} style={{ color: "#A6402F" }} title="Delete"><Trash2 size={13} /></button>
+      <button onClick={() => setEditingDoc({ kind, row })} className="text-[#7F8EA0]" title="Edit"><Pencil size={13} /></button>
+      <button onClick={() => setDeletingDoc({ kind, row })} style={{ color: "#FF6B7A" }} title="Delete"><Trash2 size={13} /></button>
     </>
   );
 
@@ -148,7 +148,7 @@ function ProcurementBody() {
       <div className="flex gap-1 flex-wrap">
         {TABS.map((t) => (
           <button key={t.key} onClick={() => { setTab(t.key); setQ(""); }}
-            className={`text-[13px] font-semibold px-3 py-1.5 rounded-md ${tab === t.key ? "bg-panel border border-hairline" : "text-[#8a8172]"}`}>
+            className={`text-[13px] font-semibold px-3 py-1.5 rounded-md ${tab === t.key ? "bg-panel border border-hairline" : "text-[#7F8EA0]"}`}>
             {t.label}
           </button>
         ))}
@@ -156,14 +156,14 @@ function ProcurementBody() {
 
       <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}>
         <KpiCard icon={<Truck size={16} />} label="Vendors" value={vendors.length} />
-        <KpiCard icon={<Receipt size={16} />} label="Owed (A/P)" value={money(totalOwed)} accent={totalOwed > 0 ? "#A6402F" : TEAL} />
+        <KpiCard icon={<Receipt size={16} />} label="Owed (A/P)" value={money(totalOwed)} accent={totalOwed > 0 ? "#FF6B7A" : TEAL} />
         <KpiCard icon={<Package size={16} />} label="Bills" value={bills.length} />
-        <KpiCard icon={<Receipt size={16} />} label="Pending approval" value={pendingCount} accent={pendingCount > 0 ? "#A6402F" : TEAL} />
+        <KpiCard icon={<Receipt size={16} />} label="Pending approval" value={pendingCount} accent={pendingCount > 0 ? "#FF6B7A" : TEAL} />
       </div>
 
       {tab === "bills" && (
         <Panel title="Approval threshold">
-          <div className="flex items-center gap-3 flex-wrap text-[12.5px] text-[#6b6357]">
+          <div className="flex items-center gap-3 flex-wrap text-[12.5px] text-[#A3B1C2]">
             <span>Invoices and bills over this amount need a teacher&apos;s approval before they post. Leave blank for no limit.</span>
             <input className="input" type="number" style={{ width: 160 }} defaultValue={threshold ?? ""} placeholder="e.g. 50000"
               onBlur={async (e) => {
@@ -192,8 +192,8 @@ function ProcurementBody() {
                   <tr key={v.id}>
                     <td>{v.name}</td><td>{v.contact}</td>
                     <td className="text-right whitespace-nowrap">
-                      <button onClick={() => setEditingVendor(v)} className="text-[#8a8172] mr-2" title="Edit vendor"><Pencil size={13} /></button>
-                      <button onClick={() => requestDeleteVendor(v)} style={{ color: "#A6402F" }} title="Delete vendor"><Trash2 size={13} /></button>
+                      <button onClick={() => setEditingVendor(v)} className="text-[#7F8EA0] mr-2" title="Edit vendor"><Pencil size={13} /></button>
+                      <button onClick={() => requestDeleteVendor(v)} style={{ color: "#FF6B7A" }} title="Delete vendor"><Trash2 size={13} /></button>
                     </td>
                   </tr>
                 ))}</tbody>
@@ -216,7 +216,7 @@ function ProcurementBody() {
                 <tbody>
                   {ordersF.map((o) => (
                     <tr key={o.id}>
-                      <td style={{ color: "#C08A2E", fontWeight: 600 }}>{o.document_number}</td>
+                      <td style={{ color: "#F2B13C", fontWeight: 600 }}>{o.document_number}</td>
                       <td>{o.order_date}</td><td>{o.vendors?.name}</td>
                       <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{money(o.total)}</td>
                       <td><StatusPill status={o.status} /></td>
@@ -249,7 +249,7 @@ function ProcurementBody() {
               <tbody>
                 {receiptsF.map((r) => (
                   <tr key={r.id}>
-                    <td style={{ color: "#C08A2E", fontWeight: 600 }}>{r.document_number}</td>
+                    <td style={{ color: "#F2B13C", fontWeight: 600 }}>{r.document_number}</td>
                     <td>{r.receipt_date}</td><td>{r.purchase_orders?.document_number}</td>
                     <td>{r.purchase_orders?.vendors?.name}</td><td>{r.notes}</td>
                   </tr>
@@ -277,7 +277,7 @@ function ProcurementBody() {
                     const status = computePaymentStatus(b.status, b.total, paid, b.due_date);
                     return (
                       <tr key={b.id}>
-                        <td style={{ color: "#C08A2E", fontWeight: 600 }}>{b.document_number}</td>
+                        <td style={{ color: "#F2B13C", fontWeight: 600 }}>{b.document_number}</td>
                         <td>{b.order_date}</td><td>{b.due_date || "—"}</td><td>{b.vendors?.name}</td>
                         <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{money(b.total)}</td>
                         <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{money(Math.max(0, b.total - paid))}</td>
@@ -286,10 +286,10 @@ function ProcurementBody() {
                           {b.status === "draft" && <TinyBtn onClick={() => setPostingBill(b)}><Check size={12} /> Mark received</TinyBtn>}
                           {docButtons("bill", b)}
                           {b.status === "pending_approval" && profile?.role === "teacher" && <TinyBtn onClick={() => setPostingBill(b)}><Check size={12} /> Approve</TinyBtn>}
-                          {b.status === "pending_approval" && profile?.role !== "teacher" && <span className="text-[11px] text-[#8a8172]">Awaiting teacher approval</span>}
+                          {b.status === "pending_approval" && profile?.role !== "teacher" && <span className="text-[11px] text-[#7F8EA0]">Awaiting teacher approval</span>}
                           {b.status === "received" && <TinyBtn onClick={() => setOpenBill(b)}>Details</TinyBtn>}
                           {b.status === "received" && (
-                            <button onClick={() => setVoidingBill(b)} className="text-[11px] text-[#8a8172] hover:text-red">Void</button>
+                            <button onClick={() => setVoidingBill(b)} className="text-[11px] text-[#7F8EA0] hover:text-red">Void</button>
                           )}
                         </td>
                       </tr>
@@ -465,7 +465,7 @@ function ReceiptForm({ order, onClose, onSaved }: { order: any; onClose: () => v
       setSubmitting(false);
       if (ok(linesRes)) { onClose(); onSaved(); }
     }}>
-      <div className="text-[12.5px] text-[#6b6357] mb-2">Confirm quantities actually received — edit if this is a partial delivery.</div>
+      <div className="text-[12.5px] text-[#A3B1C2] mb-2">Confirm quantities actually received — edit if this is a partial delivery.</div>
       {lines.map((l, i) => (
         <div key={i} className="flex gap-2 mb-2 items-center">
           <input className="input flex-[2]" value={l.description} onChange={(e) => setLines((prev) => prev.map((x, idx) => idx === i ? { ...x, description: e.target.value } : x))} placeholder="Item description" required />
@@ -506,7 +506,7 @@ function BillDetail({ bill, paid, onPaid, onDueSaved }: { bill: any; paid: numbe
   const balance = Math.max(0, bill.total - paid);
   return (
     <div>
-      <div className="text-[13px] text-[#6b6357] mb-3">
+      <div className="text-[13px] text-[#A3B1C2] mb-3">
         {bill.tax_amount > 0 && <>Subtotal {money(bill.total - bill.tax_amount)} · Tax ({bill.tax_rate}%) {money(bill.tax_amount)} · </>}
         Total {money(bill.total)} · Paid {money(paid)} · Due {bill.due_date || "on receipt"}
       </div>
@@ -517,7 +517,7 @@ function BillDetail({ bill, paid, onPaid, onDueSaved }: { bill: any; paid: numbe
           if (ok(res)) onPaid();
         }} />
       ) : (
-        <div className="text-[13px] font-semibold" style={{ color: "#12524F" }}>Paid in full ✓</div>
+        <div className="text-[13px] font-semibold" style={{ color: "#22D3C5" }}>Paid in full ✓</div>
       )}
       <Attachments relatedTable="bills" relatedId={bill.id} />
       <FormStyles />

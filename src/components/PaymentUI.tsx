@@ -30,11 +30,11 @@ export function RecordPaymentForm({ balance, onSubmit }: { balance: number; onSu
       setSubmitting(true);
       try { await onSubmit(n, date, method); } finally { setSubmitting(false); }
     }}>
-      <div className="text-[12.5px] text-[#6b6357] mb-2">Balance due: <strong>{money(balance)}</strong></div>
+      <div className="text-[12.5px] text-[#A3B1C2] mb-2">Balance due: <strong>{money(balance)}</strong></div>
       <Label>Amount</Label>
       <input className="input" type="number" min="0.01" step="0.01" max={balance} value={amount} onChange={(e) => setAmount(e.target.value)} required />
       {parseFloat(amount) > balance && (
-        <div className="text-[11.5px] mt-1" style={{ color: "#A6402F" }}>Can&rsquo;t exceed the remaining balance.</div>
+        <div className="text-[11.5px] mt-1" style={{ color: "#FF6B7A" }}>Can&rsquo;t exceed the remaining balance.</div>
       )}
       <div className="grid grid-cols-2 gap-2.5">
         <div><Label>Date</Label><input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} required /></div>

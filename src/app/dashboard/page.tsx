@@ -15,9 +15,9 @@ import { money, round2 } from "@/lib/types";
 import { computeMetrics, buildMonthlySeries, buildExpenseBreakdown, type EntryWithLines } from "@/lib/metrics";
 import type { Account, Item, PurchaseOrder, SalesOrder, PayrollRun } from "@/lib/types";
 
-const TEAL = "#12524F", GOLD = "#C08A2E", RED = "#A6402F", LINE = "#DDD8CC", INK = "#1B2430";
-const PIE_COLORS = ["#12524F", "#C08A2E", "#A6402F", "#5B7B93", "#8A8172", "#7A9E8E"];
-const tooltipStyle = { background: "#fff", border: `1px solid ${LINE}`, borderRadius: 8, fontSize: 12 };
+const TEAL = "#22D3C5", GOLD = "#F2B13C", RED = "#FF6B7A", LINE = "#243140", INK = "#E6EDF3";
+const PIE_COLORS = ["#22D3C5", "#F2B13C", "#FF6B7A", "#5AA9FF", "#7F8EA0", "#4ADE9C"];
+const tooltipStyle = { background: "#111922", color: "#E6EDF3", border: `1px solid ${LINE}`, borderRadius: 8, fontSize: 12 };
 
 export default function DashboardPage() {
   return (
@@ -179,7 +179,7 @@ function DashboardBody() {
               <div key={i} className="flex items-center gap-2.5 py-2 border-b border-hairline text-[12.5px]">
                 <span className="text-[10.5px] font-bold border rounded-full px-2 py-0.5 whitespace-nowrap" style={{ color: TEAL, borderColor: TEAL }}>{a.type}</span>
                 <span className="flex-1">{a.label}</span>
-                <span className="text-[#8a8172] text-xs whitespace-nowrap">{a.date}</span>
+                <span className="text-[#7F8EA0] text-xs whitespace-nowrap">{a.date}</span>
               </div>
             ))}
           </div>

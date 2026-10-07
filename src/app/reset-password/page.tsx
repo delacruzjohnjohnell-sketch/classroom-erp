@@ -48,16 +48,16 @@ export default function ResetPasswordPage() {
           <div className="font-serif text-2xl text-gold border border-gold rounded-lg w-11 h-11 flex items-center justify-center">§</div>
           <div>
             <div className="font-serif text-lg font-bold">JJ and Co.</div>
-            <div className="text-xs text-[#6b6357]">Set a new password</div>
+            <div className="text-xs text-[#A3B1C2]">Set a new password</div>
           </div>
         </div>
 
         {ready === "checking" && (
-          <div className="text-[13px] text-[#6b6357]">Checking your reset link…</div>
+          <div className="text-[13px] text-[#A3B1C2]">Checking your reset link…</div>
         )}
 
         {ready === "no-session" && (
-          <div className="text-[13px] text-[#6b6357]">
+          <div className="text-[13px] text-[#A3B1C2]">
             This page only works from a password-reset email link. Go back to{" "}
             <a href="/login" className="text-teal font-semibold">Sign in</a> and use{" "}
             <strong>Forgot password?</strong> to request a new one.
@@ -66,9 +66,9 @@ export default function ResetPasswordPage() {
 
         {ready === "ready" && !done && (
           <form onSubmit={submit}>
-            <label className="text-xs font-semibold text-[#5c5548] mb-1.5 mt-1 block">New password</label>
+            <label className="text-xs font-semibold text-[#A3B1C2] mb-1.5 mt-1 block">New password</label>
             <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} autoFocus />
-            <label className="text-xs font-semibold text-[#5c5548] mb-1.5 mt-1 block">Confirm new password</label>
+            <label className="text-xs font-semibold text-[#A3B1C2] mb-1.5 mt-1 block">Confirm new password</label>
             <input className="input" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required minLength={6} />
             {error && <div className="text-xs text-red mt-2">{error}</div>}
             <button disabled={busy} className="primary-btn mt-5">
@@ -84,8 +84,8 @@ export default function ResetPasswordPage() {
         )}
       </div>
       <style jsx global>{`
-        .input { font-size: 14px; padding: 9px 11px; border-radius: 8px; border: 1px solid #DDD8CC; background: #F5F3EE; color: #1B2430; outline: none; margin-bottom: 14px; width: 100%; }
-        .primary-btn { display: flex; align-items: center; justify-content: center; gap: 6px; background: #12524F; color: #fff; border: none; padding: 11px 14px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; }
+        .input { font-size: 14px; padding: 9px 11px; border-radius: 8px; border: 1px solid #243140; background: #0D1319; color: #E6EDF3; outline: none; margin-bottom: 14px; width: 100%; }
+        .primary-btn { display: flex; align-items: center; justify-content: center; gap: 6px; background: rgba(34,211,197,0.14); color: #5EEAD4; border: 1px solid rgba(34,211,197,0.6); box-shadow: 0 0 18px rgba(34,211,197,0.12); padding: 11px 14px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; }
         .primary-btn:disabled { opacity: 0.6; }
       `}</style>
     </div>

@@ -9,7 +9,7 @@ import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
 import { money, round2, todayStr } from "@/lib/types";
 
-const TEAL = "#12524F";
+const TEAL = "#22D3C5";
 
 export default function FixedAssetsPage() {
   return <AppShell><FixedAssetsBody /></AppShell>;
@@ -78,7 +78,7 @@ function FixedAssetsBody() {
                   <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{money(bookValue(a))}</td>
                   <td>
                     {fullyDepreciated(a) ? (
-                      <span className="text-[11px] text-[#8a8172]">Fully depreciated</span>
+                      <span className="text-[11px] text-[#7F8EA0]">Fully depreciated</span>
                     ) : (
                       <TinyBtn onClick={() => recordDepreciation(a)}>Record 1 month dep.</TinyBtn>
                     )}
@@ -128,7 +128,7 @@ function AssetForm({ onClose, onSaved }: { onClose: () => void; onSaved: () => v
       </div>
       <Label>Useful life (months)</Label>
       <input className="input" type="number" value={usefulLife} onChange={(e) => setUsefulLife(e.target.value)} required />
-      <div className="text-[12px] text-[#8a8172] mt-1">Straight-line: (cost − salvage) ÷ useful life months</div>
+      <div className="text-[12px] text-[#7F8EA0] mt-1">Straight-line: (cost − salvage) ÷ useful life months</div>
       <button type="submit" disabled={submitting} className="primary-btn mt-4">{submitting ? "Saving…" : "Save"}</button>
       <FormStyles />
     </form>

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Building2, TrendingUp, TrendingDown, Wallet, Briefcase, ChevronRight, LogOut, Loader2, ClipboardCheck, Trash2 } from "lucide-react";
-import { KpiCard, Panel, Empty, Modal } from "@/components/ui";
+import { KpiCard, Panel, Empty, ConfirmDialog } from "@/components/ui";
 import PracticeCheckModal from "@/components/PracticeChecker";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
@@ -12,17 +12,15 @@ import { toast } from "@/lib/toast";
 import { money, round2, type Account } from "@/lib/types";
 import { computeMetrics, type EntryWithLines } from "@/lib/metrics";
 
-const TEAL = "#12524F", GOLD = "#C08A2E", RED = "#A6402F", LINE = "#DDD8CC", INK = "#1B2430";
-const tooltipStyle = { background: "#fff", border: `1px solid ${LINE}`, borderRadius: 8, fontSize: 12 };
+const TEAL = "#22D3C5", GOLD = "#F2B13C", RED = "#FF6B7A", LINE = "#243140", INK = "#E6EDF3";
+const tooltipStyle = { background: "#111922", color: "#E6EDF3", border: `1px solid ${LINE}`, borderRadius: 8, fontSize: 12 };
 
-// Deleting a company is permanent, so the teacher has to type its name to confirm.
+// Deleting a company is permanent, so it asks once before going ahead.
 function DeleteCompanyModal({ tenant, onClose, onDeleted }: { tenant: { id: string; name: string }; onClose: () => void; onDeleted: () => void }) {
-  const [typed, setTyped] = useState("");
   const [busy, setBusy] = useState(false);
-  const matches = typed.trim() === tenant.name.trim();
 
   const doDelete = async () => {
-    if (!matches || busy) return;
+    if (busy) return;
     setBusy(true);
     // Remove the company's uploaded files first (best effort); the database function removes everything else.
     const { data: files } = await supabase.from("attachments").select("file_path").eq("tenant_id", tenant.id);
@@ -38,20 +36,15 @@ function DeleteCompanyModal({ tenant, onClose, onDeleted }: { tenant: { id: stri
   };
 
   return (
-    <Modal title="Delete this company?" onClose={onClose}>
-      <div className="text-[13px] text-[#6b6357] leading-relaxed mt-2">
-        <strong>{tenant.name}</strong> and everything in it will be permanently deleted: invoices, bills, journal entries, inventory, employees, payroll and attachments. This can&apos;t be undone.
-        Students in this company keep their accounts and will be asked to join or start a company the next time they sign in.
-      </div>
-      <label className="block text-[12px] font-semibold mt-4 mb-1">Type the company name to confirm</label>
-      <input className="input" value={typed} onChange={(e) => setTyped(e.target.value)} placeholder={tenant.name} autoFocus />
-      <div className="flex gap-2 justify-end mt-5">
-        <button onClick={onClose} disabled={busy} className="border border-hairline rounded-md px-3 py-2 text-xs text-[#6b6357]">Cancel</button>
-        <button onClick={doDelete} disabled={!matches || busy} className="rounded-md px-3 py-2 text-xs font-semibold text-white disabled:opacity-40" style={{ background: RED }}>
-          {busy ? "Deleting…" : "Delete company"}
-        </button>
-      </div>
-    </Modal>
+    <ConfirmDialog
+      title="Delete this company?"
+      danger
+      busy={busy}
+      confirmLabel="Yes, delete it"
+      message={<>Are you sure you want to delete <strong>{tenant.name}</strong>? Everything in it — invoices, bills, journal entries, inventory, employees and payroll — will be permanently removed and can&apos;t be recovered.</>}
+      onConfirm={doDelete}
+      onCancel={onClose}
+    />
   );
 }
 
@@ -106,9 +99,9 @@ export default function TeacherPage() {
       <div className="flex items-center justify-between px-6 py-4 bg-panel border-b border-hairline">
         <div>
           <div className="font-serif text-lg font-bold">Class overview</div>
-          <div className="text-xs text-[#8a8172]">Teacher · {profile.full_name}</div>
+          <div className="text-xs text-[#7F8EA0]">Teacher · {profile.full_name}</div>
         </div>
-        <button onClick={() => signOut()} className="flex items-center gap-1.5 border border-hairline rounded-md px-3 py-1.5 text-xs text-[#6b6357]">
+        <button onClick={() => signOut()} className="flex items-center gap-1.5 border border-hairline rounded-md px-3 py-1.5 text-xs text-[#A3B1C2]">
           <LogOut size={15} /> Sign out
         </button>
       </div>

@@ -2,11 +2,50 @@
 @tailwind components;
 @tailwind utilities;
 
+:root { color-scheme: dark; }
+
+html { background: #05080C; }
+
 body {
-  background: #F5F3EE;
-  color: #1B2430;
+  background-color: #070B10;
+  /* faint dot grid + a soft cyan glow at the top — the "console" backdrop */
+  background-image:
+    radial-gradient(900px 360px at 60% -120px, rgba(34, 211, 197, 0.08), transparent 70%),
+    radial-gradient(rgba(148, 170, 196, 0.07) 1px, transparent 1px);
+  background-size: auto, 22px 22px;
+  background-attachment: fixed;
+  color: #E6EDF3;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
+::selection { background: rgba(34, 211, 197, 0.3); color: #fff; }
+
+* { scrollbar-width: thin; scrollbar-color: #2A3A4D transparent; }
+*::-webkit-scrollbar { width: 9px; height: 9px; }
+*::-webkit-scrollbar-thumb { background: #2A3A4D; border-radius: 6px; }
+*::-webkit-scrollbar-thumb:hover { background: #3A5068; }
+
 table { border-collapse: collapse; width: 100%; font-size: 13px; }
-th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.02em; color: #8a8172; padding: 8px 10px; border-bottom: 1.5px solid #DDD8CC; }
-td { padding: 9px 10px; vertical-align: top; border-bottom: 1px solid #DDD8CC; }
+th {
+  text-align: left; font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;
+  color: #7F8EA0; padding: 8px 10px; border-bottom: 1px solid #243140;
+  font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+}
+td { padding: 9px 10px; vertical-align: top; border-bottom: 1px solid #1B2634; }
+tbody tr { transition: background-color 120ms; }
+tbody tr:hover { background: rgba(34, 211, 197, 0.045); }
+
+/* Form controls share one dark look; the .input rule itself lives next to each form. */
+.input:focus { border-color: #22D3C5 !important; box-shadow: 0 0 0 3px rgba(34, 211, 197, 0.16); }
+.input::placeholder { color: #5C6B7C; }
+select.input option { background: #111922; color: #E6EDF3; }
+input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.8); }
+button:not(:disabled), select:not(:disabled) { cursor: pointer; }
+button:focus-visible, a:focus-visible { outline: 2px solid #22D3C5; outline-offset: 2px; }
+
+/* The payslip prints on paper: strip the backdrop and hide the controls. */
+@media print {
+  html, body { background: #fff !important; background-image: none !important; color: #000 !important; }
+  .no-print { display: none !important; }
+}

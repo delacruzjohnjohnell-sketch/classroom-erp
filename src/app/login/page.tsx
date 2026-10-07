@@ -119,7 +119,7 @@ export default function LoginPage() {
                 <option value="">Select your company…</option>
                 {tenants.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
               </select>
-              {tenants.length === 0 && <div className="text-xs text-[#8a8172] mt-1.5">No companies yet — start one instead.</div>}
+              {tenants.length === 0 && <div className="text-xs text-[#7F8EA0] mt-1.5">No companies yet — start one instead.</div>}
             </>
           ) : (
             <>
@@ -141,14 +141,14 @@ export default function LoginPage() {
         <TabBtn active={role === "teacher"} onClick={() => setRole("teacher")}><Users size={16} className="inline mr-1.5 -mt-0.5" />Teacher</TabBtn>
       </div>
       {role === "teacher" && (
-        <div className="text-[11.5px] text-[#8a8172] mb-3 -mt-3">
+        <div className="text-[11.5px] text-[#7F8EA0] mb-3 -mt-3">
           Teacher access is restricted to the class instructor&rsquo;s email. If that&rsquo;s not you, use Student instead.
         </div>
       )}
 
       <div className="flex gap-2 text-xs mb-4">
-        <button onClick={() => setAuthMode("signin")} className={`px-2.5 py-1 rounded-md ${authMode === "signin" ? "bg-teal text-white" : "text-[#6b6357]"}`}>Sign in</button>
-        <button onClick={() => setAuthMode("signup")} className={`px-2.5 py-1 rounded-md ${authMode === "signup" ? "bg-teal text-white" : "text-[#6b6357]"}`}>Create account</button>
+        <button onClick={() => setAuthMode("signin")} className={`px-2.5 py-1 rounded-md ${authMode === "signin" ? "bg-teal text-[#04121A]" : "text-[#A3B1C2]"}`}>Sign in</button>
+        <button onClick={() => setAuthMode("signup")} className={`px-2.5 py-1 rounded-md ${authMode === "signup" ? "bg-teal text-[#04121A]" : "text-[#A3B1C2]"}`}>Create account</button>
       </div>
 
       <form onSubmit={submitAuth} className="flex flex-col">
@@ -182,31 +182,31 @@ export default function LoginPage() {
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-sm bg-panel border border-hairline rounded-2xl p-8 shadow-sm">
+      <div className="w-full max-w-sm bg-panel border border-hairline rounded-2xl p-8 shadow-[0_24px_70px_rgba(0,0,0,0.55),0_0_0_1px_rgba(34,211,197,0.08)]">
         <div className="flex items-center gap-3 mb-7">
-          <div className="font-serif text-2xl text-gold border border-gold rounded-lg w-11 h-11 flex items-center justify-center">§</div>
+          <div className="font-mono text-lg font-bold text-teal border border-[rgba(34,211,197,0.55)] bg-tealsoft rounded-lg w-11 h-11 flex items-center justify-center shadow-glow">&gt;_</div>
           <div>
             <div className="font-serif text-lg font-bold">JJ and Co.</div>
-            <div className="text-xs text-[#6b6357]">A classroom ERP</div>
+            <div className="text-xs text-[#A3B1C2]">A classroom ERP</div>
           </div>
         </div>
         {children}
       </div>
       <style jsx global>{`
-        .input { font-size: 14px; padding: 9px 11px; border-radius: 8px; border: 1px solid #DDD8CC; background: #F5F3EE; color: #1B2430; outline: none; margin-bottom: 14px; }
-        .primary-btn { display: flex; align-items: center; justify-content: center; gap: 6px; background: #12524F; color: #fff; border: none; padding: 11px 14px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+        .input { font-size: 14px; padding: 9px 11px; border-radius: 8px; border: 1px solid #243140; background: #0D1319; color: #E6EDF3; outline: none; margin-bottom: 14px; }
+        .primary-btn { display: flex; align-items: center; justify-content: center; gap: 6px; background: rgba(34,211,197,0.14); color: #5EEAD4; border: 1px solid rgba(34,211,197,0.6); box-shadow: 0 0 18px rgba(34,211,197,0.12); padding: 11px 14px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
         .primary-btn:disabled { opacity: 0.6; }
       `}</style>
     </div>
   );
 }
 function Label({ children }: { children: React.ReactNode }) {
-  return <label className="text-xs font-semibold text-[#5c5548] mb-1.5 mt-1">{children}</label>;
+  return <label className="text-xs font-semibold text-[#A3B1C2] mb-1.5 mt-1">{children}</label>;
 }
 function TabBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button type="button" onClick={onClick}
-      className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-sm font-semibold ${active ? "bg-panel text-teal shadow-sm" : "text-[#3f5b57]"}`}>
+      className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-sm font-semibold ${active ? "bg-panel text-teal shadow-sm" : "text-[#A3B1C2]"}`}>
       {children}
     </button>
   );

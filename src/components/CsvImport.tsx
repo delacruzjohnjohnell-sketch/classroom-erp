@@ -97,7 +97,7 @@ export function CsvImportModal({
 
   return (
     <Modal title={title} onClose={onClose} wide>
-      <div className="text-[12.5px] text-[#6b6357] mb-3 leading-relaxed">
+      <div className="text-[12.5px] text-[#A3B1C2] mb-3 leading-relaxed">
         CSV must have a header row naming these columns (any order — extra columns are ignored):{" "}
         <code className="text-[11.5px]">{columns.map((c) => c.key).join(", ")}</code>.
         {columns.some((c) => c.required) && (
@@ -109,11 +109,11 @@ export function CsvImportModal({
       {rows && (
         <div className="mt-3 text-[12.5px]">
           {missing.length > 0 ? (
-            <div style={{ color: "#A6402F" }}>Missing required column{missing.length > 1 ? "s" : ""}: {missing.join(", ")}</div>
+            <div style={{ color: "#FF6B7A" }}>Missing required column{missing.length > 1 ? "s" : ""}: {missing.join(", ")}</div>
           ) : dataRows.length === 0 ? (
-            <div style={{ color: "#A6402F" }}>No data rows found below the header.</div>
+            <div style={{ color: "#FF6B7A" }}>No data rows found below the header.</div>
           ) : (
-            <div className="text-[#6b6357]">{fileName} — {dataRows.length} row{dataRows.length === 1 ? "" : "s"} ready to import.</div>
+            <div className="text-[#A3B1C2]">{fileName} — {dataRows.length} row{dataRows.length === 1 ? "" : "s"} ready to import.</div>
           )}
         </div>
       )}

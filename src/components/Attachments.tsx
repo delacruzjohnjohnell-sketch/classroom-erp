@@ -50,18 +50,18 @@ export default function Attachments({ relatedTable, relatedId }: { relatedTable:
   return (
     <div className="mt-3 pt-3 border-t border-hairline">
       <div className="flex items-center justify-between mb-2">
-        <div className="text-[11px] font-bold uppercase tracking-wide text-[#8a8172] flex items-center gap-1.5"><Paperclip size={12} /> Attachments</div>
+        <div className="text-[11px] font-bold uppercase tracking-wide text-[#7F8EA0] flex items-center gap-1.5"><Paperclip size={12} /> Attachments</div>
         <label className="flex items-center gap-1.5 text-[11.5px] font-semibold text-teal cursor-pointer">
           {uploading ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />} Upload
           <input type="file" className="hidden" onChange={handleUpload} disabled={uploading} />
         </label>
       </div>
       {loading ? null : files.length === 0 ? (
-        <div className="text-[12px] text-[#8a8172]">No files attached yet.</div>
+        <div className="text-[12px] text-[#7F8EA0]">No files attached yet.</div>
       ) : (
         <div className="flex flex-col gap-1">
           {files.map((f) => (
-            <button key={f.id} onClick={() => openFile(f.file_path)} className="flex items-center gap-1.5 text-[12.5px] text-[#1B2430] text-left hover:text-teal">
+            <button key={f.id} onClick={() => openFile(f.file_path)} className="flex items-center gap-1.5 text-[12.5px] text-[#E6EDF3] text-left hover:text-teal">
               <FileText size={12} /> {f.file_name}
             </button>
           ))}

@@ -10,7 +10,7 @@ import {
   type CheckResult, type PracticeData,
 } from "@/lib/practiceCheck";
 
-const TEAL = "#12524F", RED = "#A6402F";
+const TEAL = "#22D3C5", RED = "#FF6B7A";
 
 async function loadPracticeData(tenantId: string): Promise<PracticeData> {
   const rows = (table: string, cols: string) => supabase.from(table).select(cols).eq("tenant_id", tenantId);
@@ -60,7 +60,7 @@ function Row({ r }: { r: CheckResult }) {
       {r.pass ? <CheckCircle2 size={15} color={TEAL} className="mt-0.5 shrink-0" /> : <XCircle size={15} color={RED} className="mt-0.5 shrink-0" />}
       <div className="min-w-0">
         <div className="font-semibold">{r.label}</div>
-        <div className="text-[#6b6357] break-words">Expected {r.expected}<br />Found {r.actual}</div>
+        <div className="text-[#A3B1C2] break-words">Expected {r.expected}<br />Found {r.actual}</div>
         {r.hint && <div className="mt-1" style={{ color: RED }}>{r.hint}</div>}
       </div>
     </div>
@@ -123,11 +123,11 @@ export default function PracticeCheckModal({ tenant, onClose }: { tenant: { id: 
 
   return (
     <Modal title={`Practice set check — ${tenant.name}`} onClose={onClose} wide>
-      <label className="block text-[11px] font-bold uppercase tracking-wide text-[#8a8172] mt-3 mb-1" htmlFor="practice-set-select">Practice set</label>
+      <label className="block text-[11px] font-bold uppercase tracking-wide text-[#7F8EA0] mt-3 mb-1" htmlFor="practice-set-select">Practice set</label>
       <select id="practice-set-select" className="input" value={setId} onChange={(e) => { setSetId(e.target.value); setShowPassed(false); }}>
         {PRACTICE_SETS.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
       </select>
-      <div className="text-[12px] text-[#6b6357] mt-1.5">{practiceSet.summary}</div>
+      <div className="text-[12px] text-[#A3B1C2] mt-1.5">{practiceSet.summary}</div>
 
       {!results && !error && <div className="py-10 flex justify-center"><Loader2 className="animate-spin" size={20} color={TEAL} /></div>}
       {error && <div className="mt-3 text-[13px]" style={{ color: RED }}>{error}</div>}
@@ -135,13 +135,13 @@ export default function PracticeCheckModal({ tenant, onClose }: { tenant: { id: 
         <>
           <div className="mt-4 mb-3 flex items-baseline gap-3 flex-wrap">
             <div className="text-[22px] font-bold" style={{ color: s.failed === 0 ? TEAL : RED }}>{s.passed} / {s.total}</div>
-            <div className="text-[12.5px] text-[#6b6357]">checks passed · {netIncome >= 0 ? "net profit" : "net loss"} so far</div>
+            <div className="text-[12.5px] text-[#A3B1C2]">checks passed · {netIncome >= 0 ? "net profit" : "net loss"} so far</div>
           </div>
           {s.failed === 0 && <div className="text-[13px] mb-2" style={{ color: TEAL }}>Everything matches the practice set.</div>}
 
           {grouped(failed).map(({ group, rows }) => (
             <div key={group} className="mb-3">
-              <div className="text-[11px] font-bold uppercase tracking-wide text-[#8a8172] mb-1">Needs attention · {group}</div>
+              <div className="text-[11px] font-bold uppercase tracking-wide text-[#7F8EA0] mb-1">Needs attention · {group}</div>
               {rows.map((r) => <Row key={r.group + r.label} r={r} />)}
             </div>
           ))}
@@ -153,22 +153,22 @@ export default function PracticeCheckModal({ tenant, onClose }: { tenant: { id: 
           )}
           {showPassed && grouped(passed).map(({ group, rows }) => (
             <div key={group} className="mt-3">
-              <div className="text-[11px] font-bold uppercase tracking-wide text-[#8a8172] mb-1">{group}</div>
+              <div className="text-[11px] font-bold uppercase tracking-wide text-[#7F8EA0] mb-1">{group}</div>
               {rows.map((r) => <Row key={r.group + r.label} r={r} />)}
             </div>
           ))}
 
           <div className="mt-5 pt-4 border-t border-hairline">
-            <div className="text-[11px] font-bold uppercase tracking-wide text-[#8a8172] mb-2">Share with the student</div>
+            <div className="text-[11px] font-bold uppercase tracking-wide text-[#7F8EA0] mb-2">Share with the student</div>
             <label className="flex items-start gap-2 text-[12.5px] cursor-pointer" htmlFor="include-details">
               <input id="include-details" type="checkbox" checked={includeDetails} onChange={(e) => setIncludeDetails(e.target.checked)} className="mt-0.5" />
               <span>Include expected figures and hints. Leave this off to share only pass or fail; the expected figures are then never saved.</span>
             </label>
             <div className="flex items-center gap-3 mt-3 flex-wrap">
-              <button onClick={sendReport} disabled={sending} className="rounded-md px-3 py-2 text-xs font-semibold text-white disabled:opacity-50" style={{ background: TEAL }}>
+              <button onClick={sendReport} disabled={sending} className="rounded-md px-3 py-2 text-xs font-semibold text-[#04121A] disabled:opacity-50" style={{ background: TEAL }}>
                 {sending ? "Sending…" : "Send report to student"}
               </button>
-              {sentAt && <span className="text-[12px] text-[#6b6357]">Sent at {sentAt}. Sending again replaces what students see.</span>}
+              {sentAt && <span className="text-[12px] text-[#A3B1C2]">Sent at {sentAt}. Sending again replaces what students see.</span>}
             </div>
           </div>
         </>

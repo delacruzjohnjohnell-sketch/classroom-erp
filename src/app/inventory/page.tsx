@@ -13,8 +13,8 @@ import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
 import { money, round2 } from "@/lib/types";
 
-const TEAL = "#12524F", GOLD = "#C08A2E", RED = "#A6402F", LINE = "#DDD8CC", INK = "#1B2430";
-const tooltipStyle = { background: "#fff", border: `1px solid ${LINE}`, borderRadius: 8, fontSize: 12 };
+const TEAL = "#22D3C5", GOLD = "#F2B13C", RED = "#FF6B7A", LINE = "#243140", INK = "#E6EDF3";
+const tooltipStyle = { background: "#111922", color: "#E6EDF3", border: `1px solid ${LINE}`, borderRadius: 8, fontSize: 12 };
 
 export default function InventoryPage() {
   return <AppShell><InventoryBody /></AppShell>;
@@ -113,9 +113,9 @@ function InventoryBody() {
                   <td className="text-right" style={{ fontVariantNumeric: "tabular-nums", color: i.qty_on_hand <= i.reorder_point ? RED : INK }}>{i.qty_on_hand}</td>
                   <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{money(i.unit_cost)}</td>
                   <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{money(i.qty_on_hand * i.unit_cost)}</td>
-                  <td>{i.qty_on_hand <= i.reorder_point && <span className="text-[10.5px] font-bold text-red bg-[#F6E7E3] rounded-full px-2 py-0.5">Reorder</span>}</td>
+                  <td>{i.qty_on_hand <= i.reorder_point && <span className="text-[10.5px] font-bold text-red bg-[rgba(255,107,122,0.12)] rounded-full px-2 py-0.5">Reorder</span>}</td>
                   <td className="text-right whitespace-nowrap">
-                    <button onClick={() => setEditing(i)} className="text-[#8a8172] mr-2" title="Edit item"><Pencil size={13} /></button>
+                    <button onClick={() => setEditing(i)} className="text-[#7F8EA0] mr-2" title="Edit item"><Pencil size={13} /></button>
                     <button onClick={() => requestDelete(i)} style={{ color: RED }} title="Delete item"><Trash2 size={13} /></button>
                   </td>
                 </tr>
@@ -200,7 +200,7 @@ function ItemForm({ item, onClose, onSaved }: { item?: any; onClose: () => void;
       <Label>Unit cost</Label><input className="input" type="number" step="0.01" value={cost} onChange={(e) => setCost(e.target.value)} required />
       <Label>Reorder point</Label><input className="input" type="number" value={reorder} onChange={(e) => setReorder(e.target.value)} />
       {item && (
-        <div className="text-[12px] text-[#8a8172] mt-2">
+        <div className="text-[12px] text-[#7F8EA0] mt-2">
           Changing quantity or cost updates the Inventory report only — it does not post a journal entry. Bills match their lines to items by <strong>name</strong>, so renaming an item changes how future bills restock it.
         </div>
       )}

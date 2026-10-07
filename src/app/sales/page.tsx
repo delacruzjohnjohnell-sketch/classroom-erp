@@ -20,7 +20,7 @@ import DueDateField from "@/components/DueDateField";
 import { EditDocumentModal, DeleteDocumentDialog, DueDateEditor, canChange, type DocKind } from "@/components/DocActions";
 import { DEFAULT_TERMS, dueFromTerms } from "@/lib/terms";
 
-const TEAL = "#12524F";
+const TEAL = "#22D3C5";
 const TABS = [
   { key: "customers", label: "Customers" },
   { key: "quotes", label: "Quotes" },
@@ -138,8 +138,8 @@ function SalesBody() {
   // Edit / delete for documents that haven't been booked to the ledger yet.
   const docButtons = (kind: DocKind, row: any) => canChange(kind, row.status) && (
     <>
-      <button onClick={() => setEditingDoc({ kind, row })} className="text-[#8a8172]" title="Edit"><Pencil size={13} /></button>
-      <button onClick={() => setDeletingDoc({ kind, row })} style={{ color: "#A6402F" }} title="Delete"><Trash2 size={13} /></button>
+      <button onClick={() => setEditingDoc({ kind, row })} className="text-[#7F8EA0]" title="Edit"><Pencil size={13} /></button>
+      <button onClick={() => setDeletingDoc({ kind, row })} style={{ color: "#FF6B7A" }} title="Delete"><Trash2 size={13} /></button>
     </>
   );
 
@@ -150,7 +150,7 @@ function SalesBody() {
       <div className="flex gap-1 flex-wrap">
         {TABS.map((t) => (
           <button key={t.key} onClick={() => { setTab(t.key); setQ(""); }}
-            className={`text-[13px] font-semibold px-3 py-1.5 rounded-md ${tab === t.key ? "bg-panel border border-hairline" : "text-[#8a8172]"}`}>
+            className={`text-[13px] font-semibold px-3 py-1.5 rounded-md ${tab === t.key ? "bg-panel border border-hairline" : "text-[#7F8EA0]"}`}>
             {t.label}
           </button>
         ))}
@@ -159,13 +159,13 @@ function SalesBody() {
       <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}>
         <KpiCard icon={<Users size={16} />} label="Customers" value={customers.length} />
         <KpiCard icon={<ShoppingCart size={16} />} label="Total invoiced" value={money(totalInvoiced)} accent={TEAL} />
-        <KpiCard icon={<Receipt size={16} />} label="Outstanding (A/R)" value={money(totalOutstanding)} accent={totalOutstanding > 0 ? "#A6402F" : TEAL} />
-        <KpiCard icon={<Receipt size={16} />} label="Pending approval" value={pendingCount} accent={pendingCount > 0 ? "#A6402F" : TEAL} />
+        <KpiCard icon={<Receipt size={16} />} label="Outstanding (A/R)" value={money(totalOutstanding)} accent={totalOutstanding > 0 ? "#FF6B7A" : TEAL} />
+        <KpiCard icon={<Receipt size={16} />} label="Pending approval" value={pendingCount} accent={pendingCount > 0 ? "#FF6B7A" : TEAL} />
       </div>
 
       {tab === "invoices" && (
         <Panel title="Approval threshold">
-          <div className="flex items-center gap-3 flex-wrap text-[12.5px] text-[#6b6357]">
+          <div className="flex items-center gap-3 flex-wrap text-[12.5px] text-[#A3B1C2]">
             <span>Invoices and bills over this amount need a teacher&apos;s approval before they post. Leave blank for no limit.</span>
             <input className="input" type="number" style={{ width: 160 }} defaultValue={threshold ?? ""} placeholder="e.g. 50000"
               onBlur={async (e) => {
@@ -194,8 +194,8 @@ function SalesBody() {
                   <tr key={c.id}>
                     <td>{c.name}</td><td>{c.email}</td>
                     <td className="text-right whitespace-nowrap">
-                      <button onClick={() => setEditingCustomer(c)} className="text-[#8a8172] mr-2" title="Edit customer"><Pencil size={13} /></button>
-                      <button onClick={() => requestDeleteCustomer(c)} style={{ color: "#A6402F" }} title="Delete customer"><Trash2 size={13} /></button>
+                      <button onClick={() => setEditingCustomer(c)} className="text-[#7F8EA0] mr-2" title="Edit customer"><Pencil size={13} /></button>
+                      <button onClick={() => requestDeleteCustomer(c)} style={{ color: "#FF6B7A" }} title="Delete customer"><Trash2 size={13} /></button>
                     </td>
                   </tr>
                 ))}</tbody>
@@ -218,14 +218,14 @@ function SalesBody() {
                 <tbody>
                   {quotesF.map((q) => (
                     <tr key={q.id}>
-                      <td style={{ color: "#C08A2E", fontWeight: 600 }}>{q.document_number}</td>
+                      <td style={{ color: "#F2B13C", fontWeight: 600 }}>{q.document_number}</td>
                       <td>{q.quote_date}</td><td>{q.customers?.name}</td>
                       <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{money(q.total)}</td>
                       <td><StatusPill status={q.status} /></td>
                       <td className="flex gap-1.5">
                         {q.status === "draft" && <>
                           <TinyBtn onClick={() => acceptQuote(q.id)}><Check size={12} /> Accept</TinyBtn>
-                          <button onClick={() => declineQuote(q.id)} className="text-[11px] text-[#8a8172]">Decline</button>
+                          <button onClick={() => declineQuote(q.id)} className="text-[11px] text-[#7F8EA0]">Decline</button>
                         </>}
                         {q.status === "accepted" && <TinyBtn onClick={() => setConvertingQuote(q)}><ArrowRight size={12} /> Convert to Sales Order</TinyBtn>}
                         {docButtons("quote", q)}
@@ -252,7 +252,7 @@ function SalesBody() {
                 <tbody>
                   {ordersF.map((o) => (
                     <tr key={o.id}>
-                      <td style={{ color: "#C08A2E", fontWeight: 600 }}>{o.document_number}</td>
+                      <td style={{ color: "#F2B13C", fontWeight: 600 }}>{o.document_number}</td>
                       <td>{o.order_date}</td><td>{o.customers?.name}</td>
                       <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{money(o.total)}</td>
                       <td><StatusPill status={o.status} /></td>
@@ -286,7 +286,7 @@ function SalesBody() {
                     const status = computePaymentStatus(o.status, o.total, paid, o.due_date);
                     return (
                       <tr key={o.id}>
-                        <td style={{ color: "#C08A2E", fontWeight: 600 }}>{o.document_number}</td>
+                        <td style={{ color: "#F2B13C", fontWeight: 600 }}>{o.document_number}</td>
                         <td>{o.order_date}</td><td>{o.due_date || "—"}</td><td>{o.customers?.name}</td>
                         <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{money(o.total)}</td>
                         <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{money(Math.max(0, o.total - paid))}</td>
@@ -294,11 +294,11 @@ function SalesBody() {
                         <td className="flex gap-1.5">
                           {o.status === "draft" && <TinyBtn onClick={() => setPostingInvoice(o)}><Check size={12} /> Send invoice</TinyBtn>}
                           {o.status === "pending_approval" && profile?.role === "teacher" && <TinyBtn onClick={() => setPostingInvoice(o)}><Check size={12} /> Approve</TinyBtn>}
-                          {o.status === "pending_approval" && profile?.role !== "teacher" && <span className="text-[11px] text-[#8a8172]">Awaiting teacher approval</span>}
+                          {o.status === "pending_approval" && profile?.role !== "teacher" && <span className="text-[11px] text-[#7F8EA0]">Awaiting teacher approval</span>}
                           {o.status === "fulfilled" && <TinyBtn onClick={() => setOpenInvoice(o)}>Details</TinyBtn>}
                           {docButtons("invoice", o)}
                           {o.status === "fulfilled" && (
-                            <button onClick={() => setVoidingInvoice(o)} className="text-[11px] text-[#8a8172] hover:text-red">Void</button>
+                            <button onClick={() => setVoidingInvoice(o)} className="text-[11px] text-[#7F8EA0] hover:text-red">Void</button>
                           )}
                         </td>
                       </tr>
@@ -501,7 +501,7 @@ function InvoiceDetail({ invoice, paid, onPaid, onDueSaved }: { invoice: any; pa
   const balance = Math.max(0, invoice.total - paid);
   return (
     <div>
-      <div className="text-[13px] text-[#6b6357] mb-3">
+      <div className="text-[13px] text-[#A3B1C2] mb-3">
         {invoice.tax_amount > 0 && <>Subtotal {money(invoice.total - invoice.tax_amount)} · Tax ({invoice.tax_rate}%) {money(invoice.tax_amount)} · </>}
         Total {money(invoice.total)} · Paid {money(paid)} · Due {invoice.due_date || "on receipt"}
       </div>
@@ -512,7 +512,7 @@ function InvoiceDetail({ invoice, paid, onPaid, onDueSaved }: { invoice: any; pa
           if (ok(res)) onPaid();
         }} />
       ) : (
-        <div className="text-[13px] font-semibold" style={{ color: "#12524F" }}>Paid in full ✓</div>
+        <div className="text-[13px] font-semibold" style={{ color: "#22D3C5" }}>Paid in full ✓</div>
       )}
       <Attachments relatedTable="invoices" relatedId={invoice.id} />
       <FormStyles />

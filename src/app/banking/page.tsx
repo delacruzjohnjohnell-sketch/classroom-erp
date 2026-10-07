@@ -12,7 +12,7 @@ import { money, todayStr } from "@/lib/types";
 
 const MATCH_WINDOW_DAYS = 3;
 
-const TEAL = "#12524F", RED = "#A6402F";
+const TEAL = "#22D3C5", RED = "#FF6B7A";
 
 export default function BankingPage() {
   return <AppShell><BankingBody /></AppShell>;
@@ -134,7 +134,7 @@ function BankingBody() {
           </div>
 
           {Math.abs(ledgerBalance - bankBalance) > 0.01 && (
-            <div className="text-[12.5px] font-semibold px-4 py-3 rounded-lg" style={{ background: "#FBF0E4", color: "#8a5a1e" }}>
+            <div className="text-[12.5px] font-semibold px-4 py-3 rounded-lg" style={{ background: "rgba(242,177,60,0.12)", color: "#F2B13C" }}>
               Ledger and bank statement don&rsquo;t match — off by {money(ledgerBalance - bankBalance)}. Normal until every line below is entered and reconciled.
             </div>
           )}
@@ -150,11 +150,11 @@ function BankingBody() {
                       <td className="text-right" style={{ fontVariantNumeric: "tabular-nums", color: t.amount < 0 ? RED : TEAL }}>{money(t.amount)}</td>
                       <td>
                         <div className="flex items-center gap-2">
-                          <button onClick={() => toggleReconciled(t.id, t.reconciled)} className="flex items-center gap-1.5 text-[12px] font-semibold" style={{ color: t.reconciled ? TEAL : "#8a8172" }}>
+                          <button onClick={() => toggleReconciled(t.id, t.reconciled)} className="flex items-center gap-1.5 text-[12px] font-semibold" style={{ color: t.reconciled ? TEAL : "#7F8EA0" }}>
                             {t.reconciled ? <CheckCircle2 size={14} /> : <Circle size={14} />} {t.reconciled ? "Reconciled" : "Mark reconciled"}
                           </button>
                           {t.reconciled && t.matched_journal_entry_id && (
-                            <span className="text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded" style={{ color: TEAL, background: "#E4EEEC" }}>
+                            <span className="text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded" style={{ color: TEAL, background: "rgba(34,211,197,0.12)" }}>
                               Auto-matched
                             </span>
                           )}

@@ -15,7 +15,7 @@ import { mutate, ok } from "@/lib/mutate";
 import { money, todayStr } from "@/lib/types";
 import { computePayrollForPeriod, computeHourlyPayrollForPeriod, getPeriodDateRange, type PayrollBreakdown, type PayPeriod } from "@/lib/philippinePayroll";
 
-const TEAL = "#12524F", RED = "#A6402F";
+const TEAL = "#22D3C5", RED = "#FF6B7A";
 const TABS = [
   { key: "employees", label: "Employees" },
   { key: "time", label: "Time & Attendance" },
@@ -105,7 +105,7 @@ function HrBody() {
       <div className="flex gap-1 flex-wrap">
         {TABS.map((t) => (
           <button key={t.key} onClick={() => setTab(t.key)}
-            className={`text-[13px] font-semibold px-3 py-1.5 rounded-md ${tab === t.key ? "bg-panel border border-hairline" : "text-[#8a8172]"}`}>
+            className={`text-[13px] font-semibold px-3 py-1.5 rounded-md ${tab === t.key ? "bg-panel border border-hairline" : "text-[#7F8EA0]"}`}>
             {t.label}
           </button>
         ))}
@@ -130,7 +130,7 @@ function HrBody() {
                 <thead><tr><th>Emp #</th><th>Name</th><th>Title</th><th>Department</th><th>Pay type</th><th className="text-right">Rate</th></tr></thead>
                 <tbody>{employeesF.map((e) => (
                   <tr key={e.id}>
-                    <td style={{ color: "#C08A2E", fontWeight: 600 }}>{e.employee_number}</td>
+                    <td style={{ color: "#F2B13C", fontWeight: 600 }}>{e.employee_number}</td>
                     <td>{e.name}</td><td>{e.title}</td><td>{e.department}</td>
                     <td className="capitalize">{e.pay_type || "monthly"}</td>
                     <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>
@@ -148,7 +148,7 @@ function HrBody() {
         <>
           <div className="flex gap-2"><GoldBtn onClick={() => setModal("time")} disabled={employees.length === 0}><Plus size={14} /> Log hours</GoldBtn></div>
           <Panel title="Time entries">
-            <div className="text-[12px] text-[#8a8172] mb-3">
+            <div className="text-[12px] text-[#7F8EA0] mb-3">
               Wired into pay for <strong>hourly</strong> employees — their gross pay each run comes directly from hours logged here.
               Monthly-salaried employees&rsquo; pay stays fixed regardless of logged hours (their entries are attendance records only).
             </div>
@@ -178,15 +178,15 @@ function HrBody() {
                       <td>{l.employees?.name}</td><td className="capitalize">{l.leave_type}</td>
                       <td>{l.start_date} → {l.end_date}</td>
                       <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{l.days}</td>
-                      <td className="capitalize" style={{ color: l.status === "approved" ? TEAL : l.status === "denied" ? RED : "#C08A2E", fontWeight: 600, fontSize: 12 }}>{l.status}</td>
+                      <td className="capitalize" style={{ color: l.status === "approved" ? TEAL : l.status === "denied" ? RED : "#F2B13C", fontWeight: 600, fontSize: 12 }}>{l.status}</td>
                       <td>
                         {l.status === "pending" && profile?.role === "teacher" && (
                           <div className="flex gap-1.5">
                             <TinyBtn onClick={() => setLeaveStatus(l.id, "approved")}><Check size={12} /> Approve</TinyBtn>
-                            <button onClick={() => setLeaveStatus(l.id, "denied")} className="text-[11px] text-[#8a8172] flex items-center gap-1"><X size={11} /> Deny</button>
+                            <button onClick={() => setLeaveStatus(l.id, "denied")} className="text-[11px] text-[#7F8EA0] flex items-center gap-1"><X size={11} /> Deny</button>
                           </div>
                         )}
-                        {l.status === "pending" && profile?.role !== "teacher" && <span className="text-[11px] text-[#8a8172]">Awaiting teacher review</span>}
+                        {l.status === "pending" && profile?.role !== "teacher" && <span className="text-[11px] text-[#7F8EA0]">Awaiting teacher review</span>}
                       </td>
                     </tr>
                   ))}
@@ -211,7 +211,7 @@ function HrBody() {
                       <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{money(l.principal)}</td>
                       <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{money(l.monthly_deduction)}</td>
                       <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{money(l.balance_remaining)}</td>
-                      <td style={{ color: l.status === "active" ? "#C08A2E" : TEAL, fontWeight: 600, fontSize: 12 }} className="capitalize">{l.status.replace("_", " ")}</td>
+                      <td style={{ color: l.status === "active" ? "#F2B13C" : TEAL, fontWeight: 600, fontSize: 12 }} className="capitalize">{l.status.replace("_", " ")}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -251,7 +251,7 @@ function HrBody() {
                             <tbody>
                               {runLines[r.id].map((line: any) => (
                                 <tr key={line.id}>
-                                  <td>{line.employees?.name} <span className="text-[#8a8172]">({line.employees?.employee_number})</span></td>
+                                  <td>{line.employees?.name} <span className="text-[#7F8EA0]">({line.employees?.employee_number})</span></td>
                                   <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{money(line.net_pay)}</td>
                                   <td>
                                     <Link href={`/hr/payslip/${line.id}`} target="_blank" className="flex items-center gap-1 text-[11.5px] font-semibold text-teal">
@@ -349,10 +349,10 @@ function EmployeeForm({ onClose, onSaved }: { onClose: () => void; onSaved: () =
         <><Label>Annual salary (₱)</Label><input className="input" type="number" value={salary} onChange={(e) => setSalary(e.target.value)} required /></>
       ) : (
         <><Label>Hourly rate (₱)</Label><input className="input" type="number" step="0.01" value={hourlyRate} onChange={(e) => setHourlyRate(e.target.value)} required />
-        <div className="text-[12px] text-[#8a8172] mt-1">Gross pay each run comes directly from hours logged in Time &amp; Attendance for that period.</div></>
+        <div className="text-[12px] text-[#7F8EA0] mt-1">Gross pay each run comes directly from hours logged in Time &amp; Attendance for that period.</div></>
       )}
 
-      <div className="text-[11px] font-bold uppercase tracking-wide text-[#8a8172] mt-4 mb-1">Statutory IDs (optional — shown on payslip)</div>
+      <div className="text-[11px] font-bold uppercase tracking-wide text-[#7F8EA0] mt-4 mb-1">Statutory IDs (optional — shown on payslip)</div>
       <div className="grid grid-cols-2 gap-2.5">
         <div><Label>TIN</Label><input className="input" value={tin} onChange={(e) => setTin(e.target.value)} placeholder="000-000-000-000" /></div>
         <div><Label>SSS No.</Label><input className="input" value={sss} onChange={(e) => setSss(e.target.value)} placeholder="00-0000000-0" /></div>
@@ -435,7 +435,7 @@ function LeaveForm({ employees, onClose, onSaved }: { employees: any[]; onClose:
         <div><Label>Start date</Label><input className="input" type="date" value={start} onChange={(e) => setStart(e.target.value)} required /></div>
         <div><Label>End date</Label><input className="input" type="date" value={end} onChange={(e) => setEnd(e.target.value)} required /></div>
       </div>
-      <div className="text-[12px] text-[#8a8172] mt-1">{days} day{days !== 1 ? "s" : ""}</div>
+      <div className="text-[12px] text-[#7F8EA0] mt-1">{days} day{days !== 1 ? "s" : ""}</div>
       <Label>Reason (optional)</Label>
       <input className="input" value={reason} onChange={(e) => setReason(e.target.value)} />
       <button type="submit" disabled={submitting} className="primary-btn mt-4">{submitting ? "Submitting…" : "Submit request"}</button>
@@ -474,7 +474,7 @@ function LoanForm({ employees, onClose, onSaved }: { employees: any[]; onClose: 
       </div>
       <Label>Date issued</Label>
       <input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
-      <div className="text-[12px] text-[#8a8172] mt-1">Posts Dr Employee Loans Receivable / Cr Cash immediately.</div>
+      <div className="text-[12px] text-[#7F8EA0] mt-1">Posts Dr Employee Loans Receivable / Cr Cash immediately.</div>
       <button type="submit" disabled={submitting} className="primary-btn mt-4">{submitting ? "Issuing…" : "Issue loan"}</button>
       <FormStyles />
     </form>
@@ -534,7 +534,7 @@ function PayrollPreviewModal({ employees, activeLoans, runs, tenantId, onClose, 
 
   return (
     <Modal title="Payroll preview — Philippine statutory deductions" onClose={onClose} wide>
-      <div className="text-[12px] text-[#8a8172] mb-3">
+      <div className="text-[12px] text-[#7F8EA0] mb-3">
         Rates approximate 2023–2024 SSS/PhilHealth/Pag-IBIG/BIR tables. Verify against current issuances before real use.
       </div>
       <Label>Pay month</Label>
@@ -546,17 +546,17 @@ function PayrollPreviewModal({ employees, activeLoans, runs, tenantId, onClose, 
         <option value="semi_second">Semi-monthly — 2nd half (statutory + loan deductions applied)</option>
       </select>
 
-      <div className="text-[12px] text-[#6b6357] mb-3">
+      <div className="text-[12px] text-[#A3B1C2] mb-3">
         Covers <strong>{range.start}</strong> to <strong>{range.end}</strong>. The payroll entry is dated <strong>{runDate}</strong>.
       </div>
       {alreadyRun && (
-        <div className="text-[12.5px] mb-3 p-2.5 rounded-md" style={{ background: "#FBEFD9", color: "#7a4d00" }}>
+        <div className="text-[12.5px] mb-3 p-2.5 rounded-md" style={{ background: "rgba(242,177,60,0.12)", color: "#F2B13C" }}>
           Payroll for this month and period has already been run. Posting again will pay your employees twice.
         </div>
       )}
 
       {hourlyEmployees.length > 0 && (
-        <div className="text-[12px] text-[#6b6357] mb-3">
+        <div className="text-[12px] text-[#A3B1C2] mb-3">
           Hourly employees&rsquo; gross is pulled from Time &amp; Attendance entries between <strong>{range.start}</strong> and <strong>{range.end}</strong>.
           {loadingHours && " Loading logged hours…"}
         </div>
@@ -574,7 +574,7 @@ function PayrollPreviewModal({ employees, activeLoans, runs, tenantId, onClose, 
               const emp = employees.find((e) => e.id === b.employeeId);
               return (
                 <tr key={b.employeeId}>
-                  <td>{b.employeeName}{emp?.pay_type === "hourly" && <span className="text-[#8a8172]"> · {hoursByEmployee[emp.id] || 0} hrs</span>}</td>
+                  <td>{b.employeeName}{emp?.pay_type === "hourly" && <span className="text-[#7F8EA0]"> · {hoursByEmployee[emp.id] || 0} hrs</span>}</td>
                   <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{money(b.gross)}</td>
                   <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{money(b.sssEE)}</td>
                   <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{money(b.philhealthEE)}</td>
@@ -588,10 +588,10 @@ function PayrollPreviewModal({ employees, activeLoans, runs, tenantId, onClose, 
           </tbody>
         </table>
       </div>
-      <div className="flex justify-between text-[13.5px] font-bold mt-4 pt-3" style={{ borderTop: "2px solid #1B2430" }}>
+      <div className="flex justify-between text-[13.5px] font-bold mt-4 pt-3" style={{ borderTop: "2px solid #E6EDF3" }}>
         <span>Total net pay to employees</span><span>{money(totals.netPay)}</span>
       </div>
-      <div className="text-[12px] text-[#6b6357] mt-1">
+      <div className="text-[12px] text-[#A3B1C2] mt-1">
         Plus employer-side SSS/PhilHealth/Pag-IBIG contributions posted as Payroll Tax Expense. Individual payslips are available afterward from Payroll history.
       </div>
       <button onClick={post} disabled={posting || loadingHours} className="primary-btn mt-4">{posting ? "Posting…" : "Confirm & post payroll"}</button>

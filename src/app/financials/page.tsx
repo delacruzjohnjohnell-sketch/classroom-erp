@@ -11,7 +11,7 @@ import { mutate, ok } from "@/lib/mutate";
 import { money, todayStr, type Account } from "@/lib/types";
 import { computeAccountBalances, type EntryWithLines } from "@/lib/metrics";
 
-const TEAL = "#12524F", GOLD = "#C08A2E", RED = "#A6402F";
+const TEAL = "#22D3C5", GOLD = "#F2B13C", RED = "#FF6B7A";
 
 export default function FinancialsPage() {
   return <AppShell><FinancialsBody /></AppShell>;
@@ -98,9 +98,9 @@ function FinancialsBody() {
       <ModalStyles />
 
       <div className="flex gap-2 flex-wrap">
-        <button onClick={() => setTab("journal")} className={`text-[13px] font-semibold px-3 py-1.5 rounded-md ${tab === "journal" ? "bg-panel border border-hairline" : "text-[#8a8172]"}`}>Journal entries</button>
-        <button onClick={() => setTab("accounts")} className={`text-[13px] font-semibold px-3 py-1.5 rounded-md ${tab === "accounts" ? "bg-panel border border-hairline" : "text-[#8a8172]"}`}>Chart of accounts</button>
-        <button onClick={() => setTab("recurring")} className={`text-[13px] font-semibold px-3 py-1.5 rounded-md ${tab === "recurring" ? "bg-panel border border-hairline" : "text-[#8a8172]"}`}>Recurring</button>
+        <button onClick={() => setTab("journal")} className={`text-[13px] font-semibold px-3 py-1.5 rounded-md ${tab === "journal" ? "bg-panel border border-hairline" : "text-[#7F8EA0]"}`}>Journal entries</button>
+        <button onClick={() => setTab("accounts")} className={`text-[13px] font-semibold px-3 py-1.5 rounded-md ${tab === "accounts" ? "bg-panel border border-hairline" : "text-[#7F8EA0]"}`}>Chart of accounts</button>
+        <button onClick={() => setTab("recurring")} className={`text-[13px] font-semibold px-3 py-1.5 rounded-md ${tab === "recurring" ? "bg-panel border border-hairline" : "text-[#7F8EA0]"}`}>Recurring</button>
         <div className="flex-1" />
         <GoldBtn onClick={() => setModal("sale")}><Plus size={14} /> Record sale</GoldBtn>
         <OutlineBtn onClick={() => setModal("expense")}><Plus size={14} /> Record expense</OutlineBtn>
@@ -110,7 +110,7 @@ function FinancialsBody() {
       {tab === "journal" && (
         <Panel title="Books lock">
           <div className="flex items-center gap-3 flex-wrap">
-            <span className="text-[12.5px] text-[#6b6357]">
+            <span className="text-[12.5px] text-[#A3B1C2]">
               {lockedThrough ? <>Entries dated on or before <strong>{lockedThrough}</strong> can&rsquo;t be posted.</> : "No lock set — entries can be posted to any date."}
             </span>
             <input className="input" style={{ width: 160 }} type="date" defaultValue={lockedThrough ?? ""} onBlur={(e) => saveLock(e.target.value)} />
@@ -133,7 +133,7 @@ function FinancialsBody() {
                       <>
                         <td rowSpan={e.journal_lines.length}>{e.entry_date}</td>
                         <td rowSpan={e.journal_lines.length}>{e.memo}</td>
-                        <td rowSpan={e.journal_lines.length} className="text-[#6b6357]">{postedByNames[e.created_by] ?? "—"}</td>
+                        <td rowSpan={e.journal_lines.length} className="text-[#A3B1C2]">{postedByNames[e.created_by] ?? "—"}</td>
                       </>
                     ) : null}
                     <td>{accountsById[l.account_id]?.name ?? l.account_id}</td>
@@ -145,7 +145,7 @@ function FinancialsBody() {
                           <button onClick={() => reverseEntry(e.id)} disabled={reversing === e.id} className="text-[11px] font-semibold text-teal">
                             {reversing === e.id ? "…" : "Reverse"}
                           </button>
-                          <button onClick={() => setAttachEntry({ id: e.id, memo: e.memo })} className="text-[#8a8172]" title="Attachments">
+                          <button onClick={() => setAttachEntry({ id: e.id, memo: e.memo })} className="text-[#7F8EA0]" title="Attachments">
                             <Paperclip size={13} />
                           </button>
                         </div>
@@ -172,12 +172,12 @@ function FinancialsBody() {
                 <tr key={a.id}>
                   <td style={{ color: GOLD, fontWeight: 600 }}>{a.code}</td>
                   <td>{a.name}</td>
-                  <td className="capitalize text-[#6b6357]">{a.type}</td>
+                  <td className="capitalize text-[#A3B1C2]">{a.type}</td>
                   <td>{(a as any).is_bank ? "Yes" : ""}</td>
                   <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{money(balances[a.id] || 0)}</td>
                   <td className="flex gap-2">
-                    <button onClick={() => setAccountModal(a)} className="text-[#8a8172]"><Pencil size={13} /></button>
-                    <button onClick={async () => { if (confirm(`Delete ${a.name}? This cannot be undone.`)) { await mutate(supabase.from("accounts").delete().eq("id", a.id), { successMessage: "Account deleted." }); load(); } }} className="text-red-700" style={{ color: "#A6402F" }}><Trash2 size={13} /></button>
+                    <button onClick={() => setAccountModal(a)} className="text-[#7F8EA0]"><Pencil size={13} /></button>
+                    <button onClick={async () => { if (confirm(`Delete ${a.name}? This cannot be undone.`)) { await mutate(supabase.from("accounts").delete().eq("id", a.id), { successMessage: "Account deleted." }); load(); } }} className="text-red-700" style={{ color: "#FF6B7A" }}><Trash2 size={13} /></button>
                   </td>
                 </tr>
               ))}
@@ -190,7 +190,7 @@ function FinancialsBody() {
         <>
           <div className="flex justify-end"><GoldBtn onClick={() => setModal("recurring")}><Plus size={14} /> New recurring entry</GoldBtn></div>
           <Panel title="Recurring entries">
-            <div className="text-[12px] text-[#8a8172] mb-3">
+            <div className="text-[12px] text-[#7F8EA0] mb-3">
               Posting isn&rsquo;t automatic — this tracks what&rsquo;s due and lets you post it in one click. Open this page to check for anything due.
             </div>
             {recurring.length === 0 ? <Empty>No recurring entries yet — e.g. monthly rent or a subscription.</Empty> : (
@@ -203,7 +203,7 @@ function FinancialsBody() {
                       <tr key={r.id}>
                         <td>{r.memo}</td><td className="capitalize">{r.frequency}</td>
                         <td style={{ color: due ? RED : undefined, fontWeight: due ? 600 : 400 }}>{r.next_run_date}</td>
-                        <td>{!r.active ? <span className="text-[11px] text-[#8a8172]">Ended</span> : due ? <span className="text-[11px] font-semibold" style={{ color: RED }}>Due</span> : <span className="text-[11px] text-teal">Scheduled</span>}</td>
+                        <td>{!r.active ? <span className="text-[11px] text-[#7F8EA0]">Ended</span> : due ? <span className="text-[11px] font-semibold" style={{ color: RED }}>Due</span> : <span className="text-[11px] text-teal">Scheduled</span>}</td>
                         <td>
                           {r.active && (
                             <TinyBtn onClick={async () => { await mutate(supabase.rpc("post_recurring_entry", { target_recurring_id: r.id, post_date: todayStr() }), { successMessage: "Recurring entry posted." }); load(); }}>
@@ -437,8 +437,8 @@ function AccountModal({ account, onClose, onSave }: { account: Account | null; o
 function ModalStyles() {
   return (
     <style jsx global>{`
-      .input { font-size: 14px; padding: 9px 11px; border-radius: 8px; border: 1px solid #DDD8CC; background: #F5F3EE; color: #1B2430; outline: none; width: 100%; }
-      .primary-btn { display: flex; align-items: center; justify-content: center; gap: 6px; background: #12524F; color: #fff; border: none; padding: 11px 14px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; }
+      .input { font-size: 14px; padding: 9px 11px; border-radius: 8px; border: 1px solid #243140; background: #0D1319; color: #E6EDF3; outline: none; width: 100%; }
+      .primary-btn { display: flex; align-items: center; justify-content: center; gap: 6px; background: rgba(34,211,197,0.14); color: #5EEAD4; border: 1px solid rgba(34,211,197,0.6); box-shadow: 0 0 18px rgba(34,211,197,0.12); padding: 11px 14px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; }
     `}</style>
   );
 }

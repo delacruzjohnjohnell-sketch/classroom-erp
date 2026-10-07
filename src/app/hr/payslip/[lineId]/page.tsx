@@ -34,11 +34,11 @@ export default function PayslipPage() {
   const totalEmployerContrib = line.sss_er + line.philhealth_er + line.pagibig_er;
 
   return (
-    <div className="min-h-screen bg-paper flex justify-center py-10 px-4">
-      <div className="w-full max-w-[640px] bg-panel border border-hairline rounded-xl p-8">
+    <div className="min-h-screen bg-[#F5F3EE] flex justify-center py-10 px-4">
+      <div className="w-full max-w-[640px] bg-white text-[#1B2430] border border-[#DDD8CC] rounded-xl p-8">
         <div className="flex items-center justify-between no-print mb-6">
           <div className="text-xs text-[#8a8172]">Payslip</div>
-          <button onClick={() => window.print()} className="flex items-center gap-1.5 bg-teal text-white text-xs font-semibold px-3 py-2 rounded-md">
+          <button onClick={() => window.print()} className="flex items-center gap-1.5 bg-[#12524F] text-white text-xs font-semibold px-3 py-2 rounded-md">
             <Printer size={13} /> Print / Save as PDF
           </button>
         </div>
@@ -78,7 +78,7 @@ export default function PayslipPage() {
           <span className="text-[19px] font-bold" style={{ color: "#12524F", fontVariantNumeric: "tabular-nums" }}>{money(line.net_pay)}</span>
         </div>
 
-        <div className="mt-8 pt-4 border-t border-hairline">
+        <div className="mt-8 pt-4 border-t border-[#DDD8CC]">
           <div className="text-[11px] font-bold uppercase tracking-wide text-[#8a8172] mb-2">Employer contributions (for reference — not deducted from employee)</div>
           <LineItem label="SSS (employer share)" value={line.sss_er} small />
           <LineItem label="PhilHealth (employer share)" value={line.philhealth_er} small />
@@ -104,7 +104,7 @@ export default function PayslipPage() {
 
 function Row({ label, value }: { label: string; value?: string }) {
   return (
-    <div className="flex justify-between border-b border-hairline py-1">
+    <div className="flex justify-between border-b border-[#DDD8CC] py-1">
       <span className="text-[#8a8172]">{label}</span><span className="font-medium">{value || "—"}</span>
     </div>
   );
@@ -114,7 +114,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 }
 function LineItem({ label, value, bold, border, small }: { label: string; value: number; bold?: boolean; border?: boolean; small?: boolean }) {
   return (
-    <div className={`flex justify-between py-1 ${border ? "border-t border-hairline mt-1 pt-2" : ""}`} style={{ fontSize: small ? 12 : 13, fontWeight: bold ? 700 : 400 }}>
+    <div className={`flex justify-between py-1 ${border ? "border-t border-[#DDD8CC] mt-1 pt-2" : ""}`} style={{ fontSize: small ? 12 : 13, fontWeight: bold ? 700 : 400 }}>
       <span>{label}</span><span style={{ fontVariantNumeric: "tabular-nums" }}>{money(value)}</span>
     </div>
   );

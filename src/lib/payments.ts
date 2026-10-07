@@ -13,13 +13,13 @@ export function computePaymentStatus(postedStatus: "draft" | "pending_approval" 
 }
 
 export const STATUS_COLOR: Record<PaymentStatus, string> = {
-  Draft: "#8a8172",
-  "Pending Approval": "#A6402F",
-  Open: "#C08A2E",
-  Partial: "#5B7B93",
-  Paid: "#12524F",
-  Overdue: "#A6402F",
-  Void: "#8a8172",
+  Draft: "#7F8EA0",
+  "Pending Approval": "#FF6B7A",
+  Open: "#F2B13C",
+  Partial: "#5AA9FF",
+  Paid: "#22D3C5",
+  Overdue: "#FF6B7A",
+  Void: "#7F8EA0",
 };
 
 // Aging buckets for AR/AP reports.

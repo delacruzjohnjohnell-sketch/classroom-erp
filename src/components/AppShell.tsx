@@ -44,7 +44,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   if (loading || !userId || !profile || !effectiveTenantId) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="animate-spin" size={20} color="#12524F" />
+        <Loader2 className="animate-spin" size={20} color="#22D3C5" />
       </div>
     );
   }
@@ -58,41 +58,48 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex">
       {/* Sidebar */}
-      <div className="w-[220px] shrink-0 bg-sidebar flex flex-col">
-        <div className="px-5 py-5 border-b border-white/10">
-          <div className="flex items-center gap-2.5 mb-1">
-            <div className="font-serif text-lg text-gold border border-gold rounded-md w-8 h-8 flex items-center justify-center shrink-0">§</div>
-            <div className="font-serif text-[15px] font-bold leading-tight text-white">JJ and Co.</div>
+      <div className="w-[220px] shrink-0 bg-sidebar border-r border-hairline flex flex-col sticky top-0 h-screen">
+        <div className="px-5 py-5 border-b border-hairline">
+          <div className="flex items-center gap-2.5">
+            <div className="font-mono text-[13px] font-bold text-teal border border-[rgba(34,211,197,0.55)] bg-tealsoft rounded-md w-8 h-8 flex items-center justify-center shrink-0 shadow-glow">&gt;_</div>
+            <div className="leading-tight">
+              <div className="font-mono text-[14px] font-bold text-ink">JJ and Co.</div>
+              <div className="font-mono text-[9.5px] uppercase tracking-[0.14em] text-sidebarTextMuted">classroom erp</div>
+            </div>
           </div>
         </div>
 
-        <div className="px-5 py-4 border-b border-white/10">
+        <div className="px-5 py-4 border-b border-hairline">
           {profile.role === "teacher" && (
-            <button onClick={() => { setViewTenantId(null); router.push("/teacher"); }} className="flex items-center gap-1 text-tealsoft text-xs font-semibold mb-2 hover:text-white">
+            <button onClick={() => { setViewTenantId(null); router.push("/teacher"); }} className="flex items-center gap-1 text-teal text-xs font-semibold mb-2 hover:text-ink">
               <ArrowLeft size={13} /> All companies
             </button>
           )}
-          <div className="text-[13px] font-bold truncate text-white">{tenantName}</div>
-          <div className="text-[11px] text-sidebarTextMuted mt-0.5">
-            {profile.role === "teacher" ? `Teacher · ${profile.full_name}` : `${profile.full_name} · Student`}
+          <div className="font-mono text-[9.5px] uppercase tracking-[0.14em] text-sidebarTextMuted mb-1 flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#4ADE9C]" style={{ boxShadow: "0 0 8px #4ADE9C" }} /> workspace
+          </div>
+          <div className="text-[13px] font-bold truncate text-ink">{tenantName}</div>
+          <div className="text-[11px] text-sidebarTextMuted mt-0.5 font-mono">
+            {profile.role === "teacher" ? `teacher · ${profile.full_name}` : `${profile.full_name} · student`}
           </div>
         </div>
 
-        <nav className="flex-1 py-3 px-3 flex flex-col gap-0.5">
+        <nav className="flex-1 py-3 px-3 flex flex-col gap-0.5 overflow-y-auto">
           {NAV.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href;
             return (
               <Link key={item.href} href={item.href}
-                className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] font-semibold transition-colors ${active ? "bg-sidebarActive text-white" : "text-sidebarText hover:bg-sidebarHover hover:text-white"}`}>
+                className={`relative flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] font-semibold transition-colors ${active ? "bg-sidebarActive text-teal" : "text-sidebarText hover:bg-sidebarHover hover:text-ink"}`}>
+                {active && <span className="absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded bg-teal" style={{ boxShadow: "0 0 8px #22D3C5" }} />}
                 <Icon size={16} /> {item.label}
               </Link>
             );
           })}
         </nav>
 
-        <div className="p-3 border-t border-white/10">
-          <button onClick={() => signOut()} className="flex items-center gap-2 w-full px-3 py-2 rounded-md text-[13px] text-sidebarText hover:bg-sidebarHover hover:text-white">
+        <div className="p-3 border-t border-hairline">
+          <button onClick={() => signOut()} className="flex items-center gap-2 w-full px-3 py-2 rounded-md text-[13px] text-sidebarText hover:bg-sidebarHover hover:text-ink">
             <LogOut size={15} /> Sign out
           </button>
         </div>
@@ -100,8 +107,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Main content */}
       <div className="flex-1 min-w-0">
-        <div className="px-6 py-4 border-b border-hairline bg-panel flex items-center justify-between gap-4">
-          <div className="font-serif text-lg font-bold text-ink truncate">{pageTitle}</div>
+        <div className="sticky top-0 z-20 px-6 py-3.5 border-b border-hairline bg-[rgba(8,12,17,0.82)] backdrop-blur-md flex items-center justify-between gap-4">
+          <div className="font-mono text-[15px] font-semibold text-ink truncate">
+            <span className="text-sidebarTextMuted">~/</span><span className="text-teal">{pageTitle.toLowerCase().replace(/\s+/g, "-")}</span><span className="text-teal animate-pulse">_</span>
+          </div>
           <div className="flex items-center gap-4 shrink-0">
             {otherViewers.length > 0 && (
               <div
@@ -112,25 +121,25 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                   {otherViewers.slice(0, 3).map((v) => (
                     <div
                       key={v.userId}
-                      className="w-6 h-6 rounded-full bg-gold text-white text-[9.5px] font-bold flex items-center justify-center border-2 border-panel"
+                      className="w-6 h-6 rounded-full bg-gold text-onaccent text-[9.5px] font-bold flex items-center justify-center border-2 border-panel"
                     >
                       {v.name.split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase()).join("") || "?"}
                     </div>
                   ))}
                 </div>
-                <span className="text-[11px] text-[#8a8172] hidden md:inline">
+                <span className="text-[11px] text-[#7F8EA0] hidden md:inline font-mono">
                   {otherViewers.length === 1 ? "also here" : `+${otherViewers.length} also here`}
                 </span>
               </div>
             )}
             <GlobalSearch />
             <div className="flex items-center gap-2.5 pl-3 border-l border-hairline">
-              <div className="w-8 h-8 rounded-full bg-tealsoft text-teal font-semibold text-[12px] flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-md bg-tealsoft text-teal border border-[rgba(34,211,197,0.3)] font-mono font-semibold text-[12px] flex items-center justify-center shrink-0">
                 {initials}
               </div>
               <div className="hidden sm:block leading-tight">
                 <div className="text-[13px] font-semibold text-ink truncate max-w-[140px]">{profile.full_name}</div>
-                <div className="text-[11px] text-[#8a8172] capitalize">{profile.role}</div>
+                <div className="text-[10.5px] text-[#7F8EA0] font-mono uppercase tracking-wider">{profile.role}</div>
               </div>
             </div>
           </div>

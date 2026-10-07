@@ -57,9 +57,9 @@ export function ToastHost() {
           key={t.id}
           className="flex items-start gap-2 rounded-lg px-3.5 py-3 text-[13px] font-medium shadow-lg border"
           style={{
-            background: t.type === "error" ? "#FCEFEC" : "#EAF3F1",
-            color: t.type === "error" ? "#A6402F" : "#12524F",
-            borderColor: t.type === "error" ? "#F0C6BC" : "#BFE0DB",
+            background: t.type === "error" ? "rgba(255,107,122,0.12)" : "rgba(34,211,197,0.12)",
+            color: t.type === "error" ? "#FF6B7A" : "#22D3C5",
+            borderColor: t.type === "error" ? "rgba(255,107,122,0.4)" : "rgba(34,211,197,0.4)",
           }}
         >
           {t.type === "error" ? (

@@ -11,9 +11,9 @@ import { money, round2, type Account } from "@/lib/types";
 import { computeAccountBalances, type EntryWithLines } from "@/lib/metrics";
 import { agingBucket } from "@/lib/payments";
 
-const TEAL = "#12524F", GOLD = "#C08A2E", RED = "#A6402F", LINE = "#DDD8CC", INK = "#1B2430";
-const PIE_COLORS = ["#12524F", "#C08A2E", "#A6402F", "#5B7B93", "#8A8172", "#7A9E8E"];
-const tooltipStyle = { background: "#fff", border: `1px solid ${LINE}`, borderRadius: 8, fontSize: 12 };
+const TEAL = "#22D3C5", GOLD = "#F2B13C", RED = "#FF6B7A", LINE = "#243140", INK = "#E6EDF3";
+const PIE_COLORS = ["#22D3C5", "#F2B13C", "#FF6B7A", "#5AA9FF", "#7F8EA0", "#4ADE9C"];
+const tooltipStyle = { background: "#111922", color: "#E6EDF3", border: `1px solid ${LINE}`, borderRadius: 8, fontSize: 12 };
 
 type ReportKey = "pnl" | "cashflow" | "balance" | "trial" | "arAging" | "apAging" | "inventory" | "procurement" | "sales" | "hr";
 const REPORTS: { key: ReportKey; label: string; icon: React.ReactNode }[] = [
@@ -212,18 +212,18 @@ function ReportsBody() {
         {REPORTS.map((r) => (
           <button key={r.key} onClick={() => setReport(r.key)}
             className="flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-semibold border"
-            style={report === r.key ? { background: TEAL, color: "#fff", borderColor: TEAL } : { background: "#fff", color: TEAL, borderColor: TEAL }}>
+            style={report === r.key ? { background: TEAL, color: "#04121A", borderColor: TEAL } : { background: "#111922", color: TEAL, borderColor: TEAL }}>
             {r.icon} {r.label}
           </button>
         ))}
         <div className="flex-1" />
-        <button onClick={exportCSV} className="flex items-center gap-1.5 bg-gold text-white rounded-md px-3 py-2 text-xs font-semibold"><Download size={14} /> Export CSV</button>
+        <button onClick={exportCSV} className="flex items-center gap-1.5 bg-gold text-[#04121A] rounded-md px-3 py-2 text-xs font-semibold"><Download size={14} /> Export CSV</button>
       </div>
 
       {(report === "pnl" || report === "cashflow") && (
         <div className="grid grid-cols-2 gap-2.5">
-          <div><label className="text-xs font-semibold text-[#5c5548]">From</label><input className="input" type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></div>
-          <div><label className="text-xs font-semibold text-[#5c5548]">To</label><input className="input" type="date" value={to} onChange={(e) => setTo(e.target.value)} /></div>
+          <div><label className="text-xs font-semibold text-[#A3B1C2]">From</label><input className="input" type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></div>
+          <div><label className="text-xs font-semibold text-[#A3B1C2]">To</label><input className="input" type="date" value={to} onChange={(e) => setTo(e.target.value)} /></div>
         </div>
       )}
 
@@ -238,32 +238,32 @@ function ReportsBody() {
       {report === "cashflow" && (
         <Panel title={`Cash flow statement ${from || to ? `(${from || "start"} – ${to || "now"})` : "(all time)"}`}>
           <div className="mb-3.5">
-            <div className="text-[11.5px] font-bold uppercase tracking-wide text-[#8a8172] mb-1.5">Operating activities</div>
+            <div className="text-[11.5px] font-bold uppercase tracking-wide text-[#7F8EA0] mb-1.5">Operating activities</div>
             <div className="flex justify-between text-[13px] py-1.5"><span>Net income</span><span style={{ fontVariantNumeric: "tabular-nums" }}>{money(netIncome)}</span></div>
             {depreciationExpense > 0 && (
               <div className="flex justify-between text-[13px] py-1.5"><span>Depreciation (non-cash add-back)</span><span style={{ fontVariantNumeric: "tabular-nums" }}>{money(depreciationExpense)}</span></div>
             )}
-            {wcRows.length === 0 ? <div className="text-[13px] text-[#8a8172] py-1.5">No working-capital changes this period</div> : wcRows.map((r) => (
+            {wcRows.length === 0 ? <div className="text-[13px] text-[#7F8EA0] py-1.5">No working-capital changes this period</div> : wcRows.map((r) => (
               <div key={r.code} className="flex justify-between text-[13px] py-1.5"><span>Change in {r.name}</span><span style={{ fontVariantNumeric: "tabular-nums" }}>{money(r.amount)}</span></div>
             ))}
             <div className="flex justify-between font-bold pt-1.5 mt-1 border-t border-hairline text-[13px]"><span>Net cash from operations</span><span style={{ fontVariantNumeric: "tabular-nums" }}>{money(operatingCash)}</span></div>
           </div>
           <div className="mb-3.5">
-            <div className="text-[11.5px] font-bold uppercase tracking-wide text-[#8a8172] mb-1.5">Investing activities</div>
-            {investingRows.length === 0 ? <div className="text-[13px] text-[#8a8172] py-1.5">None recorded</div> : investingRows.map((r) => (
+            <div className="text-[11.5px] font-bold uppercase tracking-wide text-[#7F8EA0] mb-1.5">Investing activities</div>
+            {investingRows.length === 0 ? <div className="text-[13px] text-[#7F8EA0] py-1.5">None recorded</div> : investingRows.map((r) => (
               <div key={r.code} className="flex justify-between text-[13px] py-1.5"><span>{r.name}</span><span style={{ fontVariantNumeric: "tabular-nums" }}>{money(r.amount)}</span></div>
             ))}
             <div className="flex justify-between font-bold pt-1.5 mt-1 border-t border-hairline text-[13px]"><span>Net cash from investing</span><span style={{ fontVariantNumeric: "tabular-nums" }}>{money(investingCash)}</span></div>
           </div>
           <div className="mb-3.5">
-            <div className="text-[11.5px] font-bold uppercase tracking-wide text-[#8a8172] mb-1.5">Financing activities</div>
-            {financingRows.length === 0 ? <div className="text-[13px] text-[#8a8172] py-1.5">None recorded</div> : financingRows.map((r) => (
+            <div className="text-[11.5px] font-bold uppercase tracking-wide text-[#7F8EA0] mb-1.5">Financing activities</div>
+            {financingRows.length === 0 ? <div className="text-[13px] text-[#7F8EA0] py-1.5">None recorded</div> : financingRows.map((r) => (
               <div key={r.code} className="flex justify-between text-[13px] py-1.5"><span>{r.name}</span><span style={{ fontVariantNumeric: "tabular-nums" }}>{money(r.amount)}</span></div>
             ))}
             <div className="flex justify-between font-bold pt-1.5 mt-1 border-t border-hairline text-[13px]"><span>Net cash from financing</span><span style={{ fontVariantNumeric: "tabular-nums" }}>{money(financingCash)}</span></div>
           </div>
           <GrandTotal label="Net change in cash" value={netChangeInCash} color={netChangeInCash >= 0 ? TEAL : RED} />
-          <div className="text-[11.5px] mt-1.5" style={{ color: cfBalanced ? "#8a8172" : RED }}>
+          <div className="text-[11.5px] mt-1.5" style={{ color: cfBalanced ? "#7F8EA0" : RED }}>
             {cfBalanced ? `Reconciles ✓ (actual cash change: ${money(actualCashChange)})` : `Off by ${money(netChangeInCash - actualCashChange)} vs. the actual cash change of ${money(actualCashChange)}`}
           </div>
         </Panel>
@@ -437,7 +437,7 @@ function ReportsBody() {
           )}
         </Panel>
       )}
-      <style jsx global>{`.input { font-size: 14px; padding: 9px 11px; border-radius: 8px; border: 1px solid #DDD8CC; background: #fff; color: #1B2430; outline: none; width: 100%; }`}</style>
+      <style jsx global>{`.input { font-size: 14px; padding: 9px 11px; border-radius: 8px; border: 1px solid #243140; background: #0D1319; color: #E6EDF3; outline: none; width: 100%; }`}</style>
     </>
   );
 }
@@ -445,8 +445,8 @@ function ReportsBody() {
 function ReportSection({ heading, lines, total, totalLabel }: { heading: string; lines: { code: string; name: string; amount: number }[]; total: number; totalLabel: string }) {
   return (
     <div className="mb-3.5">
-      <div className="text-[11.5px] font-bold uppercase tracking-wide text-[#8a8172] mb-1.5">{heading}</div>
-      {lines.length === 0 ? <div className="text-[13px] text-[#8a8172] py-1.5">None recorded</div> : (
+      <div className="text-[11.5px] font-bold uppercase tracking-wide text-[#7F8EA0] mb-1.5">{heading}</div>
+      {lines.length === 0 ? <div className="text-[13px] text-[#7F8EA0] py-1.5">None recorded</div> : (
         lines.map((l) => (
           <div key={l.code} className="flex justify-between text-[13px] py-1.5">
             <span>{l.name}</span><span style={{ fontVariantNumeric: "tabular-nums" }}>{money(l.amount)}</span>

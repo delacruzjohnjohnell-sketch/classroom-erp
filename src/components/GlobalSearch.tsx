@@ -64,7 +64,7 @@ export default function GlobalSearch() {
   return (
     <div ref={boxRef} className="relative w-full max-w-[360px]">
       <div className="flex items-center gap-2 bg-paper border border-hairline rounded-md px-3 py-2">
-        <Search size={14} color="#8a8172" />
+        <Search size={14} color="#7F8EA0" />
         <input
           value={query}
           onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
@@ -72,20 +72,20 @@ export default function GlobalSearch() {
           placeholder="Search customers, vendors, items, invoices…"
           className="flex-1 bg-transparent outline-none text-[13px]"
         />
-        {loading && <Loader2 size={13} className="animate-spin" color="#8a8172" />}
+        {loading && <Loader2 size={13} className="animate-spin" color="#7F8EA0" />}
         {query && !loading && (
-          <button onClick={() => { setQuery(""); setGroups([]); }}><X size={13} color="#8a8172" /></button>
+          <button onClick={() => { setQuery(""); setGroups([]); }}><X size={13} color="#7F8EA0" /></button>
         )}
       </div>
 
       {open && query.trim().length >= 2 && (
         <div className="absolute top-full left-0 right-0 mt-1.5 bg-panel border border-hairline rounded-md shadow-lg z-50 max-h-[420px] overflow-y-auto">
           {totalResults === 0 && !loading ? (
-            <div className="px-4 py-6 text-center text-[12.5px] text-[#8a8172]">No matches for &ldquo;{query}&rdquo;</div>
+            <div className="px-4 py-6 text-center text-[12.5px] text-[#7F8EA0]">No matches for &ldquo;{query}&rdquo;</div>
           ) : (
             groups.map((g) => (
               <div key={g.label} className="py-2">
-                <div className="px-3 pb-1 text-[10.5px] font-bold uppercase tracking-wide text-[#8a8172]">{g.label}</div>
+                <div className="px-3 pb-1 text-[10.5px] font-bold uppercase tracking-wide text-[#7F8EA0]">{g.label}</div>
                 {g.items.map((item) => (
                   <button
                     key={item.id}
@@ -93,7 +93,7 @@ export default function GlobalSearch() {
                     className="w-full text-left px-3 py-2 hover:bg-paper flex items-center justify-between text-[13px]"
                   >
                     <span>{item.primary}</span>
-                    {item.secondary && <span className="text-[#8a8172] text-[12px]">{item.secondary}</span>}
+                    {item.secondary && <span className="text-[#7F8EA0] text-[12px]">{item.secondary}</span>}
                   </button>
                 ))}
               </div>

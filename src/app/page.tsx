@@ -18,7 +18,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <Loader2 className="animate-spin" size={22} color="#12524F" />
+      <Loader2 className="animate-spin" size={22} color="#22D3C5" />
     </div>
   );
 }

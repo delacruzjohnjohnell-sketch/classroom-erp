@@ -26,7 +26,7 @@ export default function DueDateField({
         <input className="input" type="date" value={due} onChange={(e) => onChange(CUSTOM_TERMS, e.target.value)} required />
       </div>
       {due && baseDate && due < baseDate && (
-        <div className="text-[11.5px] mt-1" style={{ color: "#A6402F" }}>The due date is before the document date.</div>
+        <div className="text-[11.5px] mt-1" style={{ color: "#FF6B7A" }}>The due date is before the document date.</div>
       )}
     </div>
   );
