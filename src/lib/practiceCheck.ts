@@ -17,7 +17,7 @@ export type PracticeData = {
   vendors: { name: string }[];
   items: { sku: string | null; name: string; qty_on_hand: number; unit_cost: number; reorder_point: number }[];
   employees: { name: string; salary: number; pay_type: string | null; hourly_rate: number | null }[];
-  invoices: { id: string; total: number; tax_amount: number; status: string }[];
+  invoices: { id: string; total: number; tax_amount: number; status: string; due_date?: string | null }[];
   invoicePayments: { invoice_id: string; amount: number }[];
   bills: { id: string; total: number; tax_amount: number; status: string; due_date: string | null }[];
   billPayments: { bill_id: string; amount: number }[];
@@ -58,6 +58,8 @@ export type PracticeSet = {
   voidTotals: number[];
   billTotals: number[];
   openBillTotal: number;              // the one bill left unpaid, which must have a due date
+  openBillDue?: string;               // the exact due date that bill must carry (YYYY-MM-DD); omit = any date
+  invoiceDue?: { total: number; due: string }[];   // posted invoices whose due dates the set specifies
   quotes: { declined: number; converted: number };
   reversals: number;                  // entries starting "Reversal of:"
   recurringPosted: number;
@@ -112,7 +114,7 @@ const VENDORS = ["Meridian Wholesale Supply", "Star Packaging Co."];
 const NOV_DEC_2026: PracticeSet = {
   id: "nov-dec-2026",
   name: "November–December 2026 (two months)",
-  summary: "Ends in a net profit of ₱29,306.67. Salaried employees, 13th month pay, books locked December 31, 2026, bank steps on the Cash account.",
+  summary: "Revision 3. Ends in a net profit of ₱29,306.67. Salaried employees, 13th month pay, books locked December 31, 2026, bank steps on the Cash account. Also checks the four invoice due dates and Bill-004's due date of December 25.",
   balances: [
     { code: "1000", side: "dr", amount: 271900.13 },
     { code: "1100", side: "dr", amount: 0, hint: "Every invoice should be fully collected. Check the two final payments (Invoice-001's last 40% and Invoice-006's last 50%)." },
@@ -154,6 +156,13 @@ const NOV_DEC_2026: PracticeSet = {
   voidTotals: [47040],
   billTotals: [25536, 45920, 44520, 10080],
   openBillTotal: 10080,
+  openBillDue: "2026-12-25",
+  invoiceDue: [
+    { total: 40320, due: "2026-11-25" },   // Invoice-001, Net 15
+    { total: 47040, due: "2026-11-20" },   // Invoice-002, Net 7
+    { total: 50064, due: "2026-12-14" },   // Invoice-004, custom date
+    { total: 70448, due: "2026-12-29" },   // Invoice-006, Net 15
+  ],
   quotes: { declined: 1, converted: 6 },
   reversals: 3,
   recurringPosted: 2,
@@ -337,10 +346,23 @@ export function runPracticeChecks(d: PracticeData, set: PracticeSet): CheckResul
   const paidFor = (id: string) => d.billPayments.filter((p) => p.bill_id === id).reduce((s, p) => s + p.amount, 0);
   const openBills = d.bills.filter((b) => b.status === "received" && b.total - paidFor(b.id) > 0.005);
   const openBill = openBills.length === 1 ? openBills[0] : null;
-  add("Documents", "Exactly one unpaid bill (Bill-004), with a due date", `1 unpaid: ${peso(set.openBillTotal)}, due date set`,
-    openBills.length === 0 ? "none unpaid" : `${openBills.length} unpaid: ${listPesos(openBills.map((b) => b.total - paidFor(b.id)))}${openBill && !openBill.due_date ? ", no due date" : ""}`,
-    !!openBill && sameCents(openBill.total - paidFor(openBill.id), set.openBillTotal) && !!openBill.due_date,
-    "Bill-004 must be created with the New bill button (not the Create bill button on a purchase order) so it has a due date, and must stay unpaid. Pay the other bills.");
+  const billDueOk = !!openBill && !!openBill.due_date && (!set.openBillDue || openBill.due_date === set.openBillDue);
+  add("Documents", "Exactly one unpaid bill (Bill-004), with a due date", `1 unpaid: ${peso(set.openBillTotal)}, due ${set.openBillDue ?? "date set"}`,
+    openBills.length === 0 ? "none unpaid" : `${openBills.length} unpaid: ${listPesos(openBills.map((b) => b.total - paidFor(b.id)))}${openBill ? (openBill.due_date ? `, due ${openBill.due_date}` : ", no due date") : ""}`,
+    !!openBill && sameCents(openBill.total - paidFor(openBill.id), set.openBillTotal) && billDueOk,
+    `Bill-004 must stay unpaid and carry ${set.openBillDue ? `the due date ${set.openBillDue}` : "a due date"}. Open the bill, choose Details, and set the due date there; pay all the other bills.`);
+
+  if (set.invoiceDue && set.invoiceDue.length > 0) {
+    const posted = d.invoices.filter((i) => i.status === "fulfilled");
+    const rows = set.invoiceDue.map((spec) => {
+      const match = posted.filter((i) => sameCents(i.total, spec.total));
+      return { spec, ok: match.some((i) => i.due_date === spec.due), found: match.length ? match.map((i) => i.due_date ?? "none").join("/") : "invoice not found" };
+    });
+    const bad = rows.filter((r) => !r.ok);
+    add("Documents", "Invoice due dates", rows.map((r) => `${peso(r.spec.total)} due ${r.spec.due}`).join("; "),
+      bad.length ? bad.map((r) => `${peso(r.spec.total)}: ${r.found}`).join("; ") : "all match", bad.length === 0,
+      "Open the invoice, choose Details, and set the due date there (Payment terms: the step says Net 15, Net 7 or a Custom date). It can be changed even after the invoice is sent.");
+  }
 
   const declined = d.quotes.filter((q) => q.status === "declined").length;
   const converted = d.quotes.filter((q) => q.status === "converted").length;

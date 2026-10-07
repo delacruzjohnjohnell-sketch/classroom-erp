@@ -25,7 +25,7 @@ async function loadPracticeData(tenantId: string): Promise<PracticeData> {
     rows("vendors", "name"),
     rows("items", "sku, name, qty_on_hand, unit_cost, reorder_point"),
     rows("employees", "name, salary, pay_type, hourly_rate"),
-    rows("invoices", "id, total, tax_amount, status"),
+    rows("invoices", "id, total, tax_amount, status, due_date"),
     rows("invoice_payments", "invoice_id, amount"),
     rows("bills", "id, total, tax_amount, status, due_date"),
     rows("bill_payments", "bill_id, amount"),
