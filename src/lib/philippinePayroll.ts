@@ -190,6 +190,19 @@ export function computeHourlyPayrollForPeriod(
   return computePayrollCore(employeeId, employeeName, gross, monthlySalaryForBrackets, payPeriod, loanDeduction);
 }
 
+// Pay a gross figure typed in for ONE pay period instead of the employee's standing
+// rate — a raise that starts mid-year, a one-off adjustment, hours paid by agreement.
+// Contributions and tax are worked out from that gross, exactly as for a standing
+// rate, and the employee's own record is not touched, so earlier runs stay as paid.
+export function computePayrollForGross(
+  employeeId: string, employeeName: string, grossForPeriod: number,
+  payPeriod: PayPeriod, loanDeduction: number = 0
+): PayrollBreakdown {
+  const isSemi = payPeriod !== "monthly";
+  const gross = round2(Math.max(0, grossForPeriod));
+  return computePayrollCore(employeeId, employeeName, gross, round2(isSemi ? gross * 2 : gross), payPeriod, loanDeduction);
+}
+
 export function computeMonthlyPayroll(employeeId: string, employeeName: string, annualSalary: number): PayrollBreakdown {
   return computePayrollForPeriod(employeeId, employeeName, annualSalary, "monthly", 0);
 }

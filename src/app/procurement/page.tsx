@@ -16,6 +16,7 @@ import { countReferences } from "@/lib/references";
 import { money, todayStr, round2 } from "@/lib/types";
 import LineItemForm from "@/components/LineItemForm";
 import DueDateField from "@/components/DueDateField";
+import DatePromptDialog from "@/components/DatePrompt";
 import { EditDocumentModal, DeleteDocumentDialog, DueDateEditor, canChange, type DocKind } from "@/components/DocActions";
 import { DEFAULT_TERMS, dueFromTerms } from "@/lib/terms";
 
@@ -52,7 +53,6 @@ function ProcurementBody() {
   const [postingBill, setPostingBill] = useState<any | null>(null);
   const [posting, setPosting] = useState(false);
   const [voidingBill, setVoidingBill] = useState<any | null>(null);
-  const [voiding, setVoiding] = useState(false);
   const [editingDoc, setEditingDoc] = useState<{ kind: DocKind; row: any } | null>(null);
   const [deletingDoc, setDeletingDoc] = useState<{ kind: DocKind; row: any } | null>(null);
   const [billingOrder, setBillingOrder] = useState<any | null>(null);
@@ -100,10 +100,8 @@ function ProcurementBody() {
     if (ok(res)) setPostingBill(null);
     load();
   };
-  const doVoidBill = async (id: string) => {
-    setVoiding(true);
-    const res = await mutate(supabase.rpc("void_bill", { target_bill_id: id, void_date: new Date().toISOString().slice(0, 10) }), { successMessage: "Bill voided." });
-    setVoiding(false);
+  const doVoidBill = async (id: string, voidDate: string) => {
+    const res = await mutate(supabase.rpc("void_bill", { target_bill_id: id, void_date: voidDate }), { successMessage: "Bill voided." });
     if (ok(res)) setVoidingBill(null);
     load();
   };
@@ -115,7 +113,9 @@ function ProcurementBody() {
   };
 
   // Edit / delete for documents that haven't been booked to the ledger yet.
-  const docButtons = (kind: DocKind, row: any) => canChange(kind, row.status) && (
+  // A PO that already has goods received against it can't be reshaped.
+  const docButtons = (kind: DocKind, row: any) => canChange(kind, row.status)
+    && !(kind === "po" && receipts.some((r) => r.purchase_order_id === row.id)) && (
     <>
       <button onClick={() => setEditingDoc({ kind, row })} className="text-[#7F8EA0]" title="Edit"><Pencil size={13} /></button>
       <button onClick={() => setDeletingDoc({ kind, row })} style={{ color: "#FF6B7A" }} title="Delete"><Trash2 size={13} /></button>
@@ -417,8 +417,10 @@ function ProcurementBody() {
       )}
 
       {voidingBill && (
-        <ConfirmDialog
+        <DatePromptDialog
           title="Void this bill?"
+          label="Void date (the reversal is recorded on this date)"
+          defaultDate={voidingBill.order_date}
           message={
             <>
               This posts a reversing journal entry for <strong>{money(voidingBill.total)}</strong> and rolls back the inventory
@@ -429,9 +431,8 @@ function ProcurementBody() {
           }
           confirmLabel="Void bill"
           danger
-          busy={voiding}
           onCancel={() => setVoidingBill(null)}
-          onConfirm={() => doVoidBill(voidingBill.id)}
+          onConfirm={(d) => doVoidBill(voidingBill.id, d)}
         />
       )}
     </>
@@ -441,6 +442,7 @@ function ProcurementBody() {
 function ReceiptForm({ order, onClose, onSaved }: { order: any; onClose: () => void; onSaved: () => void }) {
   const { effectiveTenantId } = useSession();
   const [notes, setNotes] = useState("");
+  const [receiptDate, setReceiptDate] = useState(todayStr());
   const [lines, setLines] = useState<{ description: string; qty_received: string }[]>([{ description: "", qty_received: "" }]);
   const [poLines, setPoLines] = useState<any[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -458,7 +460,7 @@ function ReceiptForm({ order, onClose, onSaved }: { order: any; onClose: () => v
       e.preventDefault();
       if (submitting) return;
       setSubmitting(true);
-      const { data: gr } = await mutate(supabase.from("goods_receipts").insert({ tenant_id: effectiveTenantId, purchase_order_id: order.id, receipt_date: todayStr(), notes }).select().single());
+      const { data: gr } = await mutate(supabase.from("goods_receipts").insert({ tenant_id: effectiveTenantId, purchase_order_id: order.id, receipt_date: receiptDate, notes }).select().single());
       if (!gr) { setSubmitting(false); return; }
       const validLines = lines.filter((l) => l.description && parseFloat(l.qty_received) > 0);
       const linesRes = await mutate(supabase.from("goods_receipt_lines").insert(validLines.map((l) => ({ goods_receipt_id: gr.id, description: l.description, qty_received: parseFloat(l.qty_received) }))), { successMessage: "Receipt recorded." });
@@ -466,6 +468,8 @@ function ReceiptForm({ order, onClose, onSaved }: { order: any; onClose: () => v
       if (ok(linesRes)) { onClose(); onSaved(); }
     }}>
       <div className="text-[12.5px] text-[#A3B1C2] mb-2">Confirm quantities actually received — edit if this is a partial delivery.</div>
+      <Label>Date received</Label>
+      <input className="input mb-2" type="date" value={receiptDate} onChange={(e) => setReceiptDate(e.target.value)} required />
       {lines.map((l, i) => (
         <div key={i} className="flex gap-2 mb-2 items-center">
           <input className="input flex-[2]" value={l.description} onChange={(e) => setLines((prev) => prev.map((x, idx) => idx === i ? { ...x, description: e.target.value } : x))} placeholder="Item description" required />

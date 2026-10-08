@@ -5,6 +5,7 @@ import { Plus, X, Loader2, Pencil, Trash2, Paperclip } from "lucide-react";
 import AppShell from "@/components/AppShell";
 import { Panel, Empty, Modal, Label, GoldBtn, OutlineBtn, TinyBtn, SearchBox, FormStyles } from "@/components/ui";
 import Attachments from "@/components/Attachments";
+import DatePromptDialog from "@/components/DatePrompt";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
@@ -29,7 +30,8 @@ function FinancialsBody() {
   const [accountModal, setAccountModal] = useState<null | "new" | Account>(null);
   const [postedByNames, setPostedByNames] = useState<Record<string, string>>({});
   const [lockedThrough, setLockedThrough] = useState<string | null>(null);
-  const [reversing, setReversing] = useState<string | null>(null);
+  const [reversingEntry, setReversingEntry] = useState<{ id: string; date: string; memo: string } | null>(null);
+  const [postingRecurring, setPostingRecurring] = useState<{ id: string; memo: string; date: string } | null>(null);
   const [attachEntry, setAttachEntry] = useState<{ id: string; memo: string } | null>(null);
 
   const load = async () => {
@@ -78,11 +80,15 @@ function FinancialsBody() {
     load();
   };
 
-  const reverseEntry = async (entryId: string) => {
-    setReversing(entryId);
-    const res = await mutate(supabase.rpc("reverse_journal_entry", { original_id: entryId, reversal_date: todayStr() }), { successMessage: "Entry reversed." });
-    setReversing(null);
-    if (!ok(res)) return;
+  const reverseEntry = async (entryId: string, date: string) => {
+    const res = await mutate(supabase.rpc("reverse_journal_entry", { original_id: entryId, reversal_date: date }), { successMessage: "Entry reversed." });
+    if (ok(res)) setReversingEntry(null);
+    load();
+  };
+
+  const postRecurring = async (id: string, date: string) => {
+    const res = await mutate(supabase.rpc("post_recurring_entry", { target_recurring_id: id, post_date: date }), { successMessage: "Recurring entry posted." });
+    if (ok(res)) setPostingRecurring(null);
     load();
   };
 
@@ -111,7 +117,8 @@ function FinancialsBody() {
         <Panel title="Books lock">
           <div className="flex items-center gap-3 flex-wrap">
             <span className="text-[12.5px] text-[#A3B1C2]">
-              {lockedThrough ? <>Entries dated on or before <strong>{lockedThrough}</strong> can&rsquo;t be posted.</> : "No lock set — entries can be posted to any date."}
+              {lockedThrough ? <>Entries dated on or before <strong>{lockedThrough}</strong> can&rsquo;t be posted. Later dates stay open.</> : "No lock set — entries can be posted to any date."}
+              {lockedThrough && lockedThrough >= todayStr() && <span style={{ color: "#F2B13C" }}> This lock is in the future, so entries dated today are blocked too.</span>}
             </span>
             <input className="input" style={{ width: 160 }} type="date" defaultValue={lockedThrough ?? ""} onBlur={(e) => saveLock(e.target.value)} />
             {lockedThrough && <button onClick={() => saveLock("")} className="text-[12px] text-teal font-semibold">Clear lock</button>}
@@ -142,8 +149,8 @@ function FinancialsBody() {
                     {i === 0 ? (
                       <td rowSpan={e.journal_lines.length}>
                         <div className="flex items-center gap-2.5">
-                          <button onClick={() => reverseEntry(e.id)} disabled={reversing === e.id} className="text-[11px] font-semibold text-teal">
-                            {reversing === e.id ? "…" : "Reverse"}
+                          <button onClick={() => setReversingEntry({ id: e.id, date: e.entry_date, memo: e.memo })} className="text-[11px] font-semibold text-teal">
+                            Reverse
                           </button>
                           <button onClick={() => setAttachEntry({ id: e.id, memo: e.memo })} className="text-[#7F8EA0]" title="Attachments">
                             <Paperclip size={13} />
@@ -191,7 +198,7 @@ function FinancialsBody() {
           <div className="flex justify-end"><GoldBtn onClick={() => setModal("recurring")}><Plus size={14} /> New recurring entry</GoldBtn></div>
           <Panel title="Recurring entries">
             <div className="text-[12px] text-[#7F8EA0] mb-3">
-              Posting isn&rsquo;t automatic — this tracks what&rsquo;s due and lets you post it in one click. Open this page to check for anything due.
+              Posting isn&rsquo;t automatic — this tracks what&rsquo;s due and lets you post it in one click. <strong>Post now</strong> records the entry on its due date (you can change the date), then moves the next due date forward one period, so each month is posted in turn.
             </div>
             {recurring.length === 0 ? <Empty>No recurring entries yet — e.g. monthly rent or a subscription.</Empty> : (
               <table>
@@ -206,7 +213,7 @@ function FinancialsBody() {
                         <td>{!r.active ? <span className="text-[11px] text-[#7F8EA0]">Ended</span> : due ? <span className="text-[11px] font-semibold" style={{ color: RED }}>Due</span> : <span className="text-[11px] text-teal">Scheduled</span>}</td>
                         <td>
                           {r.active && (
-                            <TinyBtn onClick={async () => { await mutate(supabase.rpc("post_recurring_entry", { target_recurring_id: r.id, post_date: todayStr() }), { successMessage: "Recurring entry posted." }); load(); }}>
+                            <TinyBtn onClick={() => setPostingRecurring({ id: r.id, memo: r.memo, date: r.next_run_date })}>
                               Post now
                             </TinyBtn>
                           )}
@@ -219,6 +226,30 @@ function FinancialsBody() {
             )}
           </Panel>
         </>
+      )}
+
+      {reversingEntry && (
+        <DatePromptDialog
+          title="Reverse this entry?"
+          message={<>Posts an equal and opposite entry for <strong>{reversingEntry.memo || "this entry"}</strong>. The original stays in the ledger.</>}
+          label="Reversal date"
+          defaultDate={reversingEntry.date}
+          confirmLabel="Reverse entry"
+          onCancel={() => setReversingEntry(null)}
+          onConfirm={(d) => reverseEntry(reversingEntry.id, d)}
+        />
+      )}
+
+      {postingRecurring && (
+        <DatePromptDialog
+          title={`Post “${postingRecurring.memo}”`}
+          message="Records this occurrence and moves the next due date forward by one period."
+          label="Post on date"
+          defaultDate={postingRecurring.date}
+          confirmLabel="Post entry"
+          onCancel={() => setPostingRecurring(null)}
+          onConfirm={(d) => postRecurring(postingRecurring.id, d)}
+        />
       )}
 
       {accountModal && (

@@ -23,14 +23,15 @@ type DocConfig = {
   editable: string[];
 };
 
-// Which documents can still be changed or deleted: only ones that haven't been
-// booked to the ledger. Posted documents are voided, never rewritten.
+// Which documents can still be changed or deleted: only ones that haven't been booked
+// to the ledger or turned into the next document in the chain. Posted documents are
+// voided or reversed, never rewritten.
 export const DOC_CONFIG: Record<DocKind, DocConfig> = {
   invoice: { noun: "invoice", table: "invoices", linesTable: "invoice_lines", fk: "invoice_id", dateCol: "order_date", partyCol: "customer_id", partyLabel: "Customer", priceCol: "unit_price", priceLabel: "Unit price", hasItem: true, hasDue: true, editable: ["draft", "pending_approval"] },
-  quote: { noun: "quote", table: "quotes", linesTable: "quote_lines", fk: "quote_id", dateCol: "quote_date", partyCol: "customer_id", partyLabel: "Customer", priceCol: "unit_price", priceLabel: "Unit price", hasItem: true, hasDue: false, editable: ["draft"] },
-  order: { noun: "sales order", table: "sales_orders", linesTable: "sales_order_lines", fk: "sales_order_id", dateCol: "order_date", partyCol: "customer_id", partyLabel: "Customer", priceCol: "unit_price", priceLabel: "Unit price", hasItem: true, hasDue: false, editable: ["draft"] },
+  quote: { noun: "quote", table: "quotes", linesTable: "quote_lines", fk: "quote_id", dateCol: "quote_date", partyCol: "customer_id", partyLabel: "Customer", priceCol: "unit_price", priceLabel: "Unit price", hasItem: true, hasDue: false, editable: ["draft", "accepted"] },
+  order: { noun: "sales order", table: "sales_orders", linesTable: "sales_order_lines", fk: "sales_order_id", dateCol: "order_date", partyCol: "customer_id", partyLabel: "Customer", priceCol: "unit_price", priceLabel: "Unit price", hasItem: true, hasDue: false, editable: ["draft", "confirmed"] },
   bill: { noun: "bill", table: "bills", linesTable: "bill_lines", fk: "bill_id", dateCol: "order_date", partyCol: "vendor_id", partyLabel: "Vendor", priceCol: "unit_cost", priceLabel: "Unit cost", hasItem: false, hasDue: true, editable: ["draft", "pending_approval"] },
-  po: { noun: "purchase order", table: "purchase_orders", linesTable: "purchase_order_lines", fk: "purchase_order_id", dateCol: "order_date", partyCol: "vendor_id", partyLabel: "Vendor", priceCol: "unit_cost", priceLabel: "Unit cost", hasItem: false, hasDue: false, editable: ["draft"] },
+  po: { noun: "purchase order", table: "purchase_orders", linesTable: "purchase_order_lines", fk: "purchase_order_id", dateCol: "order_date", partyCol: "vendor_id", partyLabel: "Vendor", priceCol: "unit_cost", priceLabel: "Unit cost", hasItem: false, hasDue: false, editable: ["draft", "sent"] },
 };
 
 export const canChange = (kind: DocKind, status: string) => DOC_CONFIG[kind].editable.includes(status);

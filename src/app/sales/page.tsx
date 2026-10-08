@@ -17,6 +17,7 @@ import { countReferences } from "@/lib/references";
 import { money, round2, todayStr } from "@/lib/types";
 import LineItemForm from "@/components/LineItemForm";
 import DueDateField from "@/components/DueDateField";
+import DatePromptDialog from "@/components/DatePrompt";
 import { EditDocumentModal, DeleteDocumentDialog, DueDateEditor, canChange, type DocKind } from "@/components/DocActions";
 import { DEFAULT_TERMS, dueFromTerms } from "@/lib/terms";
 
@@ -55,7 +56,6 @@ function SalesBody() {
   const [postingInvoice, setPostingInvoice] = useState<any | null>(null);
   const [posting, setPosting] = useState(false);
   const [voidingInvoice, setVoidingInvoice] = useState<any | null>(null);
-  const [voiding, setVoiding] = useState(false);
   const [editingDoc, setEditingDoc] = useState<{ kind: DocKind; row: any } | null>(null);
   const [deletingDoc, setDeletingDoc] = useState<{ kind: DocKind; row: any } | null>(null);
   const [editingCustomer, setEditingCustomer] = useState<any | null>(null);
@@ -105,10 +105,8 @@ function SalesBody() {
     if (ok(res)) setPostingInvoice(null);
     load();
   };
-  const doVoidInvoice = async (id: string) => {
-    setVoiding(true);
-    const res = await mutate(supabase.rpc("void_invoice", { target_invoice_id: id, void_date: new Date().toISOString().slice(0, 10) }), { successMessage: "Invoice voided." });
-    setVoiding(false);
+  const doVoidInvoice = async (id: string, voidDate: string) => {
+    const res = await mutate(supabase.rpc("void_invoice", { target_invoice_id: id, void_date: voidDate }), { successMessage: "Invoice voided." });
     if (ok(res)) setVoidingInvoice(null);
     load();
   };
@@ -452,8 +450,10 @@ function SalesBody() {
       )}
 
       {voidingInvoice && (
-        <ConfirmDialog
+        <DatePromptDialog
           title="Void this invoice?"
+          label="Void date (the reversal is recorded on this date)"
+          defaultDate={voidingInvoice.order_date}
           message={
             <>
               This posts a reversing journal entry for <strong>{money(voidingInvoice.total)}</strong> and restores any inventory
@@ -464,9 +464,8 @@ function SalesBody() {
           }
           confirmLabel="Void invoice"
           danger
-          busy={voiding}
           onCancel={() => setVoidingInvoice(null)}
-          onConfirm={() => doVoidInvoice(voidingInvoice.id)}
+          onConfirm={(d) => doVoidInvoice(voidingInvoice.id, d)}
         />
       )}
     </>

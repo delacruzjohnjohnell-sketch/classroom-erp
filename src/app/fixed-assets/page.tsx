@@ -8,6 +8,8 @@ import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
 import { money, round2, todayStr } from "@/lib/types";
+import { nextDepreciationDate } from "@/lib/periods";
+import DatePromptDialog from "@/components/DatePrompt";
 
 const TEAL = "#22D3C5";
 
@@ -20,6 +22,7 @@ function FixedAssetsBody() {
   const [loading, setLoading] = useState(true);
   const [assets, setAssets] = useState<any[]>([]);
   const [modal, setModal] = useState<null | "new" | any>(null);
+  const [depreciating, setDepreciating] = useState<any | null>(null);
 
   const load = async () => {
     if (!effectiveTenantId) return;
@@ -40,10 +43,15 @@ function FixedAssetsBody() {
   const bookValue = (a: any) => a.cost - a.accumulated_depreciation;
   const fullyDepreciated = (a: any) => a.accumulated_depreciation >= a.cost - a.salvage_value - 0.01;
 
-  const recordDepreciation = async (asset: any) => {
-    const amount = Math.min(monthlyDep(asset), asset.cost - asset.salvage_value - asset.accumulated_depreciation);
+  const depAmount = (asset: any) => Math.min(monthlyDep(asset), asset.cost - asset.salvage_value - asset.accumulated_depreciation);
+  // Months already recorded decide which month-end the next entry defaults to.
+  const monthsRecorded = (asset: any) => Math.round(asset.accumulated_depreciation / (monthlyDep(asset) || 1));
+
+  const recordDepreciation = async (asset: any, date: string) => {
+    const amount = depAmount(asset);
     if (amount <= 0) return;
-    await mutate(supabase.rpc("record_depreciation", { asset_id: asset.id, dep_amount: amount, dep_date: todayStr() }), { successMessage: "Depreciation recorded." });
+    const res = await mutate(supabase.rpc("record_depreciation", { asset_id: asset.id, dep_amount: amount, dep_date: date }), { successMessage: "Depreciation recorded." });
+    if (ok(res)) setDepreciating(null);
     load();
   };
 
@@ -80,7 +88,7 @@ function FixedAssetsBody() {
                     {fullyDepreciated(a) ? (
                       <span className="text-[11px] text-[#7F8EA0]">Fully depreciated</span>
                     ) : (
-                      <TinyBtn onClick={() => recordDepreciation(a)}>Record 1 month dep.</TinyBtn>
+                      <TinyBtn onClick={() => setDepreciating(a)}>Record 1 month dep.</TinyBtn>
                     )}
                   </td>
                 </tr>
@@ -89,6 +97,18 @@ function FixedAssetsBody() {
           </table>
         )}
       </Panel>
+
+      {depreciating && (
+        <DatePromptDialog
+          title={`Record depreciation — ${depreciating.name}`}
+          message={<>Records <strong>{money(depAmount(depreciating))}</strong> of straight-line depreciation (Dr Depreciation Expense / Cr Accumulated Depreciation).</>}
+          label="Depreciation date (usually the month-end)"
+          defaultDate={nextDepreciationDate(depreciating.purchase_date, monthsRecorded(depreciating))}
+          confirmLabel="Record depreciation"
+          onCancel={() => setDepreciating(null)}
+          onConfirm={(d) => recordDepreciation(depreciating, d)}
+        />
+      )}
 
       {modal === "new" && (
         <Modal title="New fixed asset" onClose={() => setModal(null)}>

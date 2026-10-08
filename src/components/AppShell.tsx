@@ -10,6 +10,7 @@ import {
 import { useSession } from "@/lib/session";
 import { usePagePresence } from "@/lib/presence";
 import GlobalSearch from "./GlobalSearch";
+import CompanySwitcher from "./CompanySwitcher";
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -78,7 +79,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <div className="font-mono text-[9.5px] uppercase tracking-[0.14em] text-sidebarTextMuted mb-1 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-[#4ADE9C]" style={{ boxShadow: "0 0 8px #4ADE9C" }} /> workspace
           </div>
-          <div className="text-[13px] font-bold truncate text-ink">{tenantName}</div>
+          {profile.role === "teacher"
+            ? <div className="text-[13px] font-bold truncate text-ink">{tenantName}</div>
+            : <CompanySwitcher />}
           <div className="text-[11px] text-sidebarTextMuted mt-0.5 font-mono">
             {profile.role === "teacher" ? `teacher · ${profile.full_name}` : `${profile.full_name} · student`}
           </div>

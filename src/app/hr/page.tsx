@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
   Plus, Loader2, Briefcase, Wallet, Receipt, PhilippinePeso, ChevronDown, ChevronRight,
-  FileText, Clock, CalendarDays, HandCoins, Check, X, Gift,
+  FileText, Clock, CalendarDays, HandCoins, Check, X, Gift, Pencil, Trash2,
 } from "lucide-react";
 import AppShell from "@/components/AppShell";
 import { KpiCard, Panel, Empty, Modal, ConfirmDialog, Label, GoldBtn, OutlineBtn, TinyBtn, SearchBox, FormStyles } from "@/components/ui";
@@ -13,7 +13,9 @@ import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
 import { money, todayStr } from "@/lib/types";
-import { computePayrollForPeriod, computeHourlyPayrollForPeriod, getPeriodDateRange, type PayrollBreakdown, type PayPeriod } from "@/lib/philippinePayroll";
+import { toast } from "@/lib/toast";
+import { countReferences } from "@/lib/references";
+import { computePayrollForPeriod, computeHourlyPayrollForPeriod, computePayrollForGross, getPeriodDateRange, type PayrollBreakdown, type PayPeriod } from "@/lib/philippinePayroll";
 
 const TEAL = "#22D3C5", RED = "#FF6B7A";
 const TABS = [
@@ -43,6 +45,10 @@ function HrBody() {
   const [runs, setRuns] = useState<any[]>([]);
 
   const [modal, setModal] = useState<null | "employee" | "time" | "leave" | "loan">(null);
+  const [editingEmployee, setEditingEmployee] = useState<any | null>(null);
+  const [deletingEmployee, setDeletingEmployee] = useState<any | null>(null);
+  const [deletingBusy, setDeletingBusy] = useState(false);
+  const [year13, setYear13] = useState(new Date().getFullYear());
   const [previewing, setPreviewing] = useState(false);
   const [confirming13th, setConfirming13th] = useState(false);
   const [posting13th, setPosting13th] = useState(false);
@@ -86,10 +92,29 @@ function HrBody() {
 
   const post13thMonth = async () => {
     setPosting13th(true);
-    const res = await mutate(supabase.rpc("post_13th_month_pay", { target_tenant: effectiveTenantId, pay_year: new Date().getFullYear() }), { successMessage: "13th month pay posted." });
+    const res = await mutate(supabase.rpc("post_13th_month_pay", { target_tenant: effectiveTenantId, pay_year: year13 }), { successMessage: "13th month pay posted." });
     setPosting13th(false);
     if (ok(res)) setConfirming13th(false);
     load();
+  };
+
+  // An employee who appears in payroll, time, leave or loan records is part of that history,
+  // so they can be edited but not deleted.
+  const requestDeleteEmployee = async (emp: any) => {
+    const { count, error } = await countReferences([["payroll_run_lines", "employee_id"], ["time_entries", "employee_id"], ["leave_requests", "employee_id"], ["employee_loans", "employee_id"]], emp.id);
+    if (error) { toast.error(error); return; }
+    if (count > 0) {
+      toast.error(`"${emp.name}" appears in ${count} payroll, time, leave or loan record${count === 1 ? "" : "s"}, so can't be deleted — edit the details instead.`);
+      return;
+    }
+    setDeletingEmployee(emp);
+  };
+  const doDeleteEmployee = async () => {
+    if (!deletingEmployee) return;
+    setDeletingBusy(true);
+    const res = await mutate(supabase.from("employees").delete().eq("id", deletingEmployee.id), { successMessage: "Employee deleted." });
+    setDeletingBusy(false);
+    if (ok(res)) { setDeletingEmployee(null); load(); }
   };
 
   const employeesF = employees.filter((e) => !q || [e.name, e.title, e.department, e.employee_number].some((v) => (v ?? "").toLowerCase().includes(q.trim().toLowerCase())));
@@ -127,7 +152,7 @@ function HrBody() {
           <Panel title="Employees">
             {employeesF.length === 0 ? <Empty>{employees.length === 0 ? "No employees yet." : "No employees match your search."}</Empty> : (
               <table>
-                <thead><tr><th>Emp #</th><th>Name</th><th>Title</th><th>Department</th><th>Pay type</th><th className="text-right">Rate</th></tr></thead>
+                <thead><tr><th>Emp #</th><th>Name</th><th>Title</th><th>Department</th><th>Pay type</th><th className="text-right">Rate</th><th></th></tr></thead>
                 <tbody>{employeesF.map((e) => (
                   <tr key={e.id}>
                     <td style={{ color: "#F2B13C", fontWeight: 600 }}>{e.employee_number}</td>
@@ -135,6 +160,10 @@ function HrBody() {
                     <td className="capitalize">{e.pay_type || "monthly"}</td>
                     <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>
                       {e.pay_type === "hourly" ? `${money(e.hourly_rate || 0)}/hr` : money(e.salary)}
+                    </td>
+                    <td className="text-right whitespace-nowrap">
+                      <button onClick={() => setEditingEmployee(e)} className="text-[#7F8EA0] mr-2" title="Edit employee"><Pencil size={13} /></button>
+                      <button onClick={() => requestDeleteEmployee(e)} style={{ color: RED }} title="Delete employee"><Trash2 size={13} /></button>
                     </td>
                   </tr>
                 ))}</tbody>
@@ -226,8 +255,11 @@ function HrBody() {
           <div className="flex gap-2 flex-wrap">
             <OutlineBtn onClick={() => setPreviewing(true)} disabled={employees.length === 0}><PhilippinePeso size={14} /> Run payroll</OutlineBtn>
             <OutlineBtn onClick={() => setConfirming13th(true)} disabled={posting13th || employees.length === 0}>
-              <Gift size={14} /> {posting13th ? "Posting…" : `Post 13th month pay (${new Date().getFullYear()})`}
+              <Gift size={14} /> {posting13th ? "Posting…" : `Post 13th month pay (${year13})`}
             </OutlineBtn>
+            <select className="input" style={{ width: 96 }} value={year13} onChange={(e) => setYear13(parseInt(e.target.value))} title="Year the 13th month pay is for">
+              {[new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1].map((y) => <option key={y} value={y}>{y}</option>)}
+            </select>
           </div>
           <Panel title="Payroll history">
             {runs.length === 0 ? <Empty>No payroll runs yet.</Empty> : (
@@ -278,6 +310,22 @@ function HrBody() {
           <EmployeeForm onClose={() => setModal(null)} onSaved={load} />
         </Modal>
       )}
+      {editingEmployee && (
+        <Modal title={`Edit employee — ${editingEmployee.name}`} onClose={() => setEditingEmployee(null)}>
+          <EmployeeForm employee={editingEmployee} onClose={() => setEditingEmployee(null)} onSaved={load} />
+        </Modal>
+      )}
+      {deletingEmployee && (
+        <ConfirmDialog
+          title="Delete this employee?"
+          danger
+          busy={deletingBusy}
+          confirmLabel="Delete employee"
+          message={<><strong>{deletingEmployee.name}</strong> has no payroll, time, leave or loan history, so they will simply be removed. This can&apos;t be undone.</>}
+          onConfirm={doDeleteEmployee}
+          onCancel={() => setDeletingEmployee(null)}
+        />
+      )}
       {modal === "time" && (
         <Modal title="Log hours" onClose={() => setModal(null)}>
           <TimeEntryForm employees={employees} onClose={() => setModal(null)} onSaved={load} />
@@ -300,7 +348,7 @@ function HrBody() {
       {confirming13th && (
         <ConfirmDialog
           title="Post 13th month pay?"
-          message={`This posts one payroll expense entry per employee for ${new Date().getFullYear()}'s 13th month pay. It can't be undone from here.`}
+          message={`This posts one payroll expense entry per employee for ${year13}'s 13th month pay. It can't be undone from here.`}
           confirmLabel="Post 13th month pay"
           busy={posting13th}
           onCancel={() => setConfirming13th(false)}
@@ -311,14 +359,14 @@ function HrBody() {
   );
 }
 
-function EmployeeForm({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
+function EmployeeForm({ employee, onClose, onSaved }: { employee?: any; onClose: () => void; onSaved: () => void }) {
   const { effectiveTenantId } = useSession();
-  const [name, setName] = useState(""); const [title, setTitle] = useState("");
-  const [department, setDepartment] = useState(""); const [salary, setSalary] = useState("");
-  const [payType, setPayType] = useState<"monthly" | "hourly">("monthly");
-  const [hourlyRate, setHourlyRate] = useState("");
-  const [tin, setTin] = useState(""); const [sss, setSss] = useState("");
-  const [philhealth, setPhilhealth] = useState(""); const [pagibig, setPagibig] = useState("");
+  const [name, setName] = useState(employee?.name ?? ""); const [title, setTitle] = useState(employee?.title ?? "");
+  const [department, setDepartment] = useState(employee?.department ?? ""); const [salary, setSalary] = useState(employee && employee.pay_type !== "hourly" ? String(employee.salary ?? "") : "");
+  const [payType, setPayType] = useState<"monthly" | "hourly">(employee?.pay_type === "hourly" ? "hourly" : "monthly");
+  const [hourlyRate, setHourlyRate] = useState(employee?.hourly_rate != null ? String(employee.hourly_rate) : "");
+  const [tin, setTin] = useState(employee?.tin ?? ""); const [sss, setSss] = useState(employee?.sss_number ?? "");
+  const [philhealth, setPhilhealth] = useState(employee?.philhealth_number ?? ""); const [pagibig, setPagibig] = useState(employee?.pagibig_number ?? "");
   const [submitting, setSubmitting] = useState(false);
 
   return (
@@ -326,12 +374,15 @@ function EmployeeForm({ onClose, onSaved }: { onClose: () => void; onSaved: () =
       e.preventDefault();
       if (submitting) return;
       setSubmitting(true);
-      const res = await mutate(supabase.from("employees").insert({
-        tenant_id: effectiveTenantId, name, title, department,
+      const fields = {
+        name, title, department,
         salary: payType === "monthly" ? (parseFloat(salary) || 0) : 0,
         pay_type: payType, hourly_rate: payType === "hourly" ? (parseFloat(hourlyRate) || 0) : null,
         tin: tin || null, sss_number: sss || null, philhealth_number: philhealth || null, pagibig_number: pagibig || null,
-      }), { successMessage: "Employee added." });
+      };
+      const res = employee
+        ? await mutate(supabase.from("employees").update(fields).eq("id", employee.id), { successMessage: "Employee updated." })
+        : await mutate(supabase.from("employees").insert({ tenant_id: effectiveTenantId, ...fields }), { successMessage: "Employee added." });
       setSubmitting(false);
       if (ok(res)) { onClose(); onSaved(); }
     }}>
@@ -352,6 +403,11 @@ function EmployeeForm({ onClose, onSaved }: { onClose: () => void; onSaved: () =
         <div className="text-[12px] text-[#7F8EA0] mt-1">Gross pay each run comes directly from hours logged in Time &amp; Attendance for that period.</div></>
       )}
 
+      {employee && (
+        <div className="text-[12px] text-[#7F8EA0] mt-2">
+          A new salary or rate applies to payroll runs from now on. Runs already posted keep the pay they recorded. To pay a different amount for just one period, type it into that employee&rsquo;s row when you run payroll.
+        </div>
+      )}
       <div className="text-[11px] font-bold uppercase tracking-wide text-[#7F8EA0] mt-4 mb-1">Statutory IDs (optional — shown on payslip)</div>
       <div className="grid grid-cols-2 gap-2.5">
         <div><Label>TIN</Label><input className="input" value={tin} onChange={(e) => setTin(e.target.value)} placeholder="000-000-000-000" /></div>
@@ -487,6 +543,8 @@ function PayrollPreviewModal({ employees, activeLoans, runs, tenantId, onClose, 
   const [month, setMonth] = useState(todayStr().slice(0, 7));
   const [hoursByEmployee, setHoursByEmployee] = useState<Record<string, number>>({});
   const [loadingHours, setLoadingHours] = useState(true);
+  // Gross typed in for this run only, per employee. Blank = pay the standing rate.
+  const [grossOverride, setGrossOverride] = useState<Record<string, string>>({});
 
   const hourlyEmployees = employees.filter((e) => e.pay_type === "hourly");
   const range = getPeriodDateRange(payPeriod, month);
@@ -511,7 +569,7 @@ function PayrollPreviewModal({ employees, activeLoans, runs, tenantId, onClose, 
   }, [payPeriod, month]);
 
   const loanFor = (employeeId: string) => activeLoans.find((l) => l.employee_id === employeeId);
-  const breakdown: PayrollBreakdown[] = employees.map((e) => {
+  const standingFor = (e: any): PayrollBreakdown => {
     const loan = loanFor(e.id);
     const loanDed = loan ? Math.min(loan.monthly_deduction, loan.balance_remaining) : 0;
     if (e.pay_type === "hourly") {
@@ -519,6 +577,15 @@ function PayrollPreviewModal({ employees, activeLoans, runs, tenantId, onClose, 
       return computeHourlyPayrollForPeriod(e.id, e.name, e.hourly_rate || 0, hours, payPeriod, loanDed);
     }
     return computePayrollForPeriod(e.id, e.name, e.salary || 0, payPeriod, loanDed);
+  };
+  const breakdown: PayrollBreakdown[] = employees.map((e) => {
+    const typed = grossOverride[e.id];
+    if (typed !== undefined && typed.trim() !== "" && parseFloat(typed) >= 0) {
+      const loan = loanFor(e.id);
+      const loanDed = loan ? Math.min(loan.monthly_deduction, loan.balance_remaining) : 0;
+      return computePayrollForGross(e.id, e.name, parseFloat(typed), payPeriod, loanDed);
+    }
+    return standingFor(e);
   });
 
   const totals = breakdown.reduce((acc, b) => ({
@@ -538,9 +605,9 @@ function PayrollPreviewModal({ employees, activeLoans, runs, tenantId, onClose, 
         Rates approximate 2023–2024 SSS/PhilHealth/Pag-IBIG/BIR tables. Verify against current issuances before real use.
       </div>
       <Label>Pay month</Label>
-      <input className="input mb-3" type="month" value={month} onChange={(e) => e.target.value && setMonth(e.target.value)} required />
+      <input className="input mb-3" type="month" value={month} onChange={(e) => { if (e.target.value) { setMonth(e.target.value); setGrossOverride({}); } }} required />
       <Label>Pay period</Label>
-      <select className="input mb-3" value={payPeriod} onChange={(e) => setPayPeriod(e.target.value as PayPeriod)}>
+      <select className="input mb-3" value={payPeriod} onChange={(e) => { setPayPeriod(e.target.value as PayPeriod); setGrossOverride({}); }}>
         <option value="monthly">Monthly (full month)</option>
         <option value="semi_first">Semi-monthly — 1st half (no statutory/loan deductions)</option>
         <option value="semi_second">Semi-monthly — 2nd half (statutory + loan deductions applied)</option>
@@ -562,6 +629,9 @@ function PayrollPreviewModal({ employees, activeLoans, runs, tenantId, onClose, 
         </div>
       )}
 
+      <div className="text-[12px] text-[#7F8EA0] mb-2">
+        The <strong>Gross</strong> box shows each employee&rsquo;s standing pay for this period. Type a different amount to pay something else <em>this period only</em> (a raise starting this month, a bonus, a correction); contributions and tax are recalculated, and the employee&rsquo;s own record is not changed. Leave it blank to pay the standing rate.
+      </div>
       <div style={{ overflowX: "auto" }}>
         <table>
           <thead>
@@ -575,7 +645,16 @@ function PayrollPreviewModal({ employees, activeLoans, runs, tenantId, onClose, 
               return (
                 <tr key={b.employeeId}>
                   <td>{b.employeeName}{emp?.pay_type === "hourly" && <span className="text-[#7F8EA0]"> · {hoursByEmployee[emp.id] || 0} hrs</span>}</td>
-                  <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{money(b.gross)}</td>
+                  <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>
+                    <input
+                      className="input" type="number" min="0" step="0.01"
+                      style={{ width: 112, padding: "5px 7px", textAlign: "right", borderColor: grossOverride[b.employeeId]?.trim() ? "#F2B13C" : undefined }}
+                      title="Type a different gross to pay this employee another amount for this period only"
+                      placeholder={String(standingFor(emp).gross)}
+                      value={grossOverride[b.employeeId] ?? ""}
+                      onChange={(ev) => setGrossOverride((prev) => ({ ...prev, [b.employeeId]: ev.target.value }))}
+                    />
+                  </td>
                   <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{money(b.sssEE)}</td>
                   <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{money(b.philhealthEE)}</td>
                   <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{money(b.pagibigEE)}</td>
