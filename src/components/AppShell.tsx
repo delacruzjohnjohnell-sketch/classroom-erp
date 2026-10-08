@@ -5,12 +5,15 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LogOut, ArrowLeft, Loader2, LayoutDashboard, BookOpen, Truck,
-  Package, ShoppingCart, Briefcase, FileBarChart, Landmark, Boxes,
+  Package, ShoppingCart, Briefcase, FileBarChart, Landmark, Boxes, Building2, Plus,
 } from "lucide-react";
 import { useSession } from "@/lib/session";
 import { usePagePresence } from "@/lib/presence";
 import GlobalSearch from "./GlobalSearch";
 import CompanySwitcher from "./CompanySwitcher";
+
+// Students also get a menu item for their companies, so starting another one is never hidden.
+const COMPANIES_NAV = { href: "/companies", label: "My Companies", icon: Building2 };
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -51,7 +54,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   const tenantName = tenants.find((t) => t.id === effectiveTenantId)?.name ?? "—";
-  const pageTitle = NAV.find((item) => item.href === pathname)?.label ?? "";
+  const navItems = profile.role === "student" ? [...NAV, COMPANIES_NAV] : NAV;
+  const pageTitle = navItems.find((item) => item.href === pathname)?.label ?? "";
   const initials = profile.full_name
     ? profile.full_name.split(/\s+/).slice(0, 2).map((p: string) => p[0]?.toUpperCase()).join("")
     : "?";
@@ -81,14 +85,21 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </div>
           {profile.role === "teacher"
             ? <div className="text-[13px] font-bold truncate text-ink">{tenantName}</div>
-            : <CompanySwitcher />}
+            : (
+              <>
+                <CompanySwitcher />
+                <Link href="/companies" className="mt-2 flex items-center justify-center gap-1.5 w-full rounded-md border border-[rgba(34,211,197,0.45)] text-teal text-[12px] font-semibold px-2 py-1.5 hover:bg-tealsoft">
+                  <Plus size={13} /> New company
+                </Link>
+              </>
+            )}
           <div className="text-[11px] text-sidebarTextMuted mt-0.5 font-mono">
             {profile.role === "teacher" ? `teacher · ${profile.full_name}` : `${profile.full_name} · student`}
           </div>
         </div>
 
         <nav className="flex-1 py-3 px-3 flex flex-col gap-0.5 overflow-y-auto">
-          {NAV.map((item) => {
+          {navItems.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href;
             return (
