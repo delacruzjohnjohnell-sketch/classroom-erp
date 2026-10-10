@@ -14,6 +14,7 @@ import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
 import { money, todayStr } from "@/lib/types";
 import { toast } from "@/lib/toast";
+import DatePromptDialog from "@/components/DatePrompt";
 import { countReferences } from "@/lib/references";
 import { computePayrollForPeriod, computeHourlyPayrollForPeriod, computePayrollForGross, getPeriodDateRange, type PayrollBreakdown, type PayPeriod } from "@/lib/philippinePayroll";
 
@@ -45,6 +46,7 @@ function HrBody() {
   const [runs, setRuns] = useState<any[]>([]);
 
   const [modal, setModal] = useState<null | "employee" | "time" | "leave" | "loan">(null);
+  const [cancellingLoan, setCancellingLoan] = useState<any | null>(null);
   const [editingEmployee, setEditingEmployee] = useState<any | null>(null);
   const [deletingEmployee, setDeletingEmployee] = useState<any | null>(null);
   const [deletingBusy, setDeletingBusy] = useState(false);
@@ -95,6 +97,15 @@ function HrBody() {
     const res = await mutate(supabase.rpc("post_13th_month_pay", { target_tenant: effectiveTenantId, pay_year: year13 }), { successMessage: "13th month pay posted." });
     setPosting13th(false);
     if (ok(res)) setConfirming13th(false);
+    load();
+  };
+
+  const cancelLoan = async (loan: any, date: string) => {
+    const res = await mutate(supabase.rpc("cancel_employee_loan", { target_loan: loan.id, cancel_date: date }));
+    if (!ok(res)) return;
+    const posted = (res.data as { reversal_posted?: boolean } | null)?.reversal_posted;
+    toast.success(posted ? "Loan cancelled and the cash returned in the ledger." : "Loan removed. Its journal entry was already reversed, so nothing more was posted.");
+    setCancellingLoan(null);
     load();
   };
 
@@ -232,7 +243,7 @@ function HrBody() {
           <Panel title="Employee loans">
             {loans.length === 0 ? <Empty>No employee loans yet.</Empty> : (
               <table>
-                <thead><tr><th>Employee</th><th className="text-right">Principal</th><th className="text-right">Monthly ded.</th><th className="text-right">Balance</th><th>Status</th></tr></thead>
+                <thead><tr><th>Employee</th><th className="text-right">Principal</th><th className="text-right">Monthly ded.</th><th className="text-right">Balance</th><th>Status</th><th></th></tr></thead>
                 <tbody>
                   {loans.map((l) => (
                     <tr key={l.id}>
@@ -241,6 +252,13 @@ function HrBody() {
                       <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{money(l.monthly_deduction)}</td>
                       <td className="text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{money(l.balance_remaining)}</td>
                       <td style={{ color: l.status === "active" ? "#F2B13C" : TEAL, fontWeight: 600, fontSize: 12 }} className="capitalize">{l.status.replace("_", " ")}</td>
+                      <td className="text-right whitespace-nowrap">
+                        {l.status === "active" && l.balance_remaining >= l.principal - 0.005 ? (
+                          <button onClick={() => setCancellingLoan(l)} style={{ color: RED }} className="text-[11.5px] font-semibold">Cancel loan</button>
+                        ) : (
+                          <span className="text-[11px] text-[#7F8EA0]" title="Payroll has already deducted from this loan">In repayment</span>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -309,6 +327,21 @@ function HrBody() {
         <Modal title="New employee" onClose={() => setModal(null)}>
           <EmployeeForm onClose={() => setModal(null)} onSaved={load} />
         </Modal>
+      )}
+      {cancellingLoan && (
+        <DatePromptDialog
+          title="Cancel this loan?"
+          danger
+          label="Date the cash is returned in the ledger"
+          defaultDate={cancellingLoan.start_date}
+          confirmLabel="Cancel loan"
+          message={<>
+            Removes <strong>{cancellingLoan.employees?.name}</strong>&rsquo;s loan of <strong>{money(cancellingLoan.principal)}</strong> and puts the money back (Dr Cash / Cr Employee Loans Receivable) on this date.
+            If you already reversed the loan&rsquo;s journal entry yourself, only the loan record is removed and nothing is posted a second time.
+          </>}
+          onCancel={() => setCancellingLoan(null)}
+          onConfirm={(d) => cancelLoan(cancellingLoan, d)}
+        />
       )}
       {editingEmployee && (
         <Modal title={`Edit employee — ${editingEmployee.name}`} onClose={() => setEditingEmployee(null)}>
