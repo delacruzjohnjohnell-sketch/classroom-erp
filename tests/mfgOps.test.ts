@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   adjustmentSchema, confirmationSchema, expiresSoon, fgReceiptSchema, firstIssue, issueSchema, orderSchema, outstanding,
   pickLots, poSchema, qtyText, receiptSchema, stockValue, transferSchema, ORDER_STATUS_LABEL, ORDER_STATUS_TONE, DOC_TYPE_LABEL,
+  canReverse, deliverySchema, outputReceiptSchema, remaining, reverseSchema, reversedIds, settleSchema, VARIANCE_HELP,
 } from "../src/lib/mfgOps.ts";
 
 const msg = (r: { success: boolean; error?: { issues: { message: string }[] } }) => (r.success ? "OK" : r.error!.issues[0].message);
@@ -102,4 +103,48 @@ test("small helpers", () => {
   assert.equal(ORDER_STATUS_LABEL.PARTIALLY_CONFIRMED, "In progress");
   assert.equal(ORDER_STATUS_TONE.DELIVERED, "good");
   assert.equal(DOC_TYPE_LABEL.FGR, "Finished goods receipt");
+});
+
+test("a reversal needs a reason and a date; settling needs a date", () => {
+  assert.equal(msg(reverseSchema.safeParse({ reason: "  ", posting_date: "2026-12-01" })), "Say why you are reversing it — the reason stays on the record.");
+  assert.equal(msg(reverseSchema.safeParse({ reason: "ok", posting_date: "2026-12-01" })), "Say why you are reversing it — the reason stays on the record.");
+  assert.equal(msg(reverseSchema.safeParse({ reason: "wrong lot", posting_date: "12/01/2026" })), "Choose the date of the reversal.");
+  const good = reverseSchema.parse({ reason: "  wrong lot ", posting_date: "2026-12-01" });
+  assert.equal(good.reason, "wrong lot");
+  assert.equal(msg(settleSchema.safeParse({ posting_date: "" })), "Choose the settlement date.");
+  assert.equal(msg(settleSchema.safeParse({ posting_date: "2026-12-01" })), "OK");
+});
+
+test("only documents that are not reversals and not yet reversed can be reversed", () => {
+  const rows = [
+    { id: "a", doc_type: "GI", reversal_of: null },
+    { id: "b", doc_type: "REV", reversal_of: "a" },
+    { id: "c", doc_type: "FGR", reversal_of: null },
+  ];
+  const done = reversedIds(rows);
+  assert.deepEqual([...done], ["a"]);
+  assert.equal(canReverse(rows[0], done), false);   // already reversed
+  assert.equal(canReverse(rows[1], done), false);   // is itself a reversal
+  assert.equal(canReverse(rows[2], done), true);
+  assert.equal(canReverse({ id: "k", reversal_of: null }, done), true);   // a confirmation has no doc type
+  assert.equal(canReverse({ id: "r", reversal_of: "k" }, done), false);
+});
+
+test("a delivery needs a quantity on at least one line; a co-product receipt needs a quantity", () => {
+  const line = (qty: string) => ({ so_line_id: "l1", qty });
+  assert.equal(msg(deliverySchema.safeParse({ so_id: "s", posting_date: "2026-12-03", lines: [line("0"), line("0")] })), "Enter a quantity to deliver on at least one line.");
+  assert.equal(msg(deliverySchema.safeParse({ so_id: "s", posting_date: "2026-12-03", lines: [line("-1")] })), "Quantity can't be negative.");
+  assert.equal(msg(deliverySchema.safeParse({ so_id: "", posting_date: "2026-12-03", lines: [line("1")] })), "Choose a sales order.");
+  assert.equal(msg(deliverySchema.safeParse({ so_id: "s", posting_date: "2026-12-03", lines: [line("0"), line("4")] })), "OK");
+  assert.equal(msg(outputReceiptSchema.safeParse({ output_id: "o", qty: "0", posting_date: "2026-12-03" })), "Quantity must be above zero.");
+  const r = outputReceiptSchema.parse({ output_id: "o", qty: "5", location_id: "", batch_no: " ", posting_date: "2026-12-03" });
+  assert.equal(r.location_id, null);
+  assert.equal(r.batch_no, null);
+});
+
+test("what is left to deliver never goes below zero or shows float noise", () => {
+  assert.equal(remaining(50, 30), 20);
+  assert.equal(remaining(50, 55), 0);
+  assert.equal(remaining(0.3, 0.1), 0.2);
+  assert.ok(VARIANCE_HELP.MATERIAL.length > 20 && VARIANCE_HELP.RESIDUAL.includes("written off"));
 });

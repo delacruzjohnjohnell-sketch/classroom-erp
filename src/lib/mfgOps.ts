@@ -99,6 +99,30 @@ export const fgReceiptSchema = z.object({
   posting_date: dateStr("Choose the date."),
 });
 
+export const reverseSchema = z.object({
+  reason: z.string().trim().min(3, "Say why you are reversing it — the reason stays on the record."),
+  posting_date: dateStr("Choose the date of the reversal."),
+});
+
+export const settleSchema = z.object({ posting_date: dateStr("Choose the settlement date.") });
+
+export const outputReceiptSchema = z.object({
+  output_id: text("Choose the co-product or by-product."),
+  qty: pos("Quantity"),
+  location_id: optId,
+  batch_no: optText,
+  expiry: optDate,
+  posting_date: dateStr("Choose the date."),
+});
+
+export const deliverySchema = z.object({
+  so_id: text("Choose a sales order."),
+  posting_date: dateStr("Choose the delivery date."),
+  lines: z.array(z.object({ so_line_id: text("A line is missing its sales-order line."), qty: nonNeg("Quantity"), location_id: optId })),
+}).superRefine((v, ctx) => {
+  if (!v.lines.some((l) => l.qty > 0)) ctx.addIssue({ code: "custom", message: "Enter a quantity to deliver on at least one line." });
+});
+
 export const firstIssue = (e: z.ZodError): string => e.issues[0]?.message ?? "Please check the form.";
 
 // ---------- labels ----------
@@ -114,6 +138,27 @@ export const ORDER_STATUS_TONE: Record<string, "good" | "warn" | "muted" | "bad"
 export const DOC_TYPE_LABEL: Record<string, string> = {
   GR: "Goods receipt", GI: "Material issue", FGR: "Finished goods receipt", TRF: "Transfer", ADJ: "Adjustment", DLV: "Delivery", REV: "Reversal",
 };
+
+/** Plain-language reasons shown beside each variance line (the database names the buckets). */
+export const VARIANCE_HELP: Record<string, string> = {
+  MATERIAL: "More or less material went into the order than the standard allowed for the good units. Scrap and waste show up here.",
+  LABOR: "The labor hours worked, compared with the standard hours for the good units.",
+  MACHINE: "Machine time and variable overhead, compared with the standard for the good units.",
+  FIX_OH: "Fixed overhead applied to the order, compared with the standard for the good units.",
+  RESIDUAL: "Cost that was put into the order but never reached stock, for example a co-product that was not received. It is written off.",
+};
+
+export type Reversible = { id: string; doc_type?: string; reversal_of: string | null };
+
+/** The ids that have already been reversed: a reversal points back at the document it undoes. */
+export const reversedIds = (rows: Reversible[]): Set<string> => new Set(rows.map((r) => r.reversal_of).filter((x): x is string => !!x));
+
+/** Can the Reverse button be shown? Not for a reversal itself, and not for something already reversed. */
+export const canReverse = (row: Reversible, reversed: Set<string>): boolean =>
+  row.doc_type !== "REV" && row.reversal_of === null && !reversed.has(row.id);
+
+/** What is still to deliver, invoice or receive on a line, never below zero and without float noise. */
+export const remaining = (total: number, done: number) => Math.max(Math.round((total - done) * 1e6) / 1e6, 0);
 
 // ---------- helpers ----------
 export type Lot = { id: string; batch_no: string | null; qty: number; expiry: string | null; received_on: string | null };
