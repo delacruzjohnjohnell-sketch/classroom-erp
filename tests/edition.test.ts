@@ -60,3 +60,11 @@ test("redirects never loop: the target is always acceptable to the same edition"
     }
   }
 });
+
+test("the Manufacturing master data screens belong to the Manufacturing workspace only", () => {
+  for (const p of ["/mfg/master", "/mfg/master/bom/new", "/mfg/master/bom/0b1c", "/mfg/master/routing/9f2"]) {
+    assert.equal(isMfgPath(p), true, p);
+    assert.equal(guardTarget("MANUFACTURING", p), null, p);
+    assert.equal(guardTarget("STANDARD", p), "/dashboard", p);   // no Standard twin
+  }
+});
