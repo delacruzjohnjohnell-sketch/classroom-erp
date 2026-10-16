@@ -82,7 +82,7 @@ export default function LoginPage() {
         if (err) throw err;
       }
       await refresh();
-      router.replace("/dashboard");
+      router.replace("/choose");
     } catch (err: any) {
       setError(err.message || "Something went wrong.");
     } finally {
@@ -96,7 +96,7 @@ export default function LoginPage() {
   useEffect(() => {
     if (!loading && userId && profile) {
       if (profile.role === "teacher") { router.replace("/teacher"); return; }
-      if (profile.tenant_id) { router.replace("/dashboard"); }
+      if (profile.tenant_id) { router.replace("/choose"); }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, userId, profile]);

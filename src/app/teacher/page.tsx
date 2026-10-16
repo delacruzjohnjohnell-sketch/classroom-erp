@@ -54,6 +54,9 @@ export default function TeacherPage() {
   const [summaries, setSummaries] = useState<{ tenant: any; metrics: any }[]>([]);
   const [fetching, setFetching] = useState(true);
   const [checking, setChecking] = useState<{ id: string; name: string } | null>(null);
+  // Which ERP's companies to show: all, Standard, or Manufacturing. A company with no edition row is Standard.
+  const [editionFilter, setEditionFilter] = useState<"ALL" | "STANDARD" | "MANUFACTURING">("ALL");
+  const [editions, setEditions] = useState<Record<string, string>>({});
   const [deleting, setDeleting] = useState<{ id: string; name: string } | null>(null);
 
   useEffect(() => {
@@ -61,6 +64,21 @@ export default function TeacherPage() {
     if (!userId) { router.replace("/login"); return; }
     if (profile && profile.role !== "teacher") { router.replace("/dashboard"); return; }
   }, [loading, userId, profile, router]);
+
+  useEffect(() => {
+    // arriving from the ERP chooser with ?edition=STANDARD|MANUFACTURING
+    const wanted = new URLSearchParams(window.location.search).get("edition");
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (wanted === "STANDARD" || wanted === "MANUFACTURING") setEditionFilter(wanted);
+  }, []);
+
+  useEffect(() => {
+    if (loading || !profile || profile.role !== "teacher") return;
+    (async () => {
+      const { data } = await supabase.from("tenant_editions").select("tenant_id, edition");
+      setEditions(Object.fromEntries(((data as { tenant_id: string; edition: string }[]) ?? []).map((r) => [r.tenant_id, r.edition])));
+    })();
+  }, [loading, profile, tenants]);
 
   useEffect(() => {
     if (loading || !profile || profile.role !== "teacher") return;
@@ -88,11 +106,15 @@ export default function TeacherPage() {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" size={20} color={TEAL} /></div>;
   }
 
-  const classRevenue = summaries.reduce((s, x) => s + (x.metrics?.revenue || 0), 0);
-  const classExpenses = summaries.reduce((s, x) => s + (x.metrics?.expenses || 0), 0);
+  const editionOf = (tenantId: string) => editions[tenantId] ?? "STANDARD";
+  const visible = summaries.filter((x) => editionFilter === "ALL" || editionOf(x.tenant.id) === editionFilter);
+  const countFor = (e: "STANDARD" | "MANUFACTURING") => summaries.filter((x) => editionOf(x.tenant.id) === e).length;
+
+  const classRevenue = visible.reduce((s, x) => s + (x.metrics?.revenue || 0), 0);
+  const classExpenses = visible.reduce((s, x) => s + (x.metrics?.expenses || 0), 0);
   const classNet = classRevenue - classExpenses;
-  const classHeadcount = summaries.reduce((s, x) => s + (x.metrics?.headcount || 0), 0);
-  const barData = summaries.map((x) => ({ name: x.tenant.name.length > 14 ? x.tenant.name.slice(0, 13) + "…" : x.tenant.name, Revenue: round2(x.metrics?.revenue || 0), Expenses: round2(x.metrics?.expenses || 0) }));
+  const classHeadcount = visible.reduce((s, x) => s + (x.metrics?.headcount || 0), 0);
+  const barData = visible.map((x) => ({ name: x.tenant.name.length > 14 ? x.tenant.name.slice(0, 13) + "…" : x.tenant.name, Revenue: round2(x.metrics?.revenue || 0), Expenses: round2(x.metrics?.expenses || 0) }));
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -112,7 +134,7 @@ export default function TeacherPage() {
         ) : (
           <>
             <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}>
-              <KpiCard icon={<Building2 size={16} />} label="Companies" value={tenants.length} />
+              <KpiCard icon={<Building2 size={16} />} label="Companies" value={visible.length} />
               <KpiCard icon={<TrendingUp size={16} />} label="Class revenue" value={money(classRevenue)} accent={TEAL} />
               <KpiCard icon={<TrendingDown size={16} />} label="Class expenses" value={money(classExpenses)} accent={RED} />
               <KpiCard icon={<Wallet size={16} />} label="Class net income" value={money(classNet)} accent={classNet >= 0 ? TEAL : RED} />
@@ -135,10 +157,23 @@ export default function TeacherPage() {
               </Panel>
             )}
 
+            <div className="flex items-center gap-2 flex-wrap">
+              {([["ALL", "All", summaries.length], ["STANDARD", "Standard ERP", countFor("STANDARD")], ["MANUFACTURING", "Manufacturing ERP", countFor("MANUFACTURING")]] as const).map(([key, label, n]) => (
+                <button key={key} onClick={() => setEditionFilter(key)}
+                  className="font-mono text-[11.5px] uppercase tracking-[0.08em] rounded-md px-3 py-1.5 border transition-colors"
+                  style={{ color: editionFilter === key ? (key === "MANUFACTURING" ? "#F2B13C" : "#22D3C5") : "#7F8EA0",
+                    borderColor: editionFilter === key ? (key === "MANUFACTURING" ? "rgba(242,177,60,0.6)" : "rgba(34,211,197,0.6)") : "#243140",
+                    background: editionFilter === key ? (key === "MANUFACTURING" ? "rgba(242,177,60,0.1)" : "rgba(34,211,197,0.1)") : "transparent" }}>
+                  {label} · {n}
+                </button>
+              ))}
+              <button onClick={() => router.push("/choose")} className="ml-auto text-[12px] font-semibold text-teal">Open or close the Manufacturing ERP →</button>
+            </div>
+
             <Panel title="Companies">
               {tenants.length === 0 ? <Empty>No student companies yet. They&rsquo;ll appear here once students sign in and create one.</Empty> : (
                 <div className="flex flex-col gap-1.5">
-                  {summaries.map(({ tenant, metrics }) => (
+                  {visible.map(({ tenant, metrics }) => (
                     <div key={tenant.id} className="flex items-center gap-2 px-3.5 py-2.5 rounded-md border border-hairline bg-paper">
                       <button onClick={() => { setViewTenantId(tenant.id); router.push("/dashboard"); }}
                         className="flex flex-1 min-w-0 items-center justify-between gap-3 text-left">
@@ -149,10 +184,10 @@ export default function TeacherPage() {
                           <ChevronRight size={16} color={INK} />
                         </div>
                       </button>
-                      <button onClick={() => setChecking({ id: tenant.id, name: tenant.name })} title="Check practice set"
+                      {editionOf(tenant.id) === "STANDARD" && <button onClick={() => setChecking({ id: tenant.id, name: tenant.name })} title="Check practice set"
                         className="flex items-center gap-1 border border-hairline rounded-md px-2 py-1.5 text-[11.5px] font-semibold text-teal bg-panel shrink-0">
                         <ClipboardCheck size={13} /> Check
-                      </button>
+                      </button>}
                       <button onClick={() => setDeleting({ id: tenant.id, name: tenant.name })} title="Delete company"
                         className="border border-hairline rounded-md px-2 py-1.5 bg-panel shrink-0" style={{ color: RED }}>
                         <Trash2 size={13} />
