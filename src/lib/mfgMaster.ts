@@ -69,6 +69,7 @@ export const bomSchema = z.object({
   item_id: text("Choose the item this bill of materials makes."),
   alt_no: num("Alternative").int("The alternative must be a whole number.").min(1, "The alternative must be 1 or higher."),
   base_qty: num("Base quantity").gt(0, "The base quantity must be above zero."),
+  yield_pct: num("Expected yield").gt(0, "The expected yield must be above 0.").max(100, "The expected yield can't be above 100%."),
   valid_from: dateStr("Choose the date this version starts."),
   valid_to: z.string().optional().transform((v) => (v ? v : null)),
   description: z.string().trim().optional().transform((v) => (v ? v : null)),

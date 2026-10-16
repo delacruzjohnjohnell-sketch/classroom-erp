@@ -60,7 +60,7 @@ test("costing sheet rows say which hours their rate is charged on, and an estima
 });
 
 const line = (patch: object = {}) => ({ component_item_id: "leg", qty: "4", uom: "PC", scrap_pct: "5", is_phantom: false, kind: "COMPONENT", cost_share_pct: "0", ...patch });
-const bom = (patch: object = {}) => ({ item_id: "chair", alt_no: "1", base_qty: "1", valid_from: "2026-11-01", valid_to: "", description: "", lines: [line()], ...patch });
+const bom = (patch: object = {}) => ({ item_id: "chair", alt_no: "1", base_qty: "1", yield_pct: "100", valid_from: "2026-11-01", valid_to: "", description: "", lines: [line()], ...patch });
 
 test("a bill of materials needs lines, a component, sensible dates and no self-reference", () => {
   const msg = (b: object) => { const r = bomSchema.safeParse(b); return r.success ? "OK" : firstError(r.error); };
@@ -70,6 +70,9 @@ test("a bill of materials needs lines, a component, sensible dates and no self-r
   assert.equal(msg(bom({ lines: [line({ component_item_id: "chair" })] })), "Line 1: an item can't be a component of itself.");
   assert.equal(msg(bom({ valid_to: "2026-10-01" })), "\"Valid to\" can't be before \"valid from\".");
   assert.equal(msg(bom({ base_qty: "0" })), "The base quantity must be above zero.");
+  assert.equal(msg(bom({ yield_pct: "0" })), "The expected yield must be above 0.");
+  assert.equal(msg(bom({ yield_pct: "101" })), "The expected yield can't be above 100%.");
+  assert.equal(msg(bom({ yield_pct: "90" })), "OK");
   assert.equal(msg(bom({ lines: [line({ qty: "0" })] })), "Every line needs a quantity above zero.");
   assert.equal(msg(bom({ lines: [line(), line({ component_item_id: "x", kind: "COPRODUCT", cost_share_pct: "60" }), line({ component_item_id: "y", kind: "BYPRODUCT", cost_share_pct: "60" })] })),
     "Co-product and by-product cost shares add up to 120%, which is more than 100%.");
