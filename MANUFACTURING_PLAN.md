@@ -470,6 +470,20 @@ See `MANUFACTURING_RECONCILIATION.md`. Approved changes to the phase list: a **p
 
 ---
 
+## Phase 5a as built (deviations from the plan above)
+
+- **Migration:** `0034_mfg_planning.sql`. New tables `mfg_forecasts`, `mfg_mrp_runs` (MRP-), `mfg_planned_orders` (PLN-), `mfg_purchase_reqs` (PR-), `mfg_mrp_demand`, `mfg_mrp_grid`, `mfg_mrp_exceptions`, `mfg_pegging`; eleven new functions. Nothing existing is changed or redefined; the Standard fingerprints (functions, columns, policies, triggers) are identical before and after. Capacity, the Gantt chart and collective conversion stay in 5b (migration 0035).
+- **The run (`mfg_run_mrp(horizon_days, bucket_days, include_forecast, start)`):** one transaction. It gathers demand (open sales orders for what is not yet delivered, forecast months not yet used up by sales orders, components still to be issued to open production orders, components of firm planned orders), then plans item by item in low-level-code order so a sub-assembly is planned before its components; the components of each planned order become demand for the next level. Netting per bucket: projected stock = stock in the raw-material and finished-goods stores + receipts − requirements; when it would fall below the safety stock, the shortage is covered by a planned order (make) or a purchase requisition (buy). Late dates fall in the first bucket, dates past the horizon are ignored. 60 columns at most; buckets of 1, 7, 14 or 30 days.
+- **Lot rules (`mfg__lot_qty`):** LOT_FOR_LOT, FIXED (whole multiples), EOQ (never below the lot size; the lot size field holds the EOQ), MIN_MAX (raised to the minimum, split at the maximum), PERIODIC (the lot size field is the number of periods to cover). The item's scrap % grosses the order quantity up so the good quantity still covers the need. A lead time longer than the time left starts the order today and records how many days late it will finish.
+- **Pegging (`mfg_pegging`):** each requirement is matched first-come-first-served to the supply that covers it (stock, open purchase orders, open production orders, firm planned orders, then the new planned orders and requisitions). Deviation from the plan's `planned_id` column: the table stores both sides (kind, document, date) so it can also say that stock or an existing order covers a requirement.
+- **Exceptions:** LATE_START, PAST_DUE_RECEIPT, NO_ACTIVE_BOM, RESCHEDULE_IN, NOT_NEEDED. Calendar days are used; the work-centre calendar and holidays are not applied until 5b.
+- **Re-running:** a new run marks the previous run's unconverted suggestions DELETED, keeps converted ones and firm planned orders (counted as supply, with their components as demand) and keeps only the latest run's detail (grid, demand, pegging, exceptions); earlier runs stay in the run list. The status FAILED is reserved: a failed run rolls back completely, so no row is left behind.
+- **Conversion:** `mfg_convert_planned_order` calls the existing `mfg_create_order` (start date moved to today if it has passed); `mfg_convert_requisitions` calls the existing `mfg_create_po` and puts several requisitions for one vendor on one purchase order. Planned orders you create (`mfg_create_planned_order`) are firm. Forecasts are by month (`mfg_save_forecast`; zero clears).
+- **Size:** about 210 items over three BOM levels with 60 sales orders plans in about 0.7 s; the `authenticated` role's statement limit on this project is 8 s.
+- **Screen:** `/mfg/planning` (Planning in the menu): run panel, four counters, then tabs for the item-by-item time-phased grid with the requirements and pegging underneath, exceptions, planned orders, purchase requisitions and forecasts.
+
+---
+
 ## Manufacturing look and feel (before Phase 5)
 
 - The Manufacturing ERP now has its own **light theme**, modelled on the reference screenshot: a navy sidebar with a blue active item, a white top bar (search, company switcher, user), light cards and tables, a blue primary button. A Manufacturing company is drawn by `src/components/mfg/MfgShell.tsx` (`AppShell` hands over to it); the Standard ERP keeps its dark console look and its own shell code.
