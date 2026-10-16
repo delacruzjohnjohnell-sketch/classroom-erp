@@ -1,14 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  bomSchema, conversionSchema, expectedAccountType, firstError, itemSchema, POSTING_LABEL, rateSchema,
+  bomSchema, conversionSchema, costingSheetSchema, estimateSchema, expectedAccountType, firstError, itemSchema, POSTING_LABEL, rateSchema,
   routingSchema, uomSchema, workCenterSchema,
 } from "../src/lib/mfgMaster.ts";
 
 const item = {
   sku: "CHAIR", name: "Dining chair", item_type: "FINISHED", make_or_buy: "MAKE", base_uom: "PC",
   procurement_lead_days: "0", production_lead_days: "2", lot_rule: "LOT_FOR_LOT", lot_size: "0", min_lot: "0", max_lot: "0",
-  safety_stock: "10", scrap_pct: "0", batch_tracked: false, default_location_id: "", active: true,
+  safety_stock: "10", scrap_pct: "0", batch_tracked: false, default_location_id: "", planned_price: "0", price_unit: "1", active: true,
 };
 
 test("a normal item passes and numbers typed as text are read as numbers", () => {
@@ -32,6 +32,31 @@ test("item rules explain themselves in plain words", () => {
   assert.equal(msg({ scrap_pct: "100" }), "Scrap % must be below 100.");
   assert.equal(msg({ safety_stock: "-1" }), "Safety stock can't be negative.");
   assert.equal(msg({ production_lead_days: "1.5" }), "Production lead time must be a whole number.");
+  assert.equal(msg({ planned_price: "-5" }), "Planned price can't be negative.");
+  assert.equal(msg({ planned_price: "50", price_unit: "100" }), "OK");
+  assert.equal(msg({ price_unit: "0" }), "The price unit must be 1 or more (for example 100 for \"per 100 pieces\").");
+});
+
+test("routing times for labor and machine may be left blank, meaning the run time is all labor", () => {
+  const op = { op_no: "10", description: "", work_center_id: "wc1", setup_min: "0", run_min_per_unit: "12", teardown_min: "0", queue_min: "0", move_min: "0", control_key: "PP01", component_line_nos: [] };
+  const blank = routingSchema.safeParse({ item_id: "i", alt_no: "1", ops: [{ ...op, labor_min_per_unit: "", machine_min_per_unit: "" }] });
+  assert.equal(blank.success, true);
+  if (blank.success) { assert.equal(blank.data.ops[0].labor_min_per_unit, null); assert.equal(blank.data.ops[0].machine_min_per_unit, null); }
+  const set = routingSchema.safeParse({ item_id: "i", alt_no: "1", ops: [{ ...op, labor_min_per_unit: "90", machine_min_per_unit: "0" }] });
+  assert.equal(set.success && set.data.ops[0].labor_min_per_unit, 90);
+  assert.equal(set.success && set.data.ops[0].machine_min_per_unit, 0);
+  const bad = routingSchema.safeParse({ item_id: "i", alt_no: "1", ops: [{ ...op, labor_min_per_unit: "-1" }] });
+  assert.equal(bad.success ? "OK" : firstError(bad.error), "Labor time can't be negative.");
+});
+
+test("costing sheet rows say which hours their rate is charged on, and an estimate needs a lot size", () => {
+  const row = { name: "Fixed overhead", kind: "FIXED", base: "LABOR", oh_pct: "0", oh_rate_per_hour: "40", hour_basis: "LABOR", active: true };
+  assert.equal(costingSheetSchema.safeParse(row).success, true);
+  assert.equal(costingSheetSchema.safeParse({ ...row, hour_basis: "" }).success, false);
+  assert.equal(estimateSchema.safeParse({ item_id: "chair", lot_size: "100", costing_date: "2026-11-15" }).success, true);
+  const zero = estimateSchema.safeParse({ item_id: "chair", lot_size: "0", costing_date: "2026-11-15" });
+  assert.equal(zero.success ? "OK" : firstError(zero.error), "The lot size must be above zero.");
+  assert.equal(estimateSchema.safeParse({ item_id: "", lot_size: "1", costing_date: "2026-11-15" }).success, false);
 });
 
 const line = (patch: object = {}) => ({ component_item_id: "leg", qty: "4", uom: "PC", scrap_pct: "5", is_phantom: false, kind: "COMPONENT", cost_share_pct: "0", ...patch });

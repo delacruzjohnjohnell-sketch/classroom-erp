@@ -23,6 +23,9 @@ const num = (label: string) => z.coerce.number({ error: `${label} must be a numb
 const nonNeg = (label: string) => num(label).min(0, `${label} can't be negative.`);
 const intNonNeg = (label: string) => num(label).int(`${label} must be a whole number.`).min(0, `${label} can't be negative.`);
 const pct = (label: string) => num(label).min(0, `${label} can't be negative.`).lt(100, `${label} must be below 100.`);
+/** A time that may be left blank (blank = "use the run time"). */
+const blankOrNonNeg = (label: string) =>
+  z.preprocess((v) => (v === "" || v === undefined || v === null ? null : v), z.coerce.number({ error: `${label} must be a number.` }).min(0, `${label} can't be negative.`).nullable());
 const text = (msg: string) => z.string().trim().min(1, msg);
 const optId = z.string().optional().transform((v) => (v ? v : null));
 const dateStr = (msg: string) => z.string().regex(/^\d{4}-\d{2}-\d{2}$/, msg);
@@ -43,6 +46,8 @@ export const itemSchema = z.object({
   scrap_pct: pct("Scrap %"),
   batch_tracked: z.boolean(),
   default_location_id: optId,
+  planned_price: nonNeg("Planned price"),
+  price_unit: num("Price unit").int("The price unit must be a whole number.").min(1, "The price unit must be 1 or more (for example 100 for \"per 100 pieces\")."),
   active: z.boolean(),
 }).superRefine((v, ctx) => {
   if (v.lot_rule === "FIXED" && v.lot_size <= 0) ctx.addIssue({ code: "custom", message: "A fixed lot size needs a lot size above zero." });
@@ -85,6 +90,8 @@ export const routingOpSchema = z.object({
   setup_min: nonNeg("Setup time"),
   run_min_per_unit: nonNeg("Run time"),
   teardown_min: nonNeg("Teardown time"),
+  labor_min_per_unit: blankOrNonNeg("Labor time"),
+  machine_min_per_unit: blankOrNonNeg("Machine time"),
   queue_min: nonNeg("Queue time"),
   move_min: nonNeg("Move time"),
   control_key: z.enum(["PP01", "PP02", "PP03"]),
@@ -148,7 +155,14 @@ export const costingSheetSchema = z.object({
   base: z.enum(["MATERIAL", "LABOR", "BOTH"]),
   oh_pct: nonNeg("Percentage").max(1000, "A surcharge can't be above 1000%."),
   oh_rate_per_hour: nonNeg("Rate per hour"),
+  hour_basis: z.enum(["LABOR", "MACHINE"], { error: "Choose which hours the rate is charged on." }),
   active: z.boolean(),
+});
+
+export const estimateSchema = z.object({
+  item_id: text("Choose the item to cost."),
+  lot_size: num("Lot size").gt(0, "The lot size must be above zero."),
+  costing_date: dateStr("Choose the costing date."),
 });
 
 /** The account type each posting key may point at (mirrors mfg_set_account in migration 0025). */
