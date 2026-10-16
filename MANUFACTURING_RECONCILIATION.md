@@ -108,10 +108,21 @@ Nothing already built changes. The plan's phases absorb the brief like this:
 | 5 Seed & simulation | **Phase 7** (and an automated end-to-end SQL test in 4b) | The Dining Chair scenario: buy, produce with a material variance, ship, then Trial Balance and Income Statement |
 | (plan only) | 5a/5b, 6 | MRP and capacity; quality, OEE, roles if you choose option B |
 
-## 8. What I need from you
+## 8. Decisions (recorded 2026-10-16)
 
-1. **Confirm the stack:** stay on Supabase + SQL functions, no ORM, no server tier.
-2. **Approve the adoptions** in §2 (three-way match, landed cost, FEFO/FIFO, BOM yield, reconciliation, close-after-QC, negative-stock setting) and the new Phase 4c.
-3. **Choose** §5 option A, B or C.
-4. **Answer Q-A and Q-B** (§6).
-5. Say "phase 4a" when ready; I'll make the §4 fix first and stop after 4a for review as before.
+All of the following were approved by the user.
+
+1. **Stack:** stay on Supabase + SQL functions; no ORM, no server tier.
+2. **Adopted:** three-way match with tolerance, landed cost, FEFO/FIFO lot picking, BOM-level yield, sub-ledger ↔ GL reconciliation, "work order can't close until QC is resolved", negative-stock setting (trigger reading the company setting). New **Phase 4c** (invoice + match + landed cost + AP).
+3. **Segregation of duties = option B:** a teacher switch for **team companies** with teacher-assigned roles (`BOM_ENGINEER`, `WAREHOUSE_CLERK`, … ), enforced inside every posting function. Built **after Phase 6**. This relaxes D4 (one Manufacturing company per student) for team companies only, and the join list must then offer a team company to the students the teacher assigns.
+4. **Q-A approved:** a deferred constraint trigger on `journal_lines` so no entry can be saved unbalanced. Pre-check done on the live database: **638 entries, 1,616 lines, 0 unbalanced, 0 entries without lines, 0 negative amounts.** (6 lines carry both a debit and a credit, so the rule is on the entry's totals, not "one side per line".) It will ship as its own small migration with a rollback and a test, **before** Phase 4a's posting kernel relies on it.
+5. **Q-B approved:** Manufacturing companies refuse manual journal lines on control accounts (inventory, WIP, GR/IR, clearing, applied labor/overhead). Ships in the same migration pass, as a trigger that applies only to Manufacturing companies (Standard companies are untouched).
+6. **First step of Phase 4a:** fix the explosion/costing yield inconsistency (§4), then the posting kernel.
+
+## 9. Updated order of work
+
+1. **Pre-4a:** §4 yield fix; migration for Q-A (balance trigger) and Q-B (control accounts) with tests and Standard regression.
+2. **4a:** `mfg__post_entry`, immutable material documents, stock (FEFO/FIFO, negative-stock trigger), goods receipt, reconciliation report, production orders through FG receipt.
+3. **4b:** settlement, variances, reversals, delivery/COGS, automated end-to-end test of the Dining Chair scenario.
+4. **4c:** vendor invoice with three-way match and tolerance, landed cost, AP.
+5. **5a/5b:** MRP and capacity. **6:** quality, OEE, close-after-QC. **6b:** team companies and roles (option B). **7:** analytics, period close, teacher comparison, demo loader.

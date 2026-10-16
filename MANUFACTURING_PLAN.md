@@ -423,3 +423,9 @@ Each phase report: what was built/deviations · migrations in order · test resu
 - **Roll-up rules:** material at planned price × quantity (BOM scrap included); an item's own scrap % raises the quantity started (good ÷ (1 − scrap %)); setup and teardown are charged once per lot (SETUP rate, or the labor rate if there is none); overhead on material or labor uses that item's own level only; a phantom is looked straight through; co-/by-products take their cost-share % of the lot.
 - **Release** revalues stock on hand from `items.qty_on_hand` (the Standard-side mirror that Phase 4 keeps in step with Manufacturing stock) with one entry: inventory accounts against 5580 Inventory Revaluation, and mirrors the new cost into `items.unit_cost`.
 - **Deferred:** a lot-size sensitivity curve (cost by lot size) moves to the Phase 7 analytics screens; estimates under actual costing are planning-only.
+
+---
+
+## Roadmap after reconciliation (2026-10-16)
+
+See `MANUFACTURING_RECONCILIATION.md`. Approved changes to the phase list: a **pre-4a** step (yield fix, database balance trigger, control-account guard), a new **Phase 4c** (vendor invoice with three-way match, landed cost, AP), and **Phase 6b** (team companies with assigned roles, after Phase 6). Phases 4a/4b/5/6/7 otherwise as listed in section 11.
