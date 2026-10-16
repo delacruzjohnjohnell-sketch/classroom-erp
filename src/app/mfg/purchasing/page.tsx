@@ -6,6 +6,8 @@ import AppShell from "@/components/AppShell";
 import { Panel, Modal, Label, GoldBtn, OutlineBtn, TinyBtn, ConfirmDialog, FormStyles } from "@/components/ui";
 import ListReport, { Chip, type ListColumn } from "@/components/ListReport";
 import { useLookups } from "@/components/mfg/useLookups";
+import VendorInvoicePanel from "@/components/mfg/VendorInvoicePanel";
+import LandedCostPanel from "@/components/mfg/LandedCostPanel";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
@@ -35,6 +37,7 @@ function PurchasingBody() {
   const [vendors, setVendors] = useState<{ id: string; name: string }[]>([]);
   const [received, setReceived] = useState<Record<string, number>>({});
   const [busy, setBusy] = useState(false);
+  const [tick, setTick] = useState(0);
 
   const [newPo, setNewPo] = useState(false);
   const [vendorId, setVendorId] = useState("");
@@ -147,7 +150,7 @@ function PurchasingBody() {
         <h1 className="text-[20px] font-semibold">Purchasing</h1>
         <div className="text-[12.5px] text-[#A3B1C2] mt-1 max-w-[760px]">
           Order materials from a vendor, then receive them into stock. A receipt puts the goods in the store, owes the vendor on the GR/IR (goods received, invoice not yet received) account,
-          and under standard costing records the difference between the price you paid and the standard cost as Purchase Price Variance.
+          and under standard costing records the difference between the price you paid and the standard cost as Purchase Price Variance. When the vendor&rsquo;s invoice arrives, enter it below: it is matched with the order and the receipt before you owe anything.
         </div>
       </div>
 
@@ -157,6 +160,9 @@ function PurchasingBody() {
           onRowClick={readOnly ? undefined : (p) => p.status !== "closed" && openReceive(p)}
           toolbar={!readOnly ? <GoldBtn onClick={() => setNewPo(true)}><Plus size={13} /> New purchase order</GoldBtn> : undefined} />
       </Panel>
+
+      <VendorInvoicePanel reloadKey={tick} onChanged={() => setTick((n) => n + 1)} />
+      <LandedCostPanel reloadKey={tick} onChanged={() => setTick((n) => n + 1)} />
 
       {newPo && (
         <Modal title="New purchase order" onClose={() => setNewPo(false)} wide>

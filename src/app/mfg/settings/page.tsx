@@ -8,6 +8,8 @@ import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
 import { expectedAccountType, POSTING_LABEL } from "@/lib/mfgMaster";
+import { firstIssue, toleranceSchema } from "@/lib/mfgOps";
+import { toast } from "@/lib/toast";
 
 type Settings = {
   costing_method: "STANDARD" | "ACTUAL";
@@ -16,6 +18,7 @@ type Settings = {
   oh_close_method: "COGS" | "PRORATE";
   explain_postings: boolean;
   allow_negative_stock: boolean;
+  match_tolerance_pct: number;
 };
 type Account = { id: string; code: string; name: string; type: string };
 type Mapping = { key: string; account: Account | null };
@@ -37,14 +40,15 @@ function SettingsBody() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [log, setLog] = useState<LogRow[]>([]);
   const [costing, setCosting] = useState<Settings["costing_method"]>("STANDARD");
-  const [form, setForm] = useState<Omit<Settings, "costing_method" | "allow_negative_stock">>({ fiscal_year_start: "", variance_close_method: "COGS", oh_close_method: "COGS", explain_postings: true });
+  const [form, setForm] = useState<Omit<Settings, "costing_method" | "allow_negative_stock" | "match_tolerance_pct">>({ fiscal_year_start: "", variance_close_method: "COGS", oh_close_method: "COGS", explain_postings: true });
   const [busy, setBusy] = useState(false);
+  const [tol, setTol] = useState("2");
 
   const load = async () => {
     if (!effectiveTenantId) return;
     setLoading(true);
     const [s, d, a, l] = await Promise.all([
-      supabase.from("mfg_company_settings").select("costing_method, fiscal_year_start, variance_close_method, oh_close_method, explain_postings, allow_negative_stock").eq("tenant_id", effectiveTenantId).maybeSingle(),
+      supabase.from("mfg_company_settings").select("costing_method, fiscal_year_start, variance_close_method, oh_close_method, explain_postings, allow_negative_stock, match_tolerance_pct").eq("tenant_id", effectiveTenantId).maybeSingle(),
       supabase.from("mfg_account_determination").select("key, account_id").eq("tenant_id", effectiveTenantId).order("key"),
       supabase.from("accounts").select("id, code, name, type").eq("tenant_id", effectiveTenantId).order("code"),
       supabase.from("mfg_audit_log").select("id, event, detail, created_at").eq("tenant_id", effectiveTenantId).order("created_at", { ascending: false }).limit(20),
@@ -53,6 +57,7 @@ function SettingsBody() {
     setSettings(row);
     if (row) {
       setCosting(row.costing_method);
+      setTol(String(row.match_tolerance_pct));
       setForm({ fiscal_year_start: row.fiscal_year_start, variance_close_method: row.variance_close_method, oh_close_method: row.oh_close_method, explain_postings: row.explain_postings });
     }
     const accs = (a.data as Account[]) ?? [];
@@ -70,6 +75,15 @@ function SettingsBody() {
     if (!effectiveTenantId || busy) return;
     setBusy(true);
     const res = await mutate(supabase.rpc("set_mfg_negative_stock", { target_tenant: effectiveTenantId, allow }), { successMessage: allow ? "Negative stock is now allowed." : "Negative stock is now refused." });
+    setBusy(false);
+    if (ok(res)) load();
+  };
+  const saveTolerance = async () => {
+    if (!effectiveTenantId || busy) return;
+    const parsed = toleranceSchema.safeParse({ pct: tol });
+    if (!parsed.success) { toast.error(firstIssue(parsed.error)); return; }
+    setBusy(true);
+    const res = await mutate(supabase.rpc("set_mfg_match_tolerance", { target_tenant: effectiveTenantId, pct: parsed.data.pct }), { successMessage: "Invoice matching tolerance updated." });
     setBusy(false);
     if (ok(res)) load();
   };
@@ -112,6 +126,7 @@ function SettingsBody() {
           <span className="text-[#7F8EA0]">Variances at period end</span><span className="font-semibold">{CLOSE_LABEL[settings.variance_close_method]}</span>
           <span className="text-[#7F8EA0]">Over/under-applied overhead</span><span className="font-semibold">{CLOSE_LABEL[settings.oh_close_method]}</span>
           <span className="text-[#7F8EA0]">“Show journal entry” panel</span><span className="font-semibold">{settings.explain_postings ? "On" : "Off"}</span>
+          <span className="text-[#7F8EA0]">Vendor invoice tolerance</span><span className="font-semibold">{settings.match_tolerance_pct}% — an invoice that differs from the order or the receipt by more is held for the teacher</span>
           <span className="text-[#7F8EA0]">Stock may go below zero</span><span className="font-semibold">{settings.allow_negative_stock ? "Yes — allowed by your teacher" : "No — an issue with too little stock is refused"}</span>
         </div>
         {!isTeacher && <div className="text-[12px] text-[#7F8EA0] mt-3">Your teacher controls these settings so every company is graded the same way.</div>}
@@ -137,6 +152,15 @@ function SettingsBody() {
               <input type="checkbox" checked={settings.allow_negative_stock} disabled={busy} onChange={(e) => toggleNegative(e.target.checked)} />
               Allow stock to go below zero in this company
             </label>
+          </Panel>
+
+          <Panel title="Vendor invoice tolerance (teacher)">
+            <div className="text-[12px] text-[#7F8EA0] mb-2">Every vendor invoice is matched with the purchase order and the goods received. A price or quantity that differs by more than this percentage puts the invoice on hold until you release it.</div>
+            <div className="flex gap-2 flex-wrap items-center">
+              <input className="input" type="number" min={0} max={50} step="0.01" style={{ width: 120 }} value={tol} onChange={(e) => setTol(e.target.value)} aria-label="Tolerance in percent" />
+              <span className="text-[13px]">percent</span>
+              <GoldBtn onClick={saveTolerance} disabled={busy || Number(tol) === Number(settings.match_tolerance_pct)}>Save tolerance</GoldBtn>
+            </div>
           </Panel>
 
           <Panel title="Other settings (teacher)">
