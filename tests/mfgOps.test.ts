@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {
   adjustmentSchema, confirmationSchema, expiresSoon, fgReceiptSchema, firstIssue, issueSchema, orderSchema, outstanding,
   pickLots, poSchema, qtyText, receiptSchema, stockValue, transferSchema, ORDER_STATUS_LABEL, ORDER_STATUS_TONE, DOC_TYPE_LABEL,
-  canReverse, deliverySchema, outputReceiptSchema, remaining, reverseSchema, reversedIds, settleSchema, VARIANCE_HELP,
+  canReverse, deliverySchema, landedCostSchema, matchLine, spreadAmount, toleranceSchema, vendorInvoiceSchema, INVOICE_STATUS_LABEL, BASIS_LABEL, outputReceiptSchema, remaining, reverseSchema, reversedIds, settleSchema, VARIANCE_HELP,
 } from "../src/lib/mfgOps.ts";
 
 const msg = (r: { success: boolean; error?: { issues: { message: string }[] } }) => (r.success ? "OK" : r.error!.issues[0].message);
@@ -147,4 +147,42 @@ test("what is left to deliver never goes below zero or shows float noise", () =>
   assert.equal(remaining(50, 55), 0);
   assert.equal(remaining(0.3, 0.1), 0.2);
   assert.ok(VARIANCE_HELP.MATERIAL.length > 20 && VARIANCE_HELP.RESIDUAL.includes("written off"));
+});
+
+test("the invoice match compares quantity with what is open and price with the order, both inside the tolerance", () => {
+  assert.deepEqual(matchLine(200, 200, 65, 65, 2), { qtyPct: 0, pricePct: 0, ok: true });
+  assert.deepEqual(matchLine(100, 100, 65, 66, 2), { qtyPct: 0, pricePct: 1.54, ok: true });
+  assert.deepEqual(matchLine(100, 100, 65, 64, 2), { qtyPct: 0, pricePct: -1.54, ok: true });
+  assert.equal(matchLine(100, 100, 65, 68, 2).ok, false);          // 4.62 % dearer
+  assert.equal(matchLine(100, 100, 65, 68, 5).ok, true);           // the teacher widened the tolerance
+  assert.equal(matchLine(60, 100, 65, 65, 2).qtyPct, 66.67);       // billed more than arrived
+  assert.equal(matchLine(100, 60, 65, 65, 2).ok, true);            // billing less than is open is fine
+  assert.equal(matchLine(0, 10, 1, 1, 2).qtyPct, 100);             // nothing is open to invoice
+});
+
+test("a landed cost is spread to the centavo and the leftover goes to the first biggest line", () => {
+  assert.deepEqual(spreadAmount(1300, [12000, 1000]), [1200, 100]);
+  assert.deepEqual(spreadAmount(1000, [1, 1, 1]), [333.34, 333.33, 333.33]);
+  assert.equal(spreadAmount(100.01, [3, 1]).reduce((a, b) => Math.round((a + b) * 100) / 100, 0), 100.01);
+  assert.deepEqual(spreadAmount(500, [0, 0]), [0, 0]);
+});
+
+test("vendor invoice and landed cost forms need the essentials", () => {
+  const line = { po_line_id: "l1", qty: "10", unit_price: "65" };
+  const base = { po_id: "p", vendor_ref: "V-1", invoice_date: "2026-12-05", due_date: "", tax_rate: "12", lines: [line] };
+  assert.equal(msg(vendorInvoiceSchema.safeParse(base)), "OK");
+  assert.equal(msg(vendorInvoiceSchema.safeParse({ ...base, vendor_ref: " " })), "Enter the number printed on the vendor's invoice.");
+  assert.equal(msg(vendorInvoiceSchema.safeParse({ ...base, lines: [{ ...line, qty: "0" }] })), "Enter the quantity and price billed on at least one line.");
+  assert.equal(msg(vendorInvoiceSchema.safeParse({ ...base, due_date: "2026-12-01" })), "The due date can't be before the invoice date.");
+  assert.equal(msg(vendorInvoiceSchema.safeParse({ ...base, tax_rate: "120" })), "The VAT rate can't be more than 100 percent.");
+  const lc = { vendor_id: "v", vendor_ref: "F-1", voucher_date: "2026-12-25", due_date: "", basis: "WEIGHT", amount: "1000", tax_rate: "0", description: "", lines: [{ doc_line_id: "d1", weight: "0", volume: "0" }] };
+  assert.equal(msg(landedCostSchema.safeParse(lc)), "Enter the weight of the lines you chose.");
+  assert.equal(msg(landedCostSchema.safeParse({ ...lc, lines: [{ doc_line_id: "d1", weight: "5", volume: "0" }] })), "OK");
+  assert.equal(msg(landedCostSchema.safeParse({ ...lc, basis: "VALUE" })), "OK");
+  assert.equal(msg(landedCostSchema.safeParse({ ...lc, amount: "0" })), "The amount must be above zero.");
+  assert.equal(msg(landedCostSchema.safeParse({ ...lc, lines: [] })), "Choose at least one receipt line to spread the cost over.");
+  assert.equal(msg(toleranceSchema.safeParse({ pct: "60" })), "The tolerance can't be more than 50 percent.");
+  assert.equal(msg(toleranceSchema.safeParse({ pct: "2.5" })), "OK");
+  assert.equal(INVOICE_STATUS_LABEL.HELD, "On hold");
+  assert.equal(BASIS_LABEL.QTY, "Quantity");
 });

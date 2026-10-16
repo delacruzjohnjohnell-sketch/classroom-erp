@@ -123,6 +123,38 @@ export const deliverySchema = z.object({
   if (!v.lines.some((l) => l.qty > 0)) ctx.addIssue({ code: "custom", message: "Enter a quantity to deliver on at least one line." });
 });
 
+export const toleranceSchema = z.object({ pct: num("The tolerance").min(0, "The tolerance can't be negative.").max(50, "The tolerance can't be more than 50 percent.") });
+
+export const vendorInvoiceSchema = z.object({
+  po_id: text("Choose the purchase order."),
+  vendor_ref: text("Enter the number printed on the vendor's invoice."),
+  invoice_date: dateStr("Choose the invoice date."),
+  due_date: optDate,
+  tax_rate: nonNeg("The VAT rate").max(100, "The VAT rate can't be more than 100 percent."),
+  lines: z.array(z.object({ po_line_id: text("A line is missing its order line."), qty: nonNeg("Quantity"), unit_price: nonNeg("Price") })),
+}).superRefine((v, ctx) => {
+  if (!v.lines.some((l) => l.qty > 0)) ctx.addIssue({ code: "custom", message: "Enter the quantity and price billed on at least one line." });
+  if (v.due_date && v.due_date < v.invoice_date) ctx.addIssue({ code: "custom", message: "The due date can't be before the invoice date." });
+});
+
+export const BASIS_LABEL: Record<string, string> = { VALUE: "Value of the goods", QTY: "Quantity", WEIGHT: "Weight", VOLUME: "Volume" };
+
+export const landedCostSchema = z.object({
+  vendor_id: text("Choose the vendor who billed the cost."),
+  vendor_ref: text("Enter the number printed on the vendor's invoice."),
+  voucher_date: dateStr("Choose the invoice date."),
+  due_date: optDate,
+  basis: z.enum(["VALUE", "QTY", "WEIGHT", "VOLUME"], { error: "Choose how to spread the cost." }),
+  amount: pos("The amount"),
+  tax_rate: nonNeg("The VAT rate").max(100, "The VAT rate can't be more than 100 percent."),
+  description: optText,
+  lines: z.array(z.object({ doc_line_id: text("A line is missing."), weight: nonNeg("Weight"), volume: nonNeg("Volume") })).min(1, "Choose at least one receipt line to spread the cost over."),
+}).superRefine((v, ctx) => {
+  if (v.basis === "WEIGHT" && !v.lines.some((l) => l.weight > 0)) ctx.addIssue({ code: "custom", message: "Enter the weight of the lines you chose." });
+  if (v.basis === "VOLUME" && !v.lines.some((l) => l.volume > 0)) ctx.addIssue({ code: "custom", message: "Enter the volume of the lines you chose." });
+  if (v.due_date && v.due_date < v.voucher_date) ctx.addIssue({ code: "custom", message: "The due date can't be before the invoice date." });
+});
+
 export const firstIssue = (e: z.ZodError): string => e.issues[0]?.message ?? "Please check the form.";
 
 // ---------- labels ----------
@@ -138,6 +170,33 @@ export const ORDER_STATUS_TONE: Record<string, "good" | "warn" | "muted" | "bad"
 export const DOC_TYPE_LABEL: Record<string, string> = {
   GR: "Goods receipt", GI: "Material issue", FGR: "Finished goods receipt", TRF: "Transfer", ADJ: "Adjustment", DLV: "Delivery", REV: "Reversal",
 };
+
+export const INVOICE_STATUS_LABEL: Record<string, string> = { HELD: "On hold", POSTED: "Posted", REJECTED: "Rejected", VOID: "Voided" };
+export const INVOICE_STATUS_TONE: Record<string, "good" | "warn" | "muted" | "bad"> = { HELD: "bad", POSTED: "good", REJECTED: "muted", VOID: "muted" };
+
+/**
+ * The three-way match for one invoice line, as the database does it: the quantity billed is compared with what has been received
+ * and not yet invoiced, the price with the order price. `qtyPct` is how far the billed quantity is ABOVE what is open (billing
+ * less is fine); `pricePct` is positive when dearer than ordered and negative when cheaper. Either beyond the tolerance holds the invoice.
+ */
+export function matchLine(open: number, qty: number, poPrice: number, price: number, tolerance: number) {
+  const r2 = (n: number) => Math.round(n * 100) / 100;
+  const qtyPct = open === 0 ? (qty > 0 ? 100 : 0) : r2(((qty - open) / open) * 100);
+  const pricePct = poPrice === 0 ? (price > 0 ? 100 : 0) : r2(((price - poPrice) / poPrice) * 100);
+  return { qtyPct, pricePct, ok: qtyPct <= tolerance && Math.abs(pricePct) <= tolerance };
+}
+
+/** Spreads an amount over lines in proportion to a base (value, quantity, weight, volume), to the centavo; the leftover goes to the first biggest line. */
+export function spreadAmount(amount: number, bases: number[]): number[] {
+  const total = bases.reduce((s, b) => s + b, 0);
+  if (!(total > 0)) return bases.map(() => 0);
+  const parts = bases.map((b) => Math.round(((amount * b) / total) * 100) / 100);
+  let big = 0;
+  bases.forEach((b, i) => { if (b > bases[big]) big = i; });
+  const left = Math.round((Math.round(amount * 100) / 100 - parts.reduce((s, p) => s + p, 0)) * 100) / 100;
+  parts[big] = Math.round((parts[big] + left) * 100) / 100;
+  return parts;
+}
 
 /** Plain-language reasons shown beside each variance line (the database names the buckets). */
 export const VARIANCE_HELP: Record<string, string> = {
