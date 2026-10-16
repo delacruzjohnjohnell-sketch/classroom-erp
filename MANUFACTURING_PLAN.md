@@ -429,3 +429,17 @@ Each phase report: what was built/deviations · migrations in order · test resu
 ## Roadmap after reconciliation (2026-10-16)
 
 See `MANUFACTURING_RECONCILIATION.md`. Approved changes to the phase list: a **pre-4a** step (yield fix, database balance trigger, control-account guard), a new **Phase 4c** (vendor invoice with three-way match, landed cost, AP), and **Phase 6b** (team companies with assigned roles, after Phase 6). Phases 4a/4b/5/6/7 otherwise as listed in section 11.
+
+---
+
+## Phase 4a as built (deviations from the plan above)
+
+- **Migrations:** `0029_mfg_guards_and_yield.sql` (before 4a: one quantity rule, the database balance check, the control-account guard), `0030_mfg_stock_kernel.sql` (posting function, immutable stock documents, stock, lots, purchase orders, goods receipt, adjustments, transfers) and `0031_mfg_production.sql` (production orders to finished-goods receipt, reconciliation). Later phases keep shifting up: settlement 0032, vendor invoice with three-way match and landed cost 0033 (Phase 4c), planning 0034, capacity 0035, quality 0036, period close 0037, demo 0038.
+- **Quantity rule:** one rule for the BOM explosion, the cost estimate and the production order: start = good ÷ (1 − item scrap %) ÷ (recipe yield %), line scrap on top. A recipe-level `yield_pct` was added to bills of materials.
+- **Balance check (Q-A):** a deferred constraint trigger on `journal_lines` refuses an entry whose debits and credits differ by half a centavo or more (not exactly zero: amounts sent from the browser can carry floating-point dust). Manufacturing postings go through `mfg__post_entry`, which is exact to the centavo and sends differences of up to 5 centavos to the Rounding account.
+- **Control accounts (Q-B):** a trigger on `journal_lines` refuses manual lines (entries with no source document) on inventory, WIP, GR/IR and applied-cost accounts, in Manufacturing companies only.
+- **Stock documents** and confirmations are immutable (update and delete refused) except the teacher deleting a whole company and the one-time link of a document to its journal entry. Stock may go negative only if the teacher turns on `allow_negative_stock`.
+- **Lots** are issued earliest-expiry first, then oldest first. Valuation stays at item level (standard cost, or moving average); the lot carries traceability.
+- **Overhead in postings:** hourly rates and percentages of labor are applied at confirmation; a percentage of bought material is applied at issue. Percentages of *made* sub-assemblies are not applied (the estimate does not include them either).
+- **Deferred to 4b:** settlement of the variance left in work in process, reversals of documents and confirmations, co-/by-product receipts, delivery with cost of goods sold, and the automated end-to-end test of the whole Dining Chair story. Deferred to 4c: the vendor invoice with three-way match, and landed cost.
+- **Team roles** (segregation of duties) remain Phase 6b.

@@ -15,6 +15,7 @@ type Settings = {
   variance_close_method: "COGS" | "PRORATE";
   oh_close_method: "COGS" | "PRORATE";
   explain_postings: boolean;
+  allow_negative_stock: boolean;
 };
 type Account = { id: string; code: string; name: string; type: string };
 type Mapping = { key: string; account: Account | null };
@@ -36,14 +37,14 @@ function SettingsBody() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [log, setLog] = useState<LogRow[]>([]);
   const [costing, setCosting] = useState<Settings["costing_method"]>("STANDARD");
-  const [form, setForm] = useState<Omit<Settings, "costing_method">>({ fiscal_year_start: "", variance_close_method: "COGS", oh_close_method: "COGS", explain_postings: true });
+  const [form, setForm] = useState<Omit<Settings, "costing_method" | "allow_negative_stock">>({ fiscal_year_start: "", variance_close_method: "COGS", oh_close_method: "COGS", explain_postings: true });
   const [busy, setBusy] = useState(false);
 
   const load = async () => {
     if (!effectiveTenantId) return;
     setLoading(true);
     const [s, d, a, l] = await Promise.all([
-      supabase.from("mfg_company_settings").select("costing_method, fiscal_year_start, variance_close_method, oh_close_method, explain_postings").eq("tenant_id", effectiveTenantId).maybeSingle(),
+      supabase.from("mfg_company_settings").select("costing_method, fiscal_year_start, variance_close_method, oh_close_method, explain_postings, allow_negative_stock").eq("tenant_id", effectiveTenantId).maybeSingle(),
       supabase.from("mfg_account_determination").select("key, account_id").eq("tenant_id", effectiveTenantId).order("key"),
       supabase.from("accounts").select("id, code, name, type").eq("tenant_id", effectiveTenantId).order("code"),
       supabase.from("mfg_audit_log").select("id, event, detail, created_at").eq("tenant_id", effectiveTenantId).order("created_at", { ascending: false }).limit(20),
@@ -65,6 +66,13 @@ function SettingsBody() {
   // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/set-state-in-effect
   useEffect(() => { load(); }, [effectiveTenantId]);
 
+  const toggleNegative = async (allow: boolean) => {
+    if (!effectiveTenantId || busy) return;
+    setBusy(true);
+    const res = await mutate(supabase.rpc("set_mfg_negative_stock", { target_tenant: effectiveTenantId, allow }), { successMessage: allow ? "Negative stock is now allowed." : "Negative stock is now refused." });
+    setBusy(false);
+    if (ok(res)) load();
+  };
   const saveCosting = async () => {
     if (!effectiveTenantId || busy) return;
     setBusy(true);
@@ -104,6 +112,7 @@ function SettingsBody() {
           <span className="text-[#7F8EA0]">Variances at period end</span><span className="font-semibold">{CLOSE_LABEL[settings.variance_close_method]}</span>
           <span className="text-[#7F8EA0]">Over/under-applied overhead</span><span className="font-semibold">{CLOSE_LABEL[settings.oh_close_method]}</span>
           <span className="text-[#7F8EA0]">“Show journal entry” panel</span><span className="font-semibold">{settings.explain_postings ? "On" : "Off"}</span>
+          <span className="text-[#7F8EA0]">Stock may go below zero</span><span className="font-semibold">{settings.allow_negative_stock ? "Yes — allowed by your teacher" : "No — an issue with too little stock is refused"}</span>
         </div>
         {!isTeacher && <div className="text-[12px] text-[#7F8EA0] mt-3">Your teacher controls these settings so every company is graded the same way.</div>}
       </Panel>
@@ -120,6 +129,14 @@ function SettingsBody() {
               <GoldBtn onClick={saveCosting} disabled={busy || costing === settings.costing_method}>Change costing method</GoldBtn>
             </div>
             <FormStyles />
+          </Panel>
+
+          <Panel title="Negative stock (teacher)">
+            <div className="text-[12px] text-[#7F8EA0] mb-2">Normally issuing more than is in the store is refused. Allow it to show students what happens when stock is issued before it is received; the stock count then goes below zero until it is corrected.</div>
+            <label className="flex items-center gap-2 text-[13px]">
+              <input type="checkbox" checked={settings.allow_negative_stock} disabled={busy} onChange={(e) => toggleNegative(e.target.checked)} />
+              Allow stock to go below zero in this company
+            </label>
           </Panel>
 
           <Panel title="Other settings (teacher)">

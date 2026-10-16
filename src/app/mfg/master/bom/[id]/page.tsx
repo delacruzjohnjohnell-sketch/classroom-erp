@@ -14,7 +14,7 @@ import { toast } from "@/lib/toast";
 import { BOM_KINDS, bomSchema, firstError } from "@/lib/mfgMaster";
 
 type Line = { component_item_id: string; qty: string; uom: string; scrap_pct: string; is_phantom: boolean; kind: keyof typeof BOM_KINDS; cost_share_pct: string };
-type Head = { item_id: string; alt_no: string; base_qty: string; valid_from: string; valid_to: string; description: string };
+type Head = { item_id: string; alt_no: string; base_qty: string; yield_pct: string; valid_from: string; valid_to: string; description: string };
 type Meta = { id: string; document_number: string | null; version: number; status: string };
 type ExplodeRow = { seq: number; level: number; path: string; item_id: string; qty: number; uom: string; base_qty: number; base_uom: string; scrap_pct: number; is_phantom: boolean; has_bom: boolean };
 type UsedRow = { lvl: number; bom_id: string; document_number: string; parent_name: string; version: number; alt_no: number; status: string; qty: number; uom: string };
@@ -46,7 +46,7 @@ function BomBody() {
 
   const [loading, setLoading] = useState(!isNew);
   const [meta, setMeta] = useState<Meta | null>(null);
-  const [head, setHead] = useState<Head>({ item_id: search.get("item") ?? "", alt_no: "1", base_qty: "1", valid_from: today(), valid_to: "", description: "" });
+  const [head, setHead] = useState<Head>({ item_id: search.get("item") ?? "", alt_no: "1", base_qty: "1", yield_pct: "100", valid_from: today(), valid_to: "", description: "" });
   const [lines, setLines] = useState<Line[]>([blankLine()]);
   const [dirty, setDirty] = useState(isNew);
   const [busy, setBusy] = useState(false);
@@ -71,10 +71,10 @@ function BomBody() {
       supabase.from("mfg_boms").select("*").eq("id", id).maybeSingle(),
       supabase.from("mfg_bom_items").select("*").eq("bom_id", id).order("line_no"),
     ]);
-    const row = b.data as (Meta & { item_id: string; alt_no: number; base_qty: number; valid_from: string; valid_to: string | null; description: string | null }) | null;
+    const row = b.data as (Meta & { item_id: string; alt_no: number; base_qty: number; yield_pct: number; valid_from: string; valid_to: string | null; description: string | null }) | null;
     if (row) {
       setMeta({ id: row.id, document_number: row.document_number, version: row.version, status: row.status });
-      setHead({ item_id: row.item_id, alt_no: String(row.alt_no), base_qty: String(Number(row.base_qty)), valid_from: row.valid_from, valid_to: row.valid_to ?? "", description: row.description ?? "" });
+      setHead({ item_id: row.item_id, alt_no: String(row.alt_no), base_qty: String(Number(row.base_qty)), yield_pct: String(Number(row.yield_pct ?? 100)), valid_from: row.valid_from, valid_to: row.valid_to ?? "", description: row.description ?? "" });
       setLines(((l.data as Record<string, unknown>[]) ?? []).map((x) => ({
         component_item_id: String(x.component_item_id), qty: String(Number(x.qty)), uom: String(x.uom), scrap_pct: String(Number(x.scrap_pct)),
         is_phantom: !!x.is_phantom, kind: x.kind as Line["kind"], cost_share_pct: String(Number(x.cost_share_pct)),
@@ -168,6 +168,7 @@ function BomBody() {
           </div>
           <div><Label>Alternative</Label><input className="input" type="number" min={1} step={1} disabled={!isNew || !editable} value={head.alt_no} onChange={(e) => setH({ alt_no: e.target.value })} /></div>
           <div><Label>Quantity made {parentItem ? `(${parentItem.base_uom})` : ""}</Label><input className="input" type="number" min={0} step="any" disabled={!editable} value={head.base_qty} onChange={(e) => setH({ base_qty: e.target.value })} /></div>
+          <div><Label>Expected yield %</Label><input className="input" type="number" min={0} max={100} step="any" disabled={!editable} value={head.yield_pct} onChange={(e) => setH({ yield_pct: e.target.value })} /></div>
           <div><Label>Valid from</Label><input className="input" type="date" disabled={!editable} value={head.valid_from} onChange={(e) => setH({ valid_from: e.target.value })} /></div>
           <div><Label>Valid to (optional)</Label><input className="input" type="date" disabled={!editable} value={head.valid_to} onChange={(e) => setH({ valid_to: e.target.value })} /></div>
         </div>
@@ -215,6 +216,7 @@ function BomBody() {
         <div className="text-[11.5px] text-[#7F8EA0] mt-3">
           Scrap % adds that share on top of the quantity (5% scrap on 4 pieces needs 4.2). A phantom is built on the way and not stocked, so its own parts are needed instead.
           Co-products and by-products are outputs, not requirements; their cost shares split the cost of making them.
+          The expected yield is the share of what you start that comes out good: at 90%, making 90 good units means starting 100. It adds to the item&rsquo;s own scrap %.
         </div>
       </Panel>
 
