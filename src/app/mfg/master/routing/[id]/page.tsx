@@ -13,12 +13,12 @@ import { mutate, ok } from "@/lib/mutate";
 import { toast } from "@/lib/toast";
 import { CONTROL_KEYS, firstError, routingSchema } from "@/lib/mfgMaster";
 
-type Op = { op_no: string; description: string; work_center_id: string; setup_min: string; run_min_per_unit: string; teardown_min: string; queue_min: string; move_min: string; control_key: keyof typeof CONTROL_KEYS };
+type Op = { op_no: string; description: string; work_center_id: string; setup_min: string; run_min_per_unit: string; labor_min_per_unit: string; machine_min_per_unit: string; teardown_min: string; queue_min: string; move_min: string; control_key: keyof typeof CONTROL_KEYS };
 type Head = { item_id: string; alt_no: string; description: string };
 type Meta = { id: string; document_number: string | null; version: number; status: string };
 type LoadRow = { op_no: number; description: string | null; work_center_id: string; work_min: number; wait_min: number; setup_min: number; run_min: number; teardown_min: number };
 
-const blankOp = (no: number): Op => ({ op_no: String(no), description: "", work_center_id: "", setup_min: "0", run_min_per_unit: "0", teardown_min: "0", queue_min: "0", move_min: "0", control_key: "PP01" });
+const blankOp = (no: number): Op => ({ op_no: String(no), description: "", work_center_id: "", setup_min: "0", run_min_per_unit: "0", labor_min_per_unit: "", machine_min_per_unit: "", teardown_min: "0", queue_min: "0", move_min: "0", control_key: "PP01" });
 const hm = (min: number) => `${Math.floor(min / 60)} h ${Math.round(min % 60)} min`;
 
 export default function RoutingPage() {
@@ -69,7 +69,9 @@ function RoutingBody() {
       const raw = (o.data as Record<string, unknown>[]) ?? [];
       setOps(raw.map((x) => ({
         op_no: String(x.op_no), description: String(x.description ?? ""), work_center_id: String(x.work_center_id), setup_min: String(Number(x.setup_min)),
-        run_min_per_unit: String(Number(x.run_min_per_unit)), teardown_min: String(Number(x.teardown_min)), queue_min: String(Number(x.queue_min)),
+        run_min_per_unit: String(Number(x.run_min_per_unit)),
+        labor_min_per_unit: x.labor_min_per_unit == null ? "" : String(Number(x.labor_min_per_unit)),
+        machine_min_per_unit: x.machine_min_per_unit == null ? "" : String(Number(x.machine_min_per_unit)), teardown_min: String(Number(x.teardown_min)), queue_min: String(Number(x.queue_min)),
         move_min: String(Number(x.move_min)), control_key: x.control_key as Op["control_key"],
       })));
       setLineNos(Object.fromEntries(raw.map((x) => [Number(x.op_no), (x.component_line_nos as number[]) ?? []])));
@@ -156,8 +158,8 @@ function RoutingBody() {
 
       <Panel title="Operations">
         <div className="overflow-x-auto">
-          <table style={{ minWidth: 980 }}>
-            <thead><tr><th>Op</th><th>What is done</th><th>Work center</th><th>Setup (min)</th><th>Run (min / unit)</th><th>Teardown (min)</th><th>Queue (min)</th><th>Move (min)</th><th>Control key</th>{editable && <th />}</tr></thead>
+          <table style={{ minWidth: 1180 }}>
+            <thead><tr><th>Op</th><th>What is done</th><th>Work center</th><th>Setup (min)</th><th>Run (min / unit)</th><th>Labor (min / unit)</th><th>Machine (min / unit)</th><th>Teardown (min)</th><th>Queue (min)</th><th>Move (min)</th><th>Control key</th>{editable && <th />}</tr></thead>
             <tbody>
               {ops.map((o, i) => (
                 <tr key={i}>
@@ -169,7 +171,7 @@ function RoutingBody() {
                       {(editable ? activeCenters : lk.workCenters).map((w) => <option key={w.id} value={w.id}>{w.code} — {w.name}</option>)}
                     </select>
                   </td>
-                  <td>{numCell(i, "setup_min")}</td><td>{numCell(i, "run_min_per_unit")}</td><td>{numCell(i, "teardown_min")}</td>
+                  <td>{numCell(i, "setup_min")}</td><td>{numCell(i, "run_min_per_unit")}</td><td>{numCell(i, "labor_min_per_unit")}</td><td>{numCell(i, "machine_min_per_unit")}</td><td>{numCell(i, "teardown_min")}</td>
                   <td>{numCell(i, "queue_min")}</td><td>{numCell(i, "move_min")}</td>
                   <td>
                     <select className="input" disabled={!editable} value={o.control_key} onChange={(e) => setO(i, { control_key: e.target.value as Op["control_key"] })}>
@@ -188,7 +190,7 @@ function RoutingBody() {
           </div>
         )}
         <div className="text-[11.5px] text-[#7F8EA0] mt-3">
-          Work time is setup + run × quantity + teardown. Queue and move time are waiting time between operations. The planned rate for each hour comes from the work center&rsquo;s activity rates.
+          Labor and machine minutes are what is charged to the work center&rsquo;s labor and machine rates (leave both blank to charge the whole run time as labor). Work time is setup + run × quantity + teardown. Queue and move time are waiting time between operations. The planned rate for each hour comes from the work center&rsquo;s activity rates.
         </div>
       </Panel>
 

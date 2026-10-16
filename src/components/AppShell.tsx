@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LogOut, ArrowLeft, Loader2, LayoutDashboard, BookOpen, Truck,
-  Package, ShoppingCart, Briefcase, FileBarChart, Landmark, Boxes, Building2, Plus, ArrowLeftRight, Settings, Database,
+  Package, ShoppingCart, Briefcase, FileBarChart, Landmark, Boxes, Building2, Plus, ArrowLeftRight, Settings, Database, Calculator,
 } from "lucide-react";
 import { useSession } from "@/lib/session";
 import { usePagePresence } from "@/lib/presence";
@@ -34,6 +34,7 @@ const NAV = [
 const NAV_MFG = [
   { href: "/mfg", label: "Overview", icon: LayoutDashboard },
   { href: "/mfg/master", label: "Master Data", icon: Database },
+  { href: "/mfg/costing", label: "Costing", icon: Calculator },
   { href: "/mfg/finance", label: "Finance", icon: BookOpen },
   { href: "/mfg/sales", label: "Sales", icon: ShoppingCart },
   { href: "/mfg/banking", label: "Banking", icon: Landmark },

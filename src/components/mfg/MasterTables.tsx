@@ -158,14 +158,15 @@ export function CostingSheetTab({ reload, readOnly }: Props) {
   return (
     <SimpleMaster table="mfg_costing_sheet" title="Overhead costing sheet" orderBy="name" readOnly={readOnly} onChanged={reload} addLabel="Add surcharge"
       hint="Overhead added on top of material or labor cost when product costs are worked out (used from Phase 3)."
-      defaults={{ kind: "VARIABLE", base: "MATERIAL", oh_pct: "0", oh_rate_per_hour: "0", active: true }}
+      defaults={{ kind: "VARIABLE", base: "MATERIAL", oh_pct: "0", oh_rate_per_hour: "0", hour_basis: "MACHINE", active: true }}
       schema={costingSheetSchema}
       fields={[
         { key: "name", label: "Name", type: "text" },
         { key: "kind", label: "Behaves as", type: "select", options: [{ value: "VARIABLE", label: "Variable overhead" }, { value: "FIXED", label: "Fixed overhead" }] },
         { key: "base", label: "Charged on", type: "select", options: [{ value: "MATERIAL", label: "Material cost" }, { value: "LABOR", label: "Labor cost" }, { value: "BOTH", label: "Material and labor" }] },
         { key: "oh_pct", label: "Percentage of the base", type: "number" },
-        { key: "oh_rate_per_hour", label: "Plus ₱ per machine hour", type: "number" },
+        { key: "oh_rate_per_hour", label: "Plus ₱ per hour", type: "number" },
+        { key: "hour_basis", label: "…counted on", type: "select", options: [{ value: "LABOR", label: "Labor hours" }, { value: "MACHINE", label: "Machine hours" }] },
         { key: "active", label: "Active", type: "checkbox" },
       ]}
       columns={[
@@ -174,6 +175,7 @@ export function CostingSheetTab({ reload, readOnly }: Props) {
         { key: "base", label: "Charged on", value: (r) => String(r.base).toLowerCase(), width: 110 },
         { key: "pct", label: "Percentage", value: (r) => pct(r.oh_pct), align: "right", width: 110 },
         { key: "rate", label: "₱ per hour", value: (r) => Number(r.oh_rate_per_hour), align: "right", width: 110 },
+        { key: "hb", label: "Counted on", value: (r) => (r.hour_basis === "LABOR" ? "Labor hours" : "Machine hours"), width: 120 },
         { key: "active", label: "Status", value: (r) => (r.active ? "Active" : "Inactive"), filter: true, width: 100, render: (r) => <Chip label={r.active ? "Active" : "Inactive"} tone={r.active ? "good" : "muted"} /> },
       ]} />
   );

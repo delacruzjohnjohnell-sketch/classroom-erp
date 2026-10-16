@@ -8,12 +8,13 @@ import type { Lookups, MasterItem } from "./useLookups";
 import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
 import { toast } from "@/lib/toast";
+import { unitMoney } from "@/lib/costing";
 import { firstError, itemSchema, ITEM_TYPES, LOT_RULES, MAKE_OR_BUY, type ItemForm } from "@/lib/mfgMaster";
 
 const BLANK: ItemForm = {
   sku: "", name: "", item_type: "RAW", make_or_buy: "BUY", base_uom: "PC", procurement_lead_days: "0", production_lead_days: "0",
   lot_rule: "LOT_FOR_LOT", lot_size: "0", min_lot: "0", max_lot: "0", safety_stock: "0", scrap_pct: "0", batch_tracked: false,
-  default_location_id: "", active: true,
+  default_location_id: "", planned_price: "0", price_unit: "1", active: true,
 } as unknown as ItemForm;
 
 const toForm = (m: MasterItem): ItemForm => ({
@@ -21,7 +22,7 @@ const toForm = (m: MasterItem): ItemForm => ({
   procurement_lead_days: String(m.procurement_lead_days), production_lead_days: String(m.production_lead_days),
   lot_rule: m.lot_rule, lot_size: String(m.lot_size), min_lot: String(m.min_lot), max_lot: String(m.max_lot),
   safety_stock: String(m.safety_stock), scrap_pct: String(m.scrap_pct), batch_tracked: m.batch_tracked,
-  default_location_id: m.default_location_id ?? "", active: m.active,
+  default_location_id: m.default_location_id ?? "", planned_price: String(Number(m.planned_price)), price_unit: String(m.price_unit), active: m.active,
 } as unknown as ItemForm);
 
 const label = <T extends Record<string, string>>(map: T, k: string) => (map as Record<string, string>)[k] ?? k;
@@ -78,6 +79,9 @@ export default function ItemsTab({ lookups, reload, readOnly }: { lookups: Looku
     { key: "pl", label: "Purchase lead (days)", value: (m) => m.procurement_lead_days, align: "right", width: 150, defaultHidden: true },
     { key: "prl", label: "Production lead (days)", value: (m) => m.production_lead_days, align: "right", width: 160, defaultHidden: true },
     { key: "batch", label: "Batches", value: (m) => (m.batch_tracked ? "Tracked" : "—"), width: 90, defaultHidden: true },
+    { key: "plan", label: "Planned price", value: (m) => Number(m.planned_price) / (m.price_unit || 1), align: "right", width: 120, render: (m) => (Number(m.planned_price) ? unitMoney(Number(m.planned_price) / (m.price_unit || 1)) : "—") },
+    { key: "std", label: "Standard cost", value: (m) => Number(m.standard_cost), align: "right", width: 130, render: (m) => (Number(m.standard_cost) ? unitMoney(m.standard_cost) : "—") },
+    { key: "mavg", label: "Moving average", value: (m) => Number(m.moving_avg_cost), align: "right", width: 130, defaultHidden: true, render: (m) => (Number(m.moving_avg_cost) ? unitMoney(m.moving_avg_cost) : "—") },
     { key: "llc", label: "Low level", value: (m) => m.low_level_code, align: "right", width: 90 },
     { key: "status", label: "Status", value: (m) => (m.active ? "Active" : "Inactive"), filter: true, width: 100, render: (m) => <Chip label={m.active ? "Active" : "Inactive"} tone={m.active ? "good" : "muted"} /> },
     ...(readOnly ? [] : [{
@@ -146,6 +150,11 @@ export default function ItemsTab({ lookups, reload, readOnly }: { lookups: Looku
               <div><Label>Safety stock</Label>{numIn("safety_stock")}</div>
               <div><Label>Scrap % (yield loss)</Label>{numIn("scrap_pct")}</div>
             </div>
+            <div className="grid grid-cols-2 gap-x-3">
+              <div><Label>Planned price (₱)</Label>{numIn("planned_price")}</div>
+              <div><Label>…for this many units</Label>{numIn("price_unit", "1")}</div>
+            </div>
+            <div className="text-[11.5px] text-[#7F8EA0] mt-1">What you expect to pay for a bought item, used in cost estimates (₱50 for 100 nails = price 50, units 100). The standard cost itself is set only when a cost estimate is released.</div>
             <Label>Usual storage location</Label>
             <select className="input" value={String(f.default_location_id ?? "")} onChange={(e) => set({ default_location_id: e.target.value })}>
               <option value="">None</option>

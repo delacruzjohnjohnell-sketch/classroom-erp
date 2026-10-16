@@ -410,3 +410,16 @@ Each phase report: what was built/deviations · migrations in order · test resu
 - **Activation** closes an older active version the day before a later-starting one; any other overlap is refused. Routings keep exactly one active version per item and alternative.
 - **Master tables** that need no business rules (units, locations, work centers, cost centers, calendar, rates, costing sheet) are written directly by the owning student under row-level security; items, BOMs and routings are written only through functions.
 - **Teacher** reads every table, edits none, and is the only one who can change the account determination (`mfg_set_account`, audit-logged, account type checked).
+
+---
+
+## Phase 3 as built (deviations from the plan above)
+
+- **Migrations:** `0027_mfg_joinable_companies.sql` (the join-list function) and `0028_mfg_costing.sql` (costing). This moves the later plan numbers up by one: stock documents become 0029, production 0030, settlement 0031, planning 0032, capacity 0033, quality 0034, period close 0035, demo scenario 0036.
+- **Join list:** Manufacturing companies are hidden from the join lists (`/companies` and the first-login picker) through `joinable_companies()`; a student cannot see other companies' edition rows, so this has to be a database function.
+- **Routing times:** operations gained optional labor and machine minutes per unit (both blank = the run time is all labor), so labor and machine hours can differ as in the worked example (1.5 h labor, 0.5 h machine).
+- **Costing sheet:** each row says which hours its per-hour rate counts (labor or machine); the seeded fixed-overhead row counts labor hours.
+- **Planned price** and a **price unit** (e.g. ₱50 per 100 nails) on the item master; the standard cost is written only by releasing an estimate. `moving_avg_cost` exists now and is used from Phase 4 (actual costing).
+- **Roll-up rules:** material at planned price × quantity (BOM scrap included); an item's own scrap % raises the quantity started (good ÷ (1 − scrap %)); setup and teardown are charged once per lot (SETUP rate, or the labor rate if there is none); overhead on material or labor uses that item's own level only; a phantom is looked straight through; co-/by-products take their cost-share % of the lot.
+- **Release** revalues stock on hand from `items.qty_on_hand` (the Standard-side mirror that Phase 4 keeps in step with Manufacturing stock) with one entry: inventory accounts against 5580 Inventory Revaluation, and mirrors the new cost into `items.unit_cost`.
+- **Deferred:** a lot-size sensitivity curve (cost by lot size) moves to the Phase 7 analytics screens; estimates under actual costing are planning-only.
