@@ -49,3 +49,111 @@ button:focus-visible, a:focus-visible { outline: 2px solid #22D3C5; outline-offs
   html, body { background: #fff !important; background-image: none !important; color: #000 !important; }
   .no-print { display: none !important; }
 }
+
+/* =====================================================================================================
+   Manufacturing ERP — light theme.
+   Everything below is scoped to .mfg-light, a wrapper only the Manufacturing shell renders, so the
+   Standard ERP's dark console look is untouched. It recolours the shared components (panels, tables,
+   buttons, chips, forms, dialogs) without editing them.
+   ===================================================================================================== */
+.mfg-light {
+  --m-bg: #F3F6FB; --m-panel: #FFFFFF; --m-line: #E4EAF3; --m-line-soft: #EEF2F8;
+  --m-ink: #17213B; --m-soft: #4B5B75; --m-muted: #6B7A92;
+  --m-blue: #2F6BFF; --m-blue-d: #2457D6; --m-blue-soft: rgba(47, 107, 255, 0.10);
+  --m-green: #14A56B; --m-amber: #D98200; --m-red: #E5484D; --m-purple: #7C5CFC;
+  color-scheme: light;
+  background: var(--m-bg);
+  color: var(--m-ink);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.mfg-light * { scrollbar-color: #C5D0E2 transparent; }
+.mfg-light *::-webkit-scrollbar-thumb { background: #C5D0E2; }
+.mfg-light *::-webkit-scrollbar-thumb:hover { background: #A9B8D0; }
+.mfg-light ::selection { background: rgba(47, 107, 255, 0.25); color: inherit; }
+
+/* one sans-serif voice instead of the console's monospace */
+.mfg-light .font-mono, .mfg-light .font-serif, .mfg-light th, .mfg-light [style*="monospace"] { font-family: inherit !important; }
+
+/* colour tokens */
+.mfg-light .bg-panel { background-color: var(--m-panel); }
+.mfg-light .bg-paper { background-color: var(--m-bg); }
+.mfg-light .text-ink { color: var(--m-ink); }
+.mfg-light .text-teal, .mfg-light .text-gold, .mfg-light .text-slate { color: var(--m-blue); }
+.mfg-light .text-red { color: var(--m-red); }
+.mfg-light .text-onaccent { color: #fff; }
+.mfg-light .border-hairline { border-color: var(--m-line); }
+.mfg-light .bg-tealsoft, .mfg-light .hover\:bg-tealsoft:hover { background-color: var(--m-blue-soft); }
+.mfg-light .bg-teal { background-color: var(--m-blue); box-shadow: none !important; }
+.mfg-light .bg-gold { background-color: var(--m-blue); }
+.mfg-light .hover\:text-ink:hover { color: var(--m-ink); }
+.mfg-light .hover\:shadow-glow:hover { box-shadow: 0 6px 18px rgba(23, 33, 59, 0.10); }
+.mfg-light .text-\[\#7F8EA0\] { color: var(--m-muted); }
+.mfg-light .text-\[\#A3B1C2\] { color: var(--m-soft); }
+.mfg-light .text-\[\#C9D4E0\], .mfg-light .text-\[\#E6EDF3\] { color: var(--m-ink); }
+.mfg-light .bg-\[\#1B2634\] { background-color: #E7EDF6; }
+.mfg-light .text-\[\#FF6B7A\] { color: var(--m-red); }
+
+/* cards */
+.mfg-light [class*="shadow-[0_1px_3px_rgba(0,0,0,0.35)]"] { box-shadow: 0 1px 3px rgba(23, 33, 59, 0.06), 0 1px 2px rgba(23, 33, 59, 0.04) !important; border-radius: 12px; }
+.mfg-light [style*="linear-gradient(90deg, rgba(34, 211, 197"] { display: none; }
+.mfg-light div[class*="font-semibold uppercase tracking-[0.1em] text-[#C9D4E0]"] { text-transform: none; letter-spacing: 0; font-size: 15px; font-weight: 700; color: var(--m-ink); }
+.mfg-light .rounded-lg.bg-panel { border-radius: 12px; }
+
+/* tables */
+.mfg-light th { color: var(--m-muted); border-bottom: 1px solid var(--m-line); text-transform: none; letter-spacing: 0; font-size: 12px; font-weight: 600; background: #F8FAFD; }
+.mfg-light td { border-bottom: 1px solid var(--m-line-soft); }
+.mfg-light tbody tr:hover { background: rgba(47, 107, 255, 0.045); }
+
+/* forms */
+.mfg-light .input { border: 1px solid #D5DEEC; background: #fff; color: var(--m-ink); }
+.mfg-light .input:focus { border-color: var(--m-blue) !important; box-shadow: 0 0 0 3px rgba(47, 107, 255, 0.15); }
+.mfg-light .input::placeholder { color: #94A3B8; }
+.mfg-light select.input option { background: #fff; color: var(--m-ink); }
+.mfg-light input[type="date"]::-webkit-calendar-picker-indicator { filter: none; }
+.mfg-light button:focus-visible, .mfg-light a:focus-visible { outline-color: var(--m-blue); }
+.mfg-light .primary-btn { background: var(--m-blue); color: #fff; border: 1px solid var(--m-blue); box-shadow: 0 1px 2px rgba(47, 107, 255, 0.3); }
+.mfg-light .primary-btn:hover:not(:disabled) { background: var(--m-blue-d); }
+
+/* buttons: the amber "GoldBtn" becomes the primary blue button; the teal outline and small buttons turn neutral/blue */
+.mfg-light button[class*="border-[rgba(242,177,60,0.55)]"] { background: var(--m-blue); color: #fff; border-color: var(--m-blue); box-shadow: 0 1px 2px rgba(47, 107, 255, 0.3) !important; }
+.mfg-light button[class*="border-[rgba(242,177,60,0.55)]"]:hover:not(:disabled) { background: var(--m-blue-d); }
+.mfg-light button[class*="border-[rgba(34,211,197,0.5)]"] { background: #fff; color: var(--m-soft); border-color: #CFD9EA; }
+.mfg-light button[class*="border-[rgba(34,211,197,0.5)]"]:hover:not(:disabled) { background: #F3F6FB; color: var(--m-ink); }
+.mfg-light button[class*="border-[rgba(34,211,197,0.25)]"] { background: var(--m-blue-soft); color: var(--m-blue); border-color: rgba(47, 107, 255, 0.25); }
+.mfg-light button[class*="border-[rgba(34,211,197,0.25)]"]:hover { border-color: rgba(47, 107, 255, 0.6); }
+
+/* dialogs */
+.mfg-light .fixed.inset-0 { background: rgba(15, 23, 42, 0.45); }
+.mfg-light [class*="shadow-[0_24px_70px_rgba(0,0,0,0.6)"] { box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25) !important; border-radius: 14px; }
+.mfg-light [class*="shadow-[0_18px_50px_rgba(0,0,0,0.55)]"], .mfg-light [class*="shadow-[0_12px_40px_rgba(0,0,0,0.5)]"] { box-shadow: 0 12px 34px rgba(23, 33, 59, 0.16) !important; }
+
+/* inline colours painted by Chip, StatusPill, KpiCard and friends. React writes them as "color:#F2B13C" on the server and as
+   "color: rgb(242, 177, 60)" once the browser has touched them, so both spellings are matched.
+   teal → green, amber → deep amber, red → red, grey → slate */
+.mfg-light [style^="color:#22D3C5"], .mfg-light [style*=";color:#22D3C5"], .mfg-light [style^="color: rgb(34, 211, 197)"], .mfg-light [style*="; color: rgb(34, 211, 197)"] { color: var(--m-green) !important; }
+.mfg-light [style^="color:#F2B13C"], .mfg-light [style*=";color:#F2B13C"], .mfg-light [style^="color: rgb(242, 177, 60)"], .mfg-light [style*="; color: rgb(242, 177, 60)"] { color: var(--m-amber) !important; }
+.mfg-light [style^="color:#FF6B7A"], .mfg-light [style*=";color:#FF6B7A"], .mfg-light [style^="color: rgb(255, 107, 122)"], .mfg-light [style*="; color: rgb(255, 107, 122)"] { color: var(--m-red) !important; }
+.mfg-light [style^="color:#7F8EA0"], .mfg-light [style*=";color:#7F8EA0"], .mfg-light [style^="color: rgb(127, 142, 160)"], .mfg-light [style*="; color: rgb(127, 142, 160)"] { color: var(--m-muted) !important; }
+.mfg-light [style*="background:#22D3C5"], .mfg-light [style*="background: rgba(34, 211, 197"] { background: rgba(20, 165, 107, 0.10) !important; }
+.mfg-light [style*="background:#F2B13C"], .mfg-light [style*="background: rgba(242, 177, 60"] { background: rgba(217, 130, 0, 0.10) !important; }
+.mfg-light [style*="background:#FF6B7A"], .mfg-light [style*="background: rgba(255, 107, 122"] { background: rgba(229, 72, 77, 0.10) !important; }
+.mfg-light [style*="background:#7F8EA0"], .mfg-light [style*="background: rgba(127, 142, 160"] { background: rgba(107, 122, 146, 0.10) !important; }
+.mfg-light [style*="background:#22D3C5;"], .mfg-light [style$="background:#22D3C5"], .mfg-light [style*="background: rgb(34, 211, 197)"] { background: var(--m-green) !important; box-shadow: none !important; }
+.mfg-light [style*="background:#F2B13C;"], .mfg-light [style$="background:#F2B13C"], .mfg-light [style*="background: rgb(242, 177, 60)"] { background: var(--m-amber) !important; box-shadow: none !important; }
+.mfg-light [style*="background:#FF6B7A;"], .mfg-light [style$="background:#FF6B7A"], .mfg-light [style*="background: rgb(255, 107, 122)"] { background: var(--m-red) !important; box-shadow: none !important; }
+.mfg-light [style*="background:#7F8EA0;"], .mfg-light [style$="background:#7F8EA0"], .mfg-light [style*="background: rgb(127, 142, 160)"] { background: var(--m-muted) !important; box-shadow: none !important; }
+.mfg-light [style*="border-color:#22D3C5"], .mfg-light [style*="border-color: rgba(34, 211, 197"] { border-color: rgba(20, 165, 107, 0.35) !important; }
+.mfg-light [style*="border-color:#F2B13C"], .mfg-light [style*="border-color: rgba(242, 177, 60"] { border-color: rgba(217, 130, 0, 0.35) !important; }
+.mfg-light [style*="border-color:#FF6B7A"], .mfg-light [style*="border-color: rgba(255, 107, 122"] { border-color: rgba(229, 72, 77, 0.40) !important; }
+.mfg-light [style*="border-color:#7F8EA0"], .mfg-light [style*="border-color: rgba(127, 142, 160"] { border-color: rgba(107, 122, 146, 0.35) !important; }
+.mfg-light [style*="color:#04121A"], .mfg-light [style*="color: rgb(4, 18, 26)"] { color: #fff !important; }
+.mfg-light [style^="color:#E6EDF3"], .mfg-light [style*=";color:#E6EDF3"], .mfg-light [style*="color: rgb(230, 237, 243)"] { color: var(--m-ink) !important; }
+/* banners written with arbitrary amber / teal tints */
+.mfg-light [class*="bg-[rgba(242,177,60,0.08)]"] { background: #FFF6E5; }
+.mfg-light [class*="border-[rgba(242,177,60,0.4)]"] { border-color: #F3D18B; }
+.mfg-light [class*="bg-[rgba(34,211,197,0.06)]"] { background: #EEF4FF; }
+.mfg-light .fixed .text-ink[style*="monospace"] > .text-teal { display: none; }
+.mfg-light .fixed .text-ink[style*="monospace"] { font-size: 16px !important; font-weight: 700 !important; }
+.mfg-light .hover\:bg-sidebarHover:hover { background-color: #EEF2F8; }
+.mfg-light .text-sidebarTextMuted { color: var(--m-muted); }

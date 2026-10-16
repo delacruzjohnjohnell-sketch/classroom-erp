@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LogOut, ArrowLeft, Loader2, LayoutDashboard, BookOpen, Truck,
-  Package, ShoppingCart, Briefcase, FileBarChart, Landmark, Boxes, Building2, Plus, ArrowLeftRight, Settings, Database, Calculator, Factory, Send,
+  Package, ShoppingCart, Briefcase, FileBarChart, Landmark, Boxes, Building2, Plus, ArrowLeftRight,
 } from "lucide-react";
 import { useSession } from "@/lib/session";
 import { usePagePresence } from "@/lib/presence";
@@ -13,6 +13,7 @@ import { guardTarget } from "@/lib/edition";
 import { useEdition } from "@/lib/useEdition";
 import GlobalSearch from "./GlobalSearch";
 import CompanySwitcher from "./CompanySwitcher";
+import MfgShell from "./mfg/MfgShell";
 
 // Students also get a menu item for their companies, so starting another one is never hidden.
 const COMPANIES_NAV = { href: "/companies", label: "My Companies", icon: Building2 };
@@ -29,26 +30,7 @@ const NAV = [
   { href: "/reports", label: "Reports", icon: FileBarChart },
 ];
 
-// The Manufacturing ERP's own navigation. Only screens that exist are listed; production,
-// planning, quality and costing screens join this list as their phases arrive.
-const NAV_MFG = [
-  { href: "/mfg", label: "Overview", icon: LayoutDashboard },
-  { href: "/mfg/master", label: "Master Data", icon: Database },
-  { href: "/mfg/costing", label: "Costing", icon: Calculator },
-  { href: "/mfg/purchasing", label: "Purchasing", icon: Truck },
-  { href: "/mfg/inventory", label: "Inventory", icon: Package },
-  { href: "/mfg/production", label: "Production", icon: Factory },
-  { href: "/mfg/shipping", label: "Shipping", icon: Send },
-  { href: "/mfg/finance", label: "Finance", icon: BookOpen },
-  { href: "/mfg/sales", label: "Sales", icon: ShoppingCart },
-  { href: "/mfg/banking", label: "Banking", icon: Landmark },
-  { href: "/mfg/fixed-assets", label: "Fixed Assets", icon: Boxes },
-  { href: "/mfg/payroll", label: "Payroll", icon: Briefcase },
-  { href: "/mfg/reports", label: "Reports", icon: FileBarChart },
-  { href: "/mfg/settings", label: "Settings", icon: Settings },
-];
-
-const CYAN = "#22D3C5", AMBER = "#F2B13C";
+const CYAN = "#22D3C5";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const { loading, userId, profile, tenants, viewTenantId, setViewTenantId, effectiveTenantId, signOut } = useSession();
@@ -80,14 +62,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   if (loading || !userId || !profile || !effectiveTenantId || !editionReady || wrongEdition) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="animate-spin" size={20} color={isMfg ? AMBER : CYAN} />
+        <Loader2 className="animate-spin" size={20} color={isMfg ? "#2F6BFF" : CYAN} />
       </div>
     );
   }
 
-  const accent = isMfg ? AMBER : CYAN;
+  // A Manufacturing company has its own light shell (navy sidebar, light top bar); the Standard ERP keeps the console look below.
+  if (isMfg) return <MfgShell otherViewers={otherViewers}>{children}</MfgShell>;
+
+  const accent = CYAN;
   const tenantName = tenants.find((t) => t.id === effectiveTenantId)?.name ?? "—";
-  const baseNav = isMfg ? NAV_MFG : NAV;
+  const baseNav = NAV;
   const navItems = profile.role === "student" ? [...baseNav, COMPANIES_NAV] : baseNav;
   const pageTitle = navItems.find((item) => item.href === pathname)?.label ?? "";
   const initials = profile.full_name
@@ -104,14 +89,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               style={{ color: accent, borderColor: `${accent}8c`, background: `${accent}1f`, boxShadow: `0 0 0 1px ${accent}59, 0 0 24px ${accent}1a` }}>&gt;_</div>
             <div className="leading-tight">
               <div className="font-mono text-[14px] font-bold text-ink">JJ and Co.</div>
-              <div className="font-mono text-[9.5px] uppercase tracking-[0.14em] text-sidebarTextMuted">{isMfg ? "manufacturing erp" : "classroom erp"}</div>
+              <div className="font-mono text-[9.5px] uppercase tracking-[0.14em] text-sidebarTextMuted">classroom erp</div>
             </div>
           </div>
         </div>
 
         <div className="px-5 py-2.5 border-b border-hairline flex items-center justify-between gap-2">
           <span className="font-mono text-[10px] uppercase tracking-[0.12em] rounded px-2 py-1 border" style={{ color: accent, borderColor: `${accent}59`, background: `${accent}14` }}>
-            {isMfg ? "Manufacturing ERP" : "Standard ERP"}
+            Standard ERP
           </span>
           <Link href="/choose" className="flex items-center gap-1 text-[11px] font-semibold text-sidebarText hover:text-ink" title="Choose a different ERP">
             <ArrowLeftRight size={12} /> Switch ERP
@@ -167,7 +152,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       {/* Main content */}
       <div className="flex-1 min-w-0">
         <div className="sticky top-0 z-20 px-6 py-3.5 border-b border-hairline bg-[rgba(8,12,17,0.82)] backdrop-blur-md flex items-center justify-between gap-4"
-          style={isMfg ? { borderTop: `2px solid ${AMBER}` } : undefined}>
+          >
           <div className="font-mono text-[15px] font-semibold text-ink truncate">
             <span className="text-sidebarTextMuted">~/</span><span style={{ color: accent }}>{pageTitle.toLowerCase().replace(/\s+/g, "-")}</span><span className="animate-pulse" style={{ color: accent }}>_</span>
           </div>
