@@ -40,7 +40,7 @@ declare
     'mfg_order_wip','mfg_order_availability','mfg__issue_components','mfg_post_material_issue','mfg_post_confirmation','mfg_post_fg_receipt','mfg_reconciliation',
     'mfg__avg_after','mfg__move_so','mfg__refresh_order_status','mfg__reverse_entry','mfg__reverse_doc','mfg_reverse_document','mfg_reverse_confirmation',
     'mfg__variance_split','mfg_order_variances','mfg_settle_order','mfg_reverse_settlement','mfg_close_order','mfg_post_output_receipt',
-    'mfg_post_delivery','mfg_create_invoice_from_so'];
+    'mfg_post_delivery','mfg_create_invoice_from_so','guard_mfg_invoice_lines'];
   new_tabs text[] := array['mfg_uom','mfg_uom_conversions','mfg_storage_locations','mfg_item_master','mfg_cost_centers','mfg_work_centers',
     'mfg_holidays','mfg_activity_types','mfg_activity_rates','mfg_costing_sheet','mfg_boms','mfg_bom_items','mfg_routings','mfg_routing_ops',
     'mfg_cost_estimates','mfg_cost_estimate_lines','mfg_cost_estimate_items',
@@ -60,8 +60,8 @@ begin
   res := res || case when h = '568551cc4cc49b77c48fb07ce4591d61' then 'PASS ' else 'FAIL ' end || 'Z3 existing policies unchanged (' || h || E')\n';
   select md5(string_agg(pg_get_triggerdef(t.oid), ',' order by t.tgrelid::regclass::text, tgname)) into h
     from pg_trigger t where not tgisinternal and t.tgrelid::regclass::text !~ '^(auth|storage|realtime)\.' and t.tgrelid::regclass::text <> all(new_tabs)
-     and t.tgname not in ('trg_journal_balanced', 'trg_mfg_control_accounts');
-  res := res || case when h = 'b30ea21aa09288d3f1e6a25e86219c3a' then 'PASS ' else 'FAIL ' end || 'Z4 existing triggers unchanged apart from the two approved ones (' || h || E')\n';
+     and t.tgname not in ('trg_journal_balanced', 'trg_mfg_control_accounts', 'trg_mfg_invoice_item_guard');
+  res := res || case when h = 'b30ea21aa09288d3f1e6a25e86219c3a' then 'PASS ' else 'FAIL ' end || 'Z4 existing triggers unchanged apart from the three approved ones (' || h || E')\n';
 
   ---------------------------------------------------------------- set-up: company, items, released standard cost, stock, the Dining Chair order
   perform set_config('request.jwt.claims', json_build_object('sub', teach, 'role', 'authenticated')::text, true);
@@ -437,6 +437,24 @@ begin
   select moving_avg_cost into n2 from mfg_item_master where item_id = i_plank2;
   select sum(qty) into n3 from mfg_stock where item_id = i_plank2;
   res := res || case when n > 82 and abs(n2 - 80) < 0.001 and n3 = 20 and mfg_order_wip(o8) = 1111.11 then 'PASS ' else 'FAIL ' end || 'H4 reversing a receipt restores the moving average: ' || n || ' → ' || n2 || ' (expect 80), planks ' || n3 || ', work in process ' || mfg_order_wip(o8) || E'\n';
+
+  ---------------------------------------------------------------- K. the invoice guard (approved as Q-C)
+  insert into invoices (tenant_id, customer_id, order_date, total, status) values (mfg, cust, '2027-02-01', 1, 'draft') returning id into d;
+  begin insert into invoice_lines (invoice_id, item_id, description, qty, unit_price) values (d, i_chair, 'x', 1, 1); res := res || E'FAIL K1 an invoice line with a stock item was accepted\n';
+  exception when others then res := res || case when sqlerrm like '%can''t name a stock item%' then 'PASS ' else 'FAIL ' end || 'K1 a Manufacturing invoice line cannot name a stock item: ' || sqlerrm || E'\n'; end;
+  begin perform convert_sales_order_to_invoice(so2, '2027-02-01'); res := res || E'FAIL K2 the Standard conversion copied stock items onto a Manufacturing invoice\n';
+  exception when others then res := res || case when sqlerrm like '%can''t name a stock item%' then 'PASS ' else 'FAIL ' end || 'K2 converting a sales order that has stock items is refused: ' || sqlerrm || E'\n'; end;
+  perform switch_tenant(t1);
+  select id into x from items where tenant_id = t1 limit 1;
+  if x is null then insert into items (tenant_id, name) values (t1, 'zz std item') returning id into x; end if;
+  begin
+    insert into invoices (tenant_id, order_date, total, status) values (t1, '2026-12-02', 10, 'draft') returning id into d;
+    insert into invoice_lines (invoice_id, item_id, description, qty, unit_price) values (d, x, 'Std item', 1, 10);
+    res := res || E'PASS K3 a Standard company can still put a stock item on an invoice line\n';
+  exception when others then res := res || 'FAIL K3 Standard invoice line refused: ' || sqlerrm || E'\n'; end;
+  perform switch_tenant(mfg);
+  select count(*) into c from pg_proc where proname = 'guard_mfg_invoice_lines' and has_function_privilege('authenticated', oid, 'execute');
+  res := res || case when c = 0 then 'PASS ' else 'FAIL ' end || 'K4 the guard function is not callable from the browser=' || c || E'\n';
 
   ---------------------------------------------------------------- I. who may do what
   begin insert into mfg_settlements (tenant_id, order_id, posting_date) values (mfg, o1, '2027-01-01'); res := res || E'FAIL I1 a student wrote a settlement directly\n';

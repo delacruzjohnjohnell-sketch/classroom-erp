@@ -17,8 +17,12 @@
 --   delivery          mfg_post_delivery takes finished goods out against a sales order and posts Dr COGS / Cr inventory;
 --                     mfg_create_invoice_from_so makes the customer invoice (with NO item on its lines, so the existing
 --                     post_invoice posts only revenue / receivable / VAT and leaves cost to the delivery)
+--   invoice guard     (approved as Q-C) a trigger on the existing invoice_lines table refuses a line that names a stock item
+--                     in a Manufacturing company, so cost of goods sold can never be posted twice (once by the delivery,
+--                     once by post_invoice). Standard companies are not affected.
 --
 -- ROLLBACK (drops only what this file created; then re-run 0031 to restore the three redefined functions):
+--   drop trigger if exists trg_mfg_invoice_item_guard on invoice_lines; drop function if exists guard_mfg_invoice_lines();
 --   drop function if exists mfg_close_order(uuid), mfg_reverse_settlement(uuid, date, text), mfg_settle_order(uuid, date),
 --     mfg_order_variances(uuid), mfg__variance_split(uuid), mfg_post_output_receipt(uuid, uuid, numeric, uuid, text, date, date, text),
 --     mfg_create_invoice_from_so(uuid, date), mfg_post_delivery(uuid, date, jsonb, text),
@@ -859,7 +863,27 @@ begin
 end;
 $$ language plpgsql security definer set search_path = public;
 
+-- ---------- approved guard (Q-C): a Manufacturing invoice carries no stock item ----------
+create or replace function guard_mfg_invoice_lines()
+returns trigger as $$
+declare
+  v_t uuid;
+begin
+  if new.item_id is null then return new; end if;
+  select tenant_id into v_t from invoices where id = new.invoice_id;
+  if v_t is not null and tenant_edition(v_t) = 'MANUFACTURING' then
+    raise exception 'In a Manufacturing company an invoice line can''t name a stock item: the delivery already takes the goods out of stock and posts their cost. Deliver on the Shipping page, then use "Create invoice" there (or leave the item blank).';
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer set search_path = public;
+
+drop trigger if exists trg_mfg_invoice_item_guard on invoice_lines;
+create trigger trg_mfg_invoice_item_guard before insert or update of item_id on invoice_lines
+  for each row execute function guard_mfg_invoice_lines();
+
 -- ---------- who may call what ----------
+revoke execute on function guard_mfg_invoice_lines() from public, anon, authenticated;
 revoke execute on function mfg__avg_after(numeric, numeric, numeric, numeric) from public, anon, authenticated;
 revoke execute on function mfg__move_so(uuid, uuid, int, uuid, uuid, uuid, numeric, numeric, uuid, uuid) from public, anon, authenticated;
 revoke execute on function mfg__refresh_order_status(uuid) from public, anon, authenticated;
