@@ -10,6 +10,9 @@
 -- teach to the teacher's profile id. The Z lines compare a fingerprint of every pre-existing function,
 -- column, policy and trigger with the fingerprint taken after Phase 1 — they prove Phase 2 changed nothing
 -- that already existed.
+--
+-- This is the Phase 2 test. Once migrations 0027/0028 are applied, run integration_mfg_phase3.sql instead: it knows the
+-- later functions and tables, and it re-checks the same fingerprints.
 -- ============================================================
 do $$
 declare
