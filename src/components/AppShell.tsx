@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LogOut, ArrowLeft, Loader2, LayoutDashboard, BookOpen, Truck,
-  Package, ShoppingCart, Briefcase, FileBarChart, Landmark, Boxes, Building2, Plus, ArrowLeftRight, Settings,
+  Package, ShoppingCart, Briefcase, FileBarChart, Landmark, Boxes, Building2, Plus, ArrowLeftRight, Settings, Database,
 } from "lucide-react";
 import { useSession } from "@/lib/session";
 import { usePagePresence } from "@/lib/presence";
@@ -33,6 +33,7 @@ const NAV = [
 // planning, quality and costing screens join this list as their phases arrive.
 const NAV_MFG = [
   { href: "/mfg", label: "Overview", icon: LayoutDashboard },
+  { href: "/mfg/master", label: "Master Data", icon: Database },
   { href: "/mfg/finance", label: "Finance", icon: BookOpen },
   { href: "/mfg/sales", label: "Sales", icon: ShoppingCart },
   { href: "/mfg/banking", label: "Banking", icon: Landmark },

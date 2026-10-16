@@ -399,3 +399,14 @@ Each phase report: what was built/deviations · migrations in order · test resu
 ---
 
 **Next step:** approve (or amend) D1–D11 and Q1, Q4, Q7. Then I start Phase 1 and stop after it.
+
+---
+
+## Phase 2 as built (deviations from the plan above)
+
+- **Migrations:** `0025_mfg_master_data.sql` (units, conversions, locations, item master, cost/work centers, calendar, activity types and rates, costing sheet, BOM and routing tables, seeding, item functions, account-determination editing) and `0026_mfg_bom_routing_engine.sql` (cycle trigger, low-level codes, BOM and routing lifecycle functions, explosion, where-used, comparison, routing load, calendar hours). The earlier plan reserved 0026 for the PO/SO link tables; those move to Phase 4a together with `mfg_stock` and `mfg_batches`, which are not needed until stock moves.
+- **Scrap** is `net × (1 + scrap %)` on the BOM line. The item-level scrap % is stored for planning (Phase 5) and is not applied by the explosion.
+- **Only COMPONENT lines are requirements.** Co-product and by-product lines are outputs; their cost shares are validated (total ≤ 100 %) and used from Phase 3.
+- **Activation** closes an older active version the day before a later-starting one; any other overlap is refused. Routings keep exactly one active version per item and alternative.
+- **Master tables** that need no business rules (units, locations, work centers, cost centers, calendar, rates, costing sheet) are written directly by the owning student under row-level security; items, BOMs and routings are written only through functions.
+- **Teacher** reads every table, edits none, and is the only one who can change the account determination (`mfg_set_account`, audit-logged, account type checked).

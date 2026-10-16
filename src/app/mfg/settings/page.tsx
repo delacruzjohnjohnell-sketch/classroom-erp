@@ -7,6 +7,7 @@ import { Panel, Empty, Label, GoldBtn, FormStyles } from "@/components/ui";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
+import { expectedAccountType, POSTING_LABEL } from "@/lib/mfgMaster";
 
 type Settings = {
   costing_method: "STANDARD" | "ACTUAL";
@@ -15,7 +16,8 @@ type Settings = {
   oh_close_method: "COGS" | "PRORATE";
   explain_postings: boolean;
 };
-type Mapping = { key: string; account: { code: string; name: string } | null };
+type Account = { id: string; code: string; name: string; type: string };
+type Mapping = { key: string; account: Account | null };
 type LogRow = { id: string; event: string; detail: Record<string, unknown>; created_at: string };
 
 const COSTING_LABEL = { STANDARD: "Standard costing", ACTUAL: "Actual costing" } as const;
@@ -31,6 +33,7 @@ function SettingsBody() {
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState<Settings | null>(null);
   const [mapping, setMapping] = useState<Mapping[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const [log, setLog] = useState<LogRow[]>([]);
   const [costing, setCosting] = useState<Settings["costing_method"]>("STANDARD");
   const [form, setForm] = useState<Omit<Settings, "costing_method">>({ fiscal_year_start: "", variance_close_method: "COGS", oh_close_method: "COGS", explain_postings: true });
@@ -42,7 +45,7 @@ function SettingsBody() {
     const [s, d, a, l] = await Promise.all([
       supabase.from("mfg_company_settings").select("costing_method, fiscal_year_start, variance_close_method, oh_close_method, explain_postings").eq("tenant_id", effectiveTenantId).maybeSingle(),
       supabase.from("mfg_account_determination").select("key, account_id").eq("tenant_id", effectiveTenantId).order("key"),
-      supabase.from("accounts").select("id, code, name").eq("tenant_id", effectiveTenantId),
+      supabase.from("accounts").select("id, code, name, type").eq("tenant_id", effectiveTenantId).order("code"),
       supabase.from("mfg_audit_log").select("id, event, detail, created_at").eq("tenant_id", effectiveTenantId).order("created_at", { ascending: false }).limit(20),
     ]);
     const row = (s.data as Settings | null) ?? null;
@@ -51,7 +54,9 @@ function SettingsBody() {
       setCosting(row.costing_method);
       setForm({ fiscal_year_start: row.fiscal_year_start, variance_close_method: row.variance_close_method, oh_close_method: row.oh_close_method, explain_postings: row.explain_postings });
     }
-    const byId = new Map(((a.data as { id: string; code: string; name: string }[]) ?? []).map((x) => [x.id, x]));
+    const accs = (a.data as Account[]) ?? [];
+    setAccounts(accs);
+    const byId = new Map(accs.map((x) => [x.id, x]));
     setMapping(((d.data as { key: string; account_id: string }[]) ?? []).map((m) => ({ key: m.key, account: byId.get(m.account_id) ?? null })));
     setLog((l.data as LogRow[]) ?? []);
     setLoading(false);
@@ -66,6 +71,14 @@ function SettingsBody() {
     const res = await mutate(supabase.rpc("set_mfg_costing_method", { target_tenant: effectiveTenantId, new_method: costing }), { successMessage: "Costing method updated." });
     setBusy(false);
     if (ok(res)) load();
+  };
+  const changeAccount = async (key: string, accountId: string) => {
+    if (!effectiveTenantId || busy || !accountId) return;
+    setBusy(true);
+    const res = await mutate(supabase.rpc("mfg_set_account", { p_tenant: effectiveTenantId, p_key: key, p_account: accountId }), { successMessage: "Account changed." });
+    setBusy(false);
+    load();   // reload either way, so the table shows what is really saved
+    return ok(res);
   };
   const saveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,20 +147,37 @@ function SettingsBody() {
       )}
 
       <Panel title="Which account each posting uses">
-        <div className="text-[12px] text-[#7F8EA0] mb-2">Posting functions look accounts up here instead of hard-coding account numbers. These are the defaults for your company; they become editable by the teacher in a later phase.</div>
+        <div className="text-[12px] text-[#7F8EA0] mb-2">
+          Posting functions look accounts up here instead of hard-coding account numbers.
+          {isTeacher ? " As the teacher you can point a posting at a different account of the right type; every change is written to the history below." : " Your teacher can change these; you can see which account each posting will use."}
+        </div>
         {mapping.length === 0 ? <Empty>No account mapping found.</Empty> : (
           <table>
-            <thead><tr><th>Posting type</th><th>Account</th></tr></thead>
+            <thead><tr><th>Posting</th><th>Key</th><th>Account</th>{isTeacher && <th>Change to</th>}</tr></thead>
             <tbody>
-              {mapping.map((m) => (
-                <tr key={m.key}>
-                  <td style={{ fontFamily: "ui-monospace, Menlo, monospace", fontSize: 12 }}>{m.key}</td>
-                  <td>{m.account ? <><span style={{ color: "#F2B13C", fontWeight: 600 }}>{m.account.code}</span> {m.account.name}</> : "—"}</td>
-                </tr>
-              ))}
+              {mapping.map((m) => {
+                const want = expectedAccountType(m.key);
+                return (
+                  <tr key={m.key}>
+                    <td>{POSTING_LABEL[m.key] ?? m.key}</td>
+                    <td style={{ fontFamily: "ui-monospace, Menlo, monospace", fontSize: 12 }}>{m.key}</td>
+                    <td>{m.account ? <><span style={{ color: "#F2B13C", fontWeight: 600 }}>{m.account.code}</span> {m.account.name}</> : "—"}</td>
+                    {isTeacher && (
+                      <td>
+                        <select className="input" style={{ minWidth: 220 }} disabled={busy} value="" aria-label={`Change the account for ${m.key}`}
+                          onChange={(e) => changeAccount(m.key, e.target.value)}>
+                          <option value="">{want} accounts…</option>
+                          {accounts.filter((x) => x.type === want && x.id !== m.account?.id).map((x) => <option key={x.id} value={x.id}>{x.code} {x.name}</option>)}
+                        </select>
+                      </td>
+                    )}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
+        {isTeacher && <FormStyles />}
       </Panel>
 
       <Panel title="Settings history">
