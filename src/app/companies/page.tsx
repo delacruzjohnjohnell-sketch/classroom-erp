@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Building2, Check, Plus } from "lucide-react";
 import AppShell from "@/components/AppShell";
@@ -22,8 +22,15 @@ function CompaniesBody() {
   const [joinId, setJoinId] = useState("");
   const [busy, setBusy] = useState(false);
 
+  // Manufacturing companies belong to one student each, so they are not offered here. If the database
+  // function isn't there yet the plain list is used, so this page never breaks.
+  const [pool, setPool] = useState<{ id: string; name: string }[] | null>(null);
+  useEffect(() => {
+    supabase.rpc("joinable_companies").then(({ data, error }) => { if (!error && data) setPool(data as { id: string; name: string }[]); });
+  }, []);
+
   const mine = new Set(myCompanies.map((c) => c.id));
-  const joinable = tenants.filter((t) => !mine.has(t.id) && t.id !== effectiveTenantId);
+  const joinable = (pool ?? tenants).filter((t) => !mine.has(t.id) && t.id !== effectiveTenantId);
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault();

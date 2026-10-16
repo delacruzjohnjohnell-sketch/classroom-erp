@@ -23,6 +23,12 @@ export default function LoginPage() {
   const [companyMode, setCompanyMode] = useState<"join" | "create">("join");
   const [selectedTenant, setSelectedTenant] = useState("");
   const [newCompany, setNewCompany] = useState("");
+  // Standard companies only — a Manufacturing company belongs to the student who set it up.
+  const [pool, setPool] = useState<{ id: string; name: string }[] | null>(null);
+  useEffect(() => {
+    if (!userId) return;
+    supabase.rpc("joinable_companies").then(({ data, error }) => { if (!error && data) setPool(data as { id: string; name: string }[]); });
+  }, [userId]);
 
   const submitAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,9 +123,9 @@ export default function LoginPage() {
               <Label>Company</Label>
               <select className="input" value={selectedTenant} onChange={(e) => setSelectedTenant(e.target.value)} required>
                 <option value="">Select your company…</option>
-                {tenants.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+                {(pool ?? tenants).map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
               </select>
-              {tenants.length === 0 && <div className="text-xs text-[#7F8EA0] mt-1.5">No companies yet — start one instead.</div>}
+              {(pool ?? tenants).length === 0 && <div className="text-xs text-[#7F8EA0] mt-1.5">No companies yet — start one instead.</div>}
             </>
           ) : (
             <>
