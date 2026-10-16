@@ -103,6 +103,7 @@ function OrderBody() {
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { load(); }, [load]);
 
+  const quarantineId = lk.locations.find((l) => l.kind === "QUARANTINE")?.id ?? null;
   const name = (itemId: string) => lk.items.find((i) => i.item_id === itemId)?.name ?? "—";
   const uom = (itemId: string) => lk.items.find((i) => i.item_id === itemId)?.base_uom ?? "";
   const wcName = (wid: string) => lk.workCenters.find((w) => w.id === wid)?.name ?? "—";
@@ -154,7 +155,7 @@ function OrderBody() {
     const parsed = fgReceiptSchema.safeParse(fg);
     if (!parsed.success) { toast.error(firstIssue(parsed.error)); return; }
     const d = parsed.data;
-    run(() => supabase.rpc("mfg_post_fg_receipt", { p_order: id, p_qty: d.qty, p_location: d.location_id, p_batch_no: d.batch_no, p_expiry: d.expiry, p_date: d.posting_date, p_key: `fgr-${id}-${Date.now()}` }),
+    run(() => supabase.rpc("mfg_post_fg_receipt", { p_order: id, p_qty: d.qty, p_location: d.location_id ?? (lk.quality[o?.item_id ?? ""]?.production ? quarantineId : null), p_batch_no: d.batch_no, p_expiry: d.expiry, p_date: d.posting_date, p_key: `fgr-${id}-${Date.now()}` }),
       "Finished goods received into stock.", () => setFg({ ...fg, qty: "" }));
   };
 
@@ -169,7 +170,7 @@ function OrderBody() {
     const parsed = outputReceiptSchema.safeParse({ output_id: out.id, qty: outQty[out.id], posting_date: outDate });
     if (!parsed.success) { toast.error(firstIssue(parsed.error)); return; }
     const d = parsed.data;
-    run(() => supabase.rpc("mfg_post_output_receipt", { p_order: id, p_output: d.output_id, p_qty: d.qty, p_location: d.location_id, p_batch_no: d.batch_no, p_expiry: d.expiry, p_date: d.posting_date, p_key: `out-${out.id}-${Date.now()}` }),
+    run(() => supabase.rpc("mfg_post_output_receipt", { p_order: id, p_output: d.output_id, p_qty: d.qty, p_location: d.location_id ?? (lk.quality[out.item_id]?.production ? quarantineId : null), p_batch_no: d.batch_no, p_expiry: d.expiry, p_date: d.posting_date, p_key: `out-${out.id}-${Date.now()}` }),
       "Received into stock.");
   };
 
@@ -284,7 +285,7 @@ function OrderBody() {
               <div><Label>Quantity</Label><input className="input" type="number" min={0} step="any" value={fg.qty} onChange={(e) => setFg({ ...fg, qty: e.target.value })} placeholder={String(waiting)} /></div>
               <div><Label>Into</Label>
                 <select className="input" value={fg.location_id} onChange={(e) => setFg({ ...fg, location_id: e.target.value })}>
-                  <option value="">Usual finished-goods store</option>
+                  <option value="">{lk.quality[o.item_id]?.production ? "Quarantine (inspected before use)" : "Usual finished-goods store"}</option>
                   {lk.locations.filter((l) => l.kind !== "WIP").map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
                 </select></div>
               {itemMaster?.batch_tracked && <><div><Label>Lot number</Label><input className="input" value={fg.batch_no} onChange={(e) => setFg({ ...fg, batch_no: e.target.value })} /></div>

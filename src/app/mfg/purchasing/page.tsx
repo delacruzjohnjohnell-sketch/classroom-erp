@@ -97,7 +97,7 @@ function PurchasingBody() {
 
   const openReceive = (po: Po) => {
     setRcv(po); setRcvDate(today());
-    setRcvLines(Object.fromEntries(po.purchase_order_lines.map((l) => [l.id, { qty: String(outstanding(Number(l.qty), received[l.id] ?? 0)), location_id: "", batch_no: "", expiry: "" }])));
+    setRcvLines(Object.fromEntries(po.purchase_order_lines.map((l) => [l.id, { qty: String(outstanding(Number(l.qty), received[l.id] ?? 0)), location_id: lk.quality[lineItem(l) ?? ""]?.receipt ? lk.locations.find((x) => x.kind === "QUARANTINE")?.id ?? "" : "", batch_no: "", expiry: "" }])));
   };
 
   const receive = async (e: React.FormEvent) => {
@@ -222,7 +222,7 @@ function PurchasingBody() {
                         <td><input className="input" style={{ width: 90 }} type="number" min={0} step="any" disabled={outstanding(Number(l.qty), got) === 0} value={st.qty} onChange={(e) => set({ qty: e.target.value })} aria-label={`Quantity received of ${l.description}`} /></td>
                         <td>
                           <select className="input" style={{ minWidth: 120 }} value={st.location_id} onChange={(e) => set({ location_id: e.target.value })}>
-                            <option value="">Usual store</option>
+                            <option value="">{lk.quality[item?.item_id ?? ""]?.receipt ? "Quarantine is required" : "Usual store"}</option>
                             {lk.locations.filter((x) => x.kind !== "WIP").map((x) => <option key={x.id} value={x.id}>{x.code}</option>)}
                           </select>
                         </td>

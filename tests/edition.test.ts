@@ -62,7 +62,7 @@ test("redirects never loop: the target is always acceptable to the same edition"
 });
 
 test("the Manufacturing master data and costing screens belong to the Manufacturing workspace only", () => {
-  for (const p of ["/mfg/master", "/mfg/master/bom/new", "/mfg/master/bom/0b1c", "/mfg/master/routing/9f2", "/mfg/costing", "/mfg/costing/4d2e", "/mfg/purchasing", "/mfg/inventory", "/mfg/production", "/mfg/production/77ab", "/mfg/shipping", "/mfg/planning"]) {
+  for (const p of ["/mfg/master", "/mfg/master/bom/new", "/mfg/master/bom/0b1c", "/mfg/master/routing/9f2", "/mfg/costing", "/mfg/costing/4d2e", "/mfg/purchasing", "/mfg/inventory", "/mfg/production", "/mfg/production/77ab", "/mfg/shipping", "/mfg/planning", "/mfg/quality"]) {
     assert.equal(isMfgPath(p), true, p);
     assert.equal(guardTarget("MANUFACTURING", p), null, p);
     assert.equal(guardTarget("STANDARD", p), "/dashboard", p);   // no Standard twin

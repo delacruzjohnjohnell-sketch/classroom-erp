@@ -21,10 +21,13 @@ export type WorkCenter = {
 export type CostCenter = { id: string; code: string; name: string };
 export type ActivityType = { id: string; code: string; name: string; kind: string };
 
+/** Which items are inspected: goods bought (receipt) and/or goods made (production). Such goods must be received into quarantine. */
+export type QualityFlags = Record<string, { receipt: boolean; production: boolean }>;
+
 export type Lookups = {
-  uoms: Uom[]; locations: Location[]; items: MasterItem[]; workCenters: WorkCenter[]; costCenters: CostCenter[]; activityTypes: ActivityType[];
+  uoms: Uom[]; locations: Location[]; items: MasterItem[]; workCenters: WorkCenter[]; costCenters: CostCenter[]; activityTypes: ActivityType[]; quality: QualityFlags;
 };
-const EMPTY: Lookups = { uoms: [], locations: [], items: [], workCenters: [], costCenters: [], activityTypes: [] };
+const EMPTY: Lookups = { uoms: [], locations: [], items: [], workCenters: [], costCenters: [], activityTypes: [], quality: {} };
 
 /** The company's master data that other screens pick from (units, items, work centers…). */
 export function useLookups(): { data: Lookups; loading: boolean; reload: () => Promise<void> } {
@@ -35,13 +38,14 @@ export function useLookups(): { data: Lookups; loading: boolean; reload: () => P
   const reload = useCallback(async () => {
     if (!effectiveTenantId) return;
     const t = effectiveTenantId;
-    const [u, l, i, w, c, a] = await Promise.all([
+    const [u, l, i, w, c, a, q] = await Promise.all([
       supabase.from("mfg_uom").select("code, name").eq("tenant_id", t).order("code"),
       supabase.from("mfg_storage_locations").select("id, code, name, kind").eq("tenant_id", t).order("code"),
       supabase.from("mfg_item_master").select("*, items(sku, name, reorder_point)").eq("tenant_id", t),
       supabase.from("mfg_work_centers").select("*").eq("tenant_id", t).order("code"),
       supabase.from("mfg_cost_centers").select("id, code, name").eq("tenant_id", t).order("code"),
       supabase.from("mfg_activity_types").select("id, code, name, kind").eq("tenant_id", t).order("code"),
+      supabase.from("mfg_item_quality").select("item_id, inspect_receipt, inspect_production").eq("tenant_id", t),
     ]);
     type Raw = Omit<MasterItem, "sku" | "name" | "reorder_point"> & { items: { sku: string; name: string; reorder_point: number } | null };
     const items = ((i.data as unknown as Raw[]) ?? [])
@@ -50,6 +54,7 @@ export function useLookups(): { data: Lookups; loading: boolean; reload: () => P
     setData({
       uoms: (u.data as Uom[]) ?? [], locations: (l.data as Location[]) ?? [], items,
       workCenters: (w.data as WorkCenter[]) ?? [], costCenters: (c.data as CostCenter[]) ?? [], activityTypes: (a.data as ActivityType[]) ?? [],
+      quality: Object.fromEntries(((q.data as { item_id: string; inspect_receipt: boolean; inspect_production: boolean }[]) ?? []).map((x) => [x.item_id, { receipt: x.inspect_receipt, production: x.inspect_production }])),
     });
     setLoading(false);
   }, [effectiveTenantId]);

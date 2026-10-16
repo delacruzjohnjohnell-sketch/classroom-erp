@@ -30,7 +30,7 @@ function Body() {
     const today = isoDay(now);
     const days7 = lastDays(7, today);
     const from30 = lastDays(30, today)[0];
-    const [o, c, st, set, po, hi, dc, cf, se, vi, rec] = await Promise.all([
+    const [o, c, st, set, po, hi, dc, cf, se, vi, rec, ql] = await Promise.all([
       supabase.from("mfg_production_orders").select("id, document_number, item_id, qty_planned, qty_good, status, planned_end, created_at").eq("tenant_id", t).order("created_at", { ascending: false }).limit(500),
       supabase.from("mfg_confirmations").select("order_id, posting_date, yield_qty, scrap_qty").eq("tenant_id", t).gte("posting_date", from30),
       supabase.from("mfg_stock").select("item_id, qty").eq("tenant_id", t),
@@ -42,6 +42,7 @@ function Body() {
       supabase.from("mfg_settlements").select("id, document_number, order_id, reversal_of, created_at").eq("tenant_id", t).order("created_at", { ascending: false }).limit(4),
       supabase.from("mfg_vendor_invoices").select("id, document_number, status, vendor_ref, created_at").eq("tenant_id", t).order("created_at", { ascending: false }).limit(4),
       supabase.rpc("mfg_reconciliation", { p_tenant: t }),
+      supabase.from("mfg_inspection_lots").select("id", { count: "exact", head: true }).eq("tenant_id", t).in("status", ["CREATED", "IN_INSPECTION"]),
     ]);
 
     const orders = (o.data as { id: string; document_number: string | null; item_id: string; qty_planned: number; qty_good: number; status: string; planned_end: string | null }[]) ?? [];
@@ -107,6 +108,7 @@ function Body() {
         { label: "Vendor invoices on hold", count: held, href: "/mfg/purchasing", tone: "bad" },
         { label: "Orders finished and ready to settle", count: open.filter((x) => x.status === "CONFIRMED" || x.status === "DELIVERED").length, href: "/mfg/production", tone: "warn" },
         { label: "Items out of stock or below the reorder level", count: lowCount, href: "/mfg/inventory", tone: "warn" },
+        { label: "Inspection lots waiting for a decision", count: ql.count ?? 0, href: "/mfg/quality", tone: "warn" },
         { label: "Stock-versus-books differences", count: off, href: "/mfg/inventory?tab=reconcile", tone: "bad" },
       ],
     });

@@ -496,6 +496,24 @@ See `MANUFACTURING_RECONCILIATION.md`. Approved changes to the phase list: a **p
 
 ---
 
+## Phase 6a as built (deviations from the plan above)
+
+- **Phase 6 is split in two** like phases 4 and 5: 6a is quality (this section); 6b is the shop-floor dispatch list and OEE.
+- **Migration:** `0036_mfg_quality.sql`. New tables `mfg_item_quality`, `mfg_inspection_plans`, `mfg_inspection_lots` (QI-), `mfg_inspection_results`, `mfg_ncr` (NCR-); nine functions; three triggers on Manufacturing tables (`mfg_material_doc_lines`, `mfg_production_orders`, `mfg_material_documents`). No Standard object is touched and no existing function is redefined; the Standard fingerprints are identical before and after.
+- **What is inspected:** per item, "inspect when bought" and "inspect when made" (`mfg_save_item_quality`). Deviation from the plan: the flag lives in its own table, not on the item master, so `mfg_save_item` is unchanged.
+- **Quarantine, enforced by the database:** a trigger on stock-document lines creates an inspection lot when a flagged item arrives on a goods receipt (GR) or a finished-goods receipt (FGR), and refuses the receipt unless it goes into a QUARANTINE store. Quarantine stock is not counted by MRP and is not picked by issues, so nothing can use it. The Purchasing and Production receipt forms choose the quarantine store for flagged items.
+- **Decision (`mfg_decide_inspection_lot`):** deviation from the plan's single decision: the lot quantity can be split between accept, scrap, return and rework in one go (decision SPLIT). Every characteristic on the plan must be measured first; accepting goods with a result outside the specification needs a written reason; a rejection needs a root cause.
+  - **Accept:** quarantine to the usual store (a transfer, no postings).
+  - **Scrap:** stock out, Dr Scrap & Rework Loss (SCRAP_LOSS), Cr inventory, at the item's cost (standard or moving average).
+  - **Return:** only goods bought from a vendor. Stock out, Dr GR/IR at the order price, Cr inventory at cost, the difference to PPV; the purchase order reopens. Refused once a posted vendor invoice covers the goods (no credit notes yet).
+  - **Rework:** stays in quarantine as a new lot (source REWORK) to be inspected again. Rework effort is not costed.
+- **Non-conformance report:** one per decision that rejects anything; root cause, what happened to the goods, loss; closed with a corrective action (`mfg_close_ncr`).
+- **Guards:** a production order cannot be closed while its inspection lots are undecided; a stock document made by a quality decision cannot be reversed from the stock screen; reversing a receipt cancels its open lots.
+- **Not in 6a:** sampling plans (the whole lot is measured once per characteristic), supplier scorecards, a separate cost-of-poor-quality account (scrap uses Scrap & Rework Loss), credit notes for returns after invoicing.
+- **Screen:** `/mfg/quality` (Quality in the menu): lots, non-conformances, and plans and settings; the dashboard's "needs your attention" list counts lots waiting.
+
+---
+
 ## Manufacturing look and feel (before Phase 5)
 
 - The Manufacturing ERP now has its own **light theme**, modelled on the reference screenshot: a navy sidebar with a blue active item, a white top bar (search, company switcher, user), light cards and tables, a blue primary button. A Manufacturing company is drawn by `src/components/mfg/MfgShell.tsx` (`AppShell` hands over to it); the Standard ERP keeps its dark console look and its own shell code.
