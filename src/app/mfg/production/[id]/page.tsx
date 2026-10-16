@@ -7,13 +7,15 @@ import AppShell from "@/components/AppShell";
 import { Panel, Empty, Label, Modal, GoldBtn, OutlineBtn, ConfirmDialog, KpiCard, FormStyles } from "@/components/ui";
 import { Chip } from "@/components/ListReport";
 import PostingsPanel from "@/components/mfg/PostingsPanel";
+import VariancePanel from "@/components/mfg/VariancePanel";
+import ReverseModal from "@/components/mfg/ReverseModal";
 import { useLookups } from "@/components/mfg/useLookups";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
 import { toast } from "@/lib/toast";
 import { ELEMENT_LABEL, money, percentOf, unitMoney, type Element } from "@/lib/costing";
-import { confirmationSchema, fgReceiptSchema, firstIssue, issueSchema, ORDER_STATUS_LABEL, ORDER_STATUS_TONE, qtyText } from "@/lib/mfgOps";
+import { canReverse, confirmationSchema, DOC_TYPE_LABEL, fgReceiptSchema, firstIssue, issueSchema, ORDER_STATUS_LABEL, ORDER_STATUS_TONE, outputReceiptSchema, qtyText, remaining, reversedIds, settleSchema } from "@/lib/mfgOps";
 
 type Order = {
   id: string; document_number: string | null; item_id: string; qty_planned: number; qty_good: number; qty_scrap: number; qty_received: number; status: string;
@@ -26,6 +28,10 @@ type Op = {
 };
 type Avail = { component_id: string; on_hand: number; short: number };
 type Cost = { element: string; amount: number };
+type DocRow = { id: string; document_number: string; doc_type: string; posting_date: string; memo: string | null; reversal_of: string | null };
+type ConfRow = { id: string; document_number: string | null; op_no: number | null; posting_date: string; yield_qty: number; scrap_qty: number; labor_h: number; machine_h: number; is_final: boolean; reversal_of: string | null };
+type Output = { id: string; item_id: string; kind: string; cost_share_pct: number; qty_planned: number; qty_received: number };
+type Target = { kind: "doc" | "conf" | "settlement"; id: string; label: string };
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -53,19 +59,29 @@ function OrderBody() {
   const [confirmModal, setConfirmModal] = useState(false);
   const [cf, setCf] = useState({ op_no: "", yield_qty: "", scrap_qty: "0", scrap_reason: "", setup_h: "0", labor_h: "0", machine_h: "0", is_final: false, posting_date: today() });
   const [fg, setFg] = useState({ qty: "", location_id: "", batch_no: "", expiry: "", posting_date: today() });
-  const [dialog, setDialog] = useState<null | "release" | "cancel" | "approve">(null);
+  const [dialog, setDialog] = useState<null | "release" | "cancel" | "approve" | "close">(null);
+  const [docs, setDocs] = useState<DocRow[]>([]);
+  const [confs, setConfs] = useState<ConfRow[]>([]);
+  const [outputs, setOutputs] = useState<Output[]>([]);
+  const [outQty, setOutQty] = useState<Record<string, string>>({});
+  const [outDate, setOutDate] = useState(today());
+  const [settleModal, setSettleModal] = useState(false);
+  const [settleDate, setSettleDate] = useState(today());
+  const [reverseTarget, setReverseTarget] = useState<Target | null>(null);
   const [tick, setTick] = useState(0);
 
   const load = useCallback(async () => {
     if (!effectiveTenantId) return;
-    const [h, c, p, a, k, d, f] = await Promise.all([
+    const [h, c, p, a, k, d, f, ou, st] = await Promise.all([
       supabase.from("mfg_production_orders").select("*").eq("id", id).maybeSingle(),
       supabase.from("mfg_prod_components").select("id, line_no, item_id, qty_required, qty_issued, backflush").eq("order_id", id).order("line_no"),
       supabase.from("mfg_prod_operations").select("*").eq("order_id", id).order("op_no"),
       supabase.rpc("mfg_order_availability", { p_order: id }),
       supabase.from("mfg_order_costs").select("element, amount").eq("order_id", id),
-      supabase.from("mfg_material_documents").select("id").eq("reference_id", id),
-      supabase.from("mfg_confirmations").select("id").eq("order_id", id),
+      supabase.from("mfg_material_documents").select("id, document_number, doc_type, posting_date, memo, reversal_of").eq("reference_id", id).order("created_at"),
+      supabase.from("mfg_confirmations").select("id, document_number, op_no, posting_date, yield_qty, scrap_qty, labor_h, machine_h, is_final, reversal_of").eq("order_id", id).order("created_at"),
+      supabase.from("mfg_prod_outputs").select("id, item_id, kind, cost_share_pct, qty_planned, qty_received").eq("order_id", id).order("line_no"),
+      supabase.from("mfg_settlements").select("id").eq("order_id", id),
     ]);
     const order = (h.data as Order | null) ?? null;
     setO(order);
@@ -74,7 +90,12 @@ function OrderBody() {
     setOps((p.data as Op[]) ?? []);
     setAvail(Object.fromEntries(((a.data as Avail[]) ?? []).map((x) => [x.component_id, x])));
     setCosts((k.data as Cost[]) ?? []);
-    setSources([...((d.data as { id: string }[]) ?? []), ...((f.data as { id: string }[]) ?? [])].map((x) => x.id));
+    setDocs((d.data as DocRow[]) ?? []);
+    setConfs((f.data as ConfRow[]) ?? []);
+    const outs = (ou.data as Output[]) ?? [];
+    setOutputs(outs);
+    setOutQty((prev) => Object.fromEntries(outs.map((x) => [x.id, prev[x.id] ?? String(remaining(Number(x.qty_planned), Number(x.qty_received)))])));
+    setSources([...((d.data as { id: string }[]) ?? []), ...((f.data as { id: string }[]) ?? []), ...((st.data as { id: string }[]) ?? [])].map((x) => x.id));
     setIssueQty((prev) => Object.fromEntries(cs.map((x) => [x.id, prev[x.id] ?? String(Math.max(Number(x.qty_required) - Number(x.qty_issued), 0))])));
     setLoading(false);
     setTick((n) => n + 1);
@@ -137,6 +158,30 @@ function OrderBody() {
       "Finished goods received into stock.", () => setFg({ ...fg, qty: "" }));
   };
 
+  const settle = (e: React.FormEvent) => {
+    e.preventDefault();
+    const parsed = settleSchema.safeParse({ posting_date: settleDate });
+    if (!parsed.success) { toast.error(firstIssue(parsed.error)); return; }
+    run(() => supabase.rpc("mfg_settle_order", { p_order: id, p_date: parsed.data.posting_date }), "Order settled: the difference was written off to the variance accounts.", () => setSettleModal(false));
+  };
+
+  const receiveOutput = (out: Output) => {
+    const parsed = outputReceiptSchema.safeParse({ output_id: out.id, qty: outQty[out.id], posting_date: outDate });
+    if (!parsed.success) { toast.error(firstIssue(parsed.error)); return; }
+    const d = parsed.data;
+    run(() => supabase.rpc("mfg_post_output_receipt", { p_order: id, p_output: d.output_id, p_qty: d.qty, p_location: d.location_id, p_batch_no: d.batch_no, p_expiry: d.expiry, p_date: d.posting_date, p_key: `out-${out.id}-${Date.now()}` }),
+      "Received into stock.");
+  };
+
+  const reverse = (reason: string, date: string) => {
+    const t = reverseTarget;
+    if (!t) return;
+    const call = t.kind === "doc" ? supabase.rpc("mfg_reverse_document", { p_doc: t.id, p_date: date, p_reason: reason })
+      : t.kind === "conf" ? supabase.rpc("mfg_reverse_confirmation", { p_conf: t.id, p_date: date, p_reason: reason })
+      : supabase.rpc("mfg_reverse_settlement", { p_order: id, p_date: date, p_reason: reason });
+    run(() => call, "Reversed. The original stays on the record.", () => setReverseTarget(null));
+  };
+
   if (loading || lkLoading) return <div className="py-16 flex justify-center"><Loader2 className="animate-spin" size={20} color="#F2B13C" /></div>;
   if (!o) return <Panel title="Production order"><Empty>That production order was not found.</Empty></Panel>;
 
@@ -155,10 +200,16 @@ function OrderBody() {
         <div className="ml-auto flex gap-2 flex-wrap">
           {canEdit && o.status === "CREATED" && <GoldBtn onClick={() => setDialog("release")} disabled={busy}>Release</GoldBtn>}
           {isTeacher && o.status === "PENDING_APPROVAL" && <GoldBtn onClick={() => setDialog("approve")} disabled={busy}>Approve and release</GoldBtn>}
+          {canEdit && ["CONFIRMED", "DELIVERED"].includes(o.status) && <GoldBtn onClick={() => setSettleModal(true)} disabled={busy || waiting > 0.000001} title={waiting > 0.000001 ? "Receive the remaining good units into stock first" : undefined}>Settle order</GoldBtn>}
+          {canEdit && o.status === "TECHNICALLY_COMPLETE" && <GoldBtn onClick={() => setDialog("close")} disabled={busy}>Close order</GoldBtn>}
+          {canEdit && o.status === "TECHNICALLY_COMPLETE" && <OutlineBtn onClick={() => setReverseTarget({ kind: "settlement", id, label: "the settlement of this order" })} disabled={busy}>Undo settlement</OutlineBtn>}
           {canEdit && ["CREATED", "PENDING_APPROVAL", "RELEASED"].includes(o.status) && wip === 0 && <OutlineBtn onClick={() => setDialog("cancel")} disabled={busy} style={{ color: "#FF6B7A", borderColor: "rgba(255,107,122,0.5)" }}>Cancel order</OutlineBtn>}
         </div>
       </div>
       {o.status === "PENDING_APPROVAL" && <div className="text-[12.5px] px-3 py-2 rounded-md border border-[rgba(242,177,60,0.4)] bg-[rgba(242,177,60,0.08)]">This order costs more than your company&rsquo;s approval limit, so your teacher must approve it before material can be issued.</div>}
+
+      {o.status === "TECHNICALLY_COMPLETE" && <div className="text-[12.5px] px-3 py-2 rounded-md border border-hairline bg-[rgba(34,211,197,0.06)]">This order is <b>settled</b> (technically complete): nothing is left in process and no more material or hours can be posted. Close it to finish, or undo the settlement to correct something.</div>}
+      {o.status === "CLOSED" && <div className="text-[12.5px] px-3 py-2 rounded-md border border-hairline">This order is closed.</div>}
 
       <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))" }}>
         <KpiCard icon={<span>#</span>} label="Planned" value={`${qtyText(o.qty_planned)} ${itemMaster?.base_uom ?? ""}`} />
@@ -261,12 +312,76 @@ function OrderBody() {
             })}
             <div className="text-[13px] border-t border-hairline pt-2 mt-1">Put into work in process: <b>{money(Array.from(byElement.entries()).filter(([k]) => k !== "RELIEF").reduce((s, [, v]) => s + v, 0))}</b>
               {byElement.get("RELIEF") ? <> · moved to finished goods: <b>{money(-(byElement.get("RELIEF") ?? 0))}</b></> : null} · still in process: <b className="text-gold">{money(wip)}</b></div>
-            {(o.status === "DELIVERED" || o.status === "CONFIRMED") && Math.abs(wip) >= 0.01 && o.costing_method === "STANDARD" && (
-              <div className="text-[12px] text-[#A3B1C2]">The {money(wip)} left in process is the difference between what the order really cost and the standard cost of the good units made. Settling it into variance accounts is the next step of production accounting.</div>
+            {(o.status === "DELIVERED" || o.status === "CONFIRMED") && Math.abs(wip) >= 0.01 && (
+              <div className="text-[12px] text-[#A3B1C2]">The {money(wip)} still in process is the difference between what the order really cost and what the good units were credited at. <b>Settle the order</b> to write it off to the variance accounts.</div>
             )}
           </div>
         )}
       </Panel>
+
+      <VariancePanel orderId={id} status={o.status} costing={o.costing_method} reloadKey={tick} />
+
+      {outputs.length > 0 && (
+        <Panel title="Co-products and by-products">
+          <div className="overflow-x-auto">
+            <table style={{ minWidth: 640 }}>
+              <thead><tr><th>Item</th><th>Kind</th><th style={{ textAlign: "right" }}>Share of cost</th><th style={{ textAlign: "right" }}>Expected</th><th style={{ textAlign: "right" }}>In stock</th>{canEdit && ["PARTIALLY_CONFIRMED", "CONFIRMED", "DELIVERED"].includes(o.status) && <th>Receive now</th>}</tr></thead>
+              <tbody>
+                {outputs.map((x) => {
+                  const left = remaining(Number(x.qty_planned), Number(x.qty_received));
+                  return (
+                    <tr key={x.id}>
+                      <td>{name(x.item_id)} <span className="text-[#7F8EA0]">({uom(x.item_id)})</span></td>
+                      <td>{x.kind === "COPRODUCT" ? "Co-product" : "By-product"}</td>
+                      <td style={{ textAlign: "right" }}>{qtyText(x.cost_share_pct)}%</td>
+                      <td style={{ textAlign: "right" }}>{qtyText(x.qty_planned)}</td>
+                      <td style={{ textAlign: "right" }}>{qtyText(x.qty_received)}</td>
+                      {canEdit && ["PARTIALLY_CONFIRMED", "CONFIRMED", "DELIVERED"].includes(o.status) && (
+                        <td>{left > 0 ? (
+                          <div className="flex gap-2 items-center">
+                            <input className="input" style={{ width: 100 }} type="number" min={0} step="any" value={outQty[x.id] ?? ""} onChange={(e) => setOutQty({ ...outQty, [x.id]: e.target.value })} aria-label={`Quantity of ${name(x.item_id)} to receive`} />
+                            <OutlineBtn type="button" onClick={() => receiveOutput(x)} disabled={busy}>Receive</OutlineBtn>
+                          </div>
+                        ) : "All received"}</td>
+                      )}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          {canEdit && ["PARTIALLY_CONFIRMED", "CONFIRMED", "DELIVERED"].includes(o.status) && <div className="flex items-end gap-3 mt-3"><div><Label>Date</Label><input className="input" type="date" style={{ width: 160 }} value={outDate} onChange={(e) => setOutDate(e.target.value)} /></div></div>}
+          <div className="text-[11.5px] text-[#7F8EA0] mt-3">A co-product takes its share of the order&rsquo;s cost when it goes into stock; a by-product with no share goes in at no cost. Whatever cost is never received is written off when the order is settled.</div>
+        </Panel>
+      )}
+
+      {(docs.length > 0 || confs.length > 0) && (
+        <Panel title="Documents and confirmations">
+          <div className="overflow-x-auto">
+            <table style={{ minWidth: 640 }}>
+              <thead><tr><th>Document</th><th>What</th><th>Date</th><th>Detail</th><th /></tr></thead>
+              <tbody>
+                {(() => {
+                  const reversedDocs = reversedIds(docs);
+                  const reversedConfs = reversedIds(confs);
+                  const rows = [
+                    ...docs.map((x) => ({ key: x.id, no: x.document_number, what: DOC_TYPE_LABEL[x.doc_type] ?? x.doc_type, date: x.posting_date, detail: x.memo ?? "", done: reversedDocs.has(x.id), can: canReverse(x, reversedDocs), t: { kind: "doc" as const, id: x.id, label: `${x.document_number} (${DOC_TYPE_LABEL[x.doc_type] ?? x.doc_type})` } })),
+                    ...confs.map((x) => ({ key: x.id, no: x.document_number ?? "", what: x.reversal_of ? "Confirmation reversal" : "Confirmation", date: x.posting_date, detail: `${qtyText(x.yield_qty)} good · ${qtyText(x.scrap_qty)} scrap · ${qtyText(x.labor_h)} labor h · ${qtyText(x.machine_h)} machine h`, done: reversedConfs.has(x.id), can: canReverse({ id: x.id, reversal_of: x.reversal_of }, reversedConfs), t: { kind: "conf" as const, id: x.id, label: `confirmation ${x.document_number ?? ""}` } })),
+                  ].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+                  return rows.map((r) => (
+                    <tr key={r.key}>
+                      <td>{r.no}</td><td>{r.what}</td><td>{r.date}</td>
+                      <td className="text-[#A3B1C2]">{r.detail}{r.done ? " · reversed" : ""}</td>
+                      <td style={{ textAlign: "right" }}>{canEdit && r.can && !["TECHNICALLY_COMPLETE", "CLOSED", "CANCELLED"].includes(o.status) && <OutlineBtn type="button" onClick={() => setReverseTarget(r.t)} disabled={busy}>Reverse</OutlineBtn>}</td>
+                    </tr>
+                  ));
+                })()}
+              </tbody>
+            </table>
+          </div>
+          <div className="text-[11.5px] text-[#7F8EA0] mt-3">Posted documents are never edited. A mistake is undone with a reversal that posts the opposite stock movement and journal entry. Reversing a confirmation also reverses the materials it backflushed.</div>
+        </Panel>
+      )}
 
       <Panel title="What was posted to the books">
         <PostingsPanel sourceIds={sources} reloadKey={tick} />
@@ -305,6 +420,24 @@ function OrderBody() {
         </Modal>
       )}
 
+      {settleModal && (
+        <Modal title="Settle this order" onClose={() => setSettleModal(false)}>
+          <form onSubmit={settle}>
+            <div className="text-[13px] text-[#C9D4E0]">Settling writes whatever is left in work in process ({money(wip)}) off to the variance accounts, so the order ends with nothing in process. See the variance table on this page for where it goes.</div>
+            <div className="text-[12px] text-[#7F8EA0] mt-1">After settling, no more material or hours can be posted. You can undo the settlement until the order is closed.</div>
+            <Label>Settlement date</Label>
+            <input className="input" type="date" value={settleDate} onChange={(e) => setSettleDate(e.target.value)} />
+            <div className="flex gap-2 justify-end mt-5">
+              <OutlineBtn type="button" onClick={() => setSettleModal(false)} disabled={busy}>Cancel</OutlineBtn>
+              <GoldBtn type="submit" disabled={busy}>{busy ? <Loader2 size={13} className="animate-spin" /> : null} Settle order</GoldBtn>
+            </div>
+          </form>
+        </Modal>
+      )}
+      {reverseTarget && <ReverseModal title="Reverse" what={`You are reversing ${reverseTarget.label}.`} busy={busy} onCancel={() => setReverseTarget(null)} onSubmit={reverse} />}
+      {dialog === "close" && <ConfirmDialog title="Close this order" confirmLabel="Close order" busy={busy} onCancel={() => setDialog(null)}
+        message="Closing finishes the order. It needs nothing left in work in process, which settling has already taken care of."
+        onConfirm={() => { setDialog(null); run(() => supabase.rpc("mfg_close_order", { p_order: id }), "Order closed."); }} />}
       {dialog === "release" && <ConfirmDialog title="Release this order" confirmLabel="Release" busy={busy} onCancel={() => setDialog(null)}
         message="Releasing lets you issue material and confirm production. If the order costs more than your company's approval limit it will wait for your teacher."
         onConfirm={() => { setDialog(null); run(() => supabase.rpc("mfg_release_order", { p_order: id }), "Order sent for release."); }} />}
