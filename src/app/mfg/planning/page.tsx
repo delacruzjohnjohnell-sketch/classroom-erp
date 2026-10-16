@@ -8,12 +8,15 @@ import AppShell from "@/components/AppShell";
 import { Empty, GoldBtn, KpiCard, Label, Modal, OutlineBtn, Panel, TinyBtn, FormStyles } from "@/components/ui";
 import ListReport, { Chip, type ListColumn } from "@/components/ListReport";
 import PlanGrid from "@/components/mfg/PlanGrid";
+import CapacityPanel from "@/components/mfg/CapacityPanel";
+import GanttChart from "@/components/mfg/GanttChart";
 import { useLookups } from "@/components/mfg/useLookups";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
 import { toast } from "@/lib/toast";
-import { firstIssue, qtyText } from "@/lib/mfgOps";
+import { firstIssue, qtyText, ORDER_STATUS_LABEL } from "@/lib/mfgOps";
+import { addDays as plusDays, type GanttItem } from "@/lib/mfgGantt";
 import { DEMAND_LABEL, EXCEPTION_HELP, EXCEPTION_LABEL, LOT_RULE_HELP, LOT_RULE_LABEL, SUPPLY_LABEL, addDays, type LotRule } from "@/lib/mrp";
 import {
   BUCKET_OPTIONS, HORIZON_OPTIONS, bucketCount, convertRequisitionsSchema, forecastSchema, plannedOrderSchema, planRunSchema, runSummary, suggestedPrice,
@@ -29,9 +32,10 @@ type Req = { id: string; document_number: string; item_id: string; qty: number; 
 type Exc = { id: string; item_id: string; kind: string; message: string; ref_date: string | null };
 type Forecast = { id: string; item_id: string; period_start: string; qty: number };
 type Demand = { id: string; kind: string; source_ref: string | null; need_date: string; qty: number };
+type OrderRow = { id: string; document_number: string | null; item_id: string; qty_planned: number; status: string; planned_start: string | null; planned_end: string | null };
 type Peg = { id: string; demand_kind: string; demand_ref: string | null; demand_date: string | null; supply_kind: string; supply_ref: string | null; supply_date: string | null; qty: number };
 
-const TABS = [["grid", "Planning grid"], ["exceptions", "Exceptions"], ["planned", "Planned orders"], ["reqs", "Purchase requisitions"], ["forecast", "Forecast"]] as const;
+const TABS = [["grid", "Planning grid"], ["exceptions", "Exceptions"], ["planned", "Planned orders"], ["reqs", "Purchase requisitions"], ["capacity", "Capacity"], ["gantt", "Gantt"], ["forecast", "Forecast"]] as const;
 const today = () => new Date().toISOString().slice(0, 10);
 const STATUS_TONE: Record<string, "good" | "warn" | "muted" | "bad"> = { OPEN: "warn", CONVERTED: "good", DELETED: "muted" };
 const STATUS_TEXT: Record<string, string> = { OPEN: "Open", CONVERTED: "Converted", DELETED: "Deleted" };
@@ -65,6 +69,10 @@ function PlanningBody() {
   const [itemId, setItemId] = useState("");
   const [view, setView] = useState<{ key: string; grid: GridRow[]; demand: Demand[]; pegs: Peg[] }>({ key: "", grid: [], demand: [], pegs: [] });
   const [busy, setBusy] = useState(false);
+  const [orders, setOrders] = useState<OrderRow[]>([]);
+  const [tick, setTick] = useState(0);
+  const [pickId, setPickId] = useState<string | null>(null);
+  const [move, setMove] = useState<{ kind: "order" | "planned"; id: string; start: string; end: string } | null>(null);
 
   const [start, setStart] = useState(today());
   const [horizon, setHorizon] = useState("84");
@@ -80,12 +88,13 @@ function PlanningBody() {
   const load = useCallback(async () => {
     if (!effectiveTenantId) return;
     const t = effectiveTenantId;
-    const [r, p, q, f, v] = await Promise.all([
+    const [r, p, q, f, v, od] = await Promise.all([
       supabase.from("mfg_mrp_runs").select("*").eq("tenant_id", t).order("started_at", { ascending: false }).limit(1),
       supabase.from("mfg_planned_orders").select("id, document_number, item_id, qty, start_date, finish_date, source, firm, status, converted_to_id, late_days").eq("tenant_id", t).order("created_at", { ascending: false }).limit(500),
       supabase.from("mfg_purchase_reqs").select("id, document_number, item_id, qty, need_date, order_by_date, status, po_id, late_days").eq("tenant_id", t).order("created_at", { ascending: false }).limit(500),
       supabase.from("mfg_forecasts").select("id, item_id, period_start, qty").eq("tenant_id", t).order("period_start"),
       supabase.from("vendors").select("id, name").eq("tenant_id", t).order("name"),
+      supabase.from("mfg_production_orders").select("id, document_number, item_id, qty_planned, status, planned_start, planned_end").eq("tenant_id", t).in("status", ["CREATED", "PENDING_APPROVAL", "RELEASED", "PARTIALLY_CONFIRMED", "CONFIRMED"]).order("planned_start").limit(500),
     ]);
     const latest = ((r.data as Run[]) ?? [])[0] ?? null;
     setRun(latest);
@@ -93,6 +102,8 @@ function PlanningBody() {
     setReqs((q.data as Req[]) ?? []);
     setForecasts((f.data as Forecast[]) ?? []);
     setVendors((v.data as { id: string; name: string }[]) ?? []);
+    setOrders((od.data as OrderRow[]) ?? []);
+    setTick((n) => n + 1);
     if (latest) {
       const e = await supabase.from("mfg_mrp_exceptions").select("id, item_id, kind, message, ref_date").eq("run_id", latest.id).limit(1000);
       setExcs((e.data as Exc[]) ?? []);
@@ -171,6 +182,28 @@ function PlanningBody() {
     setBusy(false);
     if (ok(res)) await load();
   };
+  const makeSelected = async (rows: Planned[]) => {
+    const open = rows.filter((r) => r.status === "OPEN");
+    if (open.length === 0) { toast.error("Tick at least one open planned order."); return; }
+    if (busy) return;
+    setBusy(true);
+    const res = await mutate(supabase.rpc("mfg_convert_planned_orders", { p_ids: open.map((r) => r.id), p_backflush: false }),
+      { successMessage: `${open.length} production order${open.length === 1 ? "" : "s"} created. Nothing was created if one of them could not be made.` });
+    setBusy(false);
+    if (ok(res)) await load();
+  };
+  const saveMove = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!move || busy) return;
+    if (!move.start || !move.end) { toast.error("Enter the start and finish dates."); return; }
+    if (move.end < move.start) { toast.error("The finish date can't be before the start date."); return; }
+    setBusy(true);
+    const res = move.kind === "planned"
+      ? await mutate(supabase.rpc("mfg_reschedule_planned_order", { p_id: move.id, p_start: move.start, p_finish: move.end }), { successMessage: "Planned order moved. It is now firm: the next planning run keeps these dates." })
+      : await mutate(supabase.rpc("mfg_reschedule_order", { p_order: move.id, p_start: move.start, p_end: move.end }), { successMessage: "Production order moved." });
+    setBusy(false);
+    if (ok(res)) { setMove(null); await load(); }
+  };
   const deleteReq = async (r: Req) => {
     if (busy) return;
     setBusy(true);
@@ -230,6 +263,16 @@ function PlanningBody() {
   };
 
   const chosen = item(shownItemId);
+  const todayIso = today();
+  const ganttItems: GanttItem[] = [
+    ...orders.map((o) => {
+      const st = o.planned_start ?? todayIso;
+      const en = o.planned_end && o.planned_end >= st ? o.planned_end : st;
+      return { id: `o:${o.id}`, label: `${o.document_number ?? "Order"} · ${itemName(o.item_id)}`, detail: `${qtyText(o.qty_planned)} · ${ORDER_STATUS_LABEL[o.status] ?? o.status}`, kind: "order" as const, start: st, end: en, status: o.status, late: en < todayIso };
+    }),
+    ...planned.filter((x) => x.status === "OPEN").map((x) => ({ id: `p:${x.id}`, label: `${x.document_number} · ${itemName(x.item_id)}`, detail: `${qtyText(x.qty)} planned`, kind: "planned" as const, start: x.start_date, end: x.finish_date, status: x.status, late: x.late_days > 0 })),
+  ];
+  const picked = pickId ? ganttItems.find((g) => g.id === pickId) ?? null : null;
   const actions = (node: React.ReactNode) => <span onClick={(e) => e.stopPropagation()} className="inline-flex gap-1.5">{node}</span>;
 
   const plannedCols: ListColumn<Planned>[] = [
@@ -241,9 +284,9 @@ function PlanningBody() {
     { key: "src", label: "Made by", value: (r) => (r.source === "MRP" ? "Planning run" : "You (firm)"), filter: true, width: 120 },
     { key: "late", label: "Late by", value: (r) => r.late_days, align: "right", width: 90, render: (r) => (r.late_days > 0 ? <Chip label={`${r.late_days} days`} tone="bad" /> : "—") },
     { key: "status", label: "Status", value: (r) => STATUS_TEXT[r.status] ?? r.status, filter: true, width: 120, render: (r) => <Chip label={STATUS_TEXT[r.status] ?? r.status} tone={STATUS_TONE[r.status] ?? "muted"} /> },
-    { key: "do", label: "", value: () => "", width: 190, render: (r) => r.status === "CONVERTED" && r.converted_to_id
+    { key: "do", label: "", value: () => "", width: 250, render: (r) => r.status === "CONVERTED" && r.converted_to_id
         ? <Link href={`/mfg/production/${r.converted_to_id}`} onClick={(e) => e.stopPropagation()} className="text-[12px] font-semibold underline">Open production order</Link>
-        : r.status === "OPEN" && !readOnly ? actions(<><TinyBtn type="button" disabled={busy} onClick={() => convertPlanned(r)}>Make it</TinyBtn><TinyBtn type="button" disabled={busy} onClick={() => deletePlanned(r)}>Delete</TinyBtn></>) : null },
+        : r.status === "OPEN" && !readOnly ? actions(<><TinyBtn type="button" disabled={busy} onClick={() => convertPlanned(r)}>Make it</TinyBtn><TinyBtn type="button" disabled={busy} onClick={() => setMove({ kind: "planned", id: r.id, start: r.start_date, end: r.finish_date })}>Move</TinyBtn><TinyBtn type="button" disabled={busy} onClick={() => deletePlanned(r)}>Delete</TinyBtn></>) : null },
   ];
 
   const reqCols: ListColumn<Req>[] = [
@@ -393,9 +436,10 @@ function PlanningBody() {
       {tab === "planned" && (
         <Panel title="Planned orders — what to make">
           <ListReport listKey="mfg-planned-orders" rows={planned} columns={plannedCols} rowKey={(r) => r.id} exportName="planned-orders"
+            bulkActions={!readOnly ? [{ label: "Make selected", onRun: makeSelected }] : undefined}
             toolbar={!readOnly ? <OutlineBtn type="button" onClick={() => setNewOrder({ item_id: makeItems[0]?.item_id ?? "", qty: "", start_date: today(), finish_date: addDays(today(), makeItems[0]?.production_lead_days ?? 0) })}>New planned order</OutlineBtn> : undefined}
             emptyText="No planned orders. Run planning; products that are short get a suggestion here." />
-          <div className="text-[11.5px] text-[#7F8EA0] mt-2">“Make it” turns a suggestion into a real production order with its components. A planned order you create yourself is <b>firm</b>: planning keeps it, counts it as supply and plans the components it needs.</div>
+          <div className="text-[11.5px] text-[#7F8EA0] mt-2">“Make it” turns a suggestion into a real production order with its components; tick several and choose “Make selected” to make them all at once (all or none). “Move” changes the dates and makes the order firm. A planned order you create yourself is <b>firm</b>: planning keeps it, counts it as supply and plans the components it needs.</div>
         </Panel>
       )}
 
@@ -405,6 +449,17 @@ function PlanningBody() {
             bulkActions={!readOnly ? [{ label: "Create purchase order…", onRun: (rows) => openPo(rows) }] : undefined}
             emptyText="No requisitions. Run planning; bought items that are short get a suggestion here." />
           <div className="text-[11.5px] text-[#7F8EA0] mt-2">Tick the requisitions for one vendor and choose “Create purchase order…”. The purchase order then appears on the Purchasing page, where you receive the goods.</div>
+        </Panel>
+      )}
+
+      {tab === "capacity" && effectiveTenantId && (
+        <CapacityPanel tenantId={effectiveTenantId} workCenters={lk.workCenters} itemName={itemName} refreshKey={tick} />
+      )}
+
+      {tab === "gantt" && (
+        <Panel title="Gantt — when each order runs">
+          <GanttChart items={ganttItems} today={todayIso} onPick={(g) => setPickId(g.id)} />
+          <div className="text-[11.5px] text-[#7F8EA0] mt-2">Click a bar to see the order and move its dates. A moved planned order becomes firm, so the next planning run keeps it. Only production orders that have not started can be moved.</div>
         </Panel>
       )}
 
@@ -449,6 +504,41 @@ function PlanningBody() {
             <div className="flex gap-2 justify-end mt-5">
               <OutlineBtn type="button" onClick={() => setNewOrder(null)} disabled={busy}>Cancel</OutlineBtn>
               <GoldBtn type="submit" disabled={busy}>{busy ? <Loader2 size={13} className="animate-spin" /> : null} Create</GoldBtn>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {picked && (() => {
+        const isPlanned = picked.kind === "planned";
+        const realId = picked.id.slice(2);
+        const o = isPlanned ? null : orders.find((x) => x.id === realId) ?? null;
+        const movable = isPlanned || (o !== null && ["CREATED", "PENDING_APPROVAL", "RELEASED"].includes(o.status));
+        return (
+          <Modal title={picked.label} onClose={() => setPickId(null)} wide>
+            <div className="text-[12.5px] text-[#A3B1C2]">{picked.detail} · {picked.start} to {picked.end}{picked.late ? " · late" : ""}</div>
+            <div className="flex gap-2 flex-wrap mt-4">
+              {isPlanned
+                ? !readOnly && <GoldBtn type="button" disabled={busy} onClick={async () => { await convertPlanned(planned.find((x) => x.id === realId)!); setPickId(null); }}>Make it now</GoldBtn>
+                : <Link href={`/mfg/production/${realId}`} className="text-[12.5px] font-semibold underline self-center">Open production order</Link>}
+              {!readOnly && movable && <OutlineBtn type="button" onClick={() => { setMove({ kind: picked.kind, id: realId, start: picked.start, end: picked.end }); setPickId(null); }}>Move dates</OutlineBtn>}
+            </div>
+            {!isPlanned && !movable && <div className="text-[11.5px] text-[#7F8EA0] mt-3">This order has already started, so its dates can no longer be moved.</div>}
+          </Modal>
+        );
+      })()}
+
+      {move && (
+        <Modal title={move.kind === "planned" ? "Move a planned order" : "Move a production order"} onClose={() => setMove(null)}>
+          <form onSubmit={saveMove}>
+            <div className="grid gap-x-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))" }}>
+              <div><Label>Start</Label><input className="input" type="date" value={move.start} onChange={(e) => setMove({ ...move, start: e.target.value, end: move.end < e.target.value ? plusDays(e.target.value, 0) : move.end })} /></div>
+              <div><Label>Finish</Label><input className="input" type="date" value={move.end} onChange={(e) => setMove({ ...move, end: e.target.value })} /></div>
+            </div>
+            <div className="text-[11.5px] text-[#7F8EA0] mt-3">{move.kind === "planned" ? "Moving a planned order makes it firm: the next planning run keeps these dates and plans its components from them." : "Only dates change. Nothing is posted."}</div>
+            <div className="flex gap-2 justify-end mt-5">
+              <OutlineBtn type="button" onClick={() => setMove(null)} disabled={busy}>Cancel</OutlineBtn>
+              <GoldBtn type="submit" disabled={busy}>{busy ? <Loader2 size={13} className="animate-spin" /> : null} Save</GoldBtn>
             </div>
           </form>
         </Modal>

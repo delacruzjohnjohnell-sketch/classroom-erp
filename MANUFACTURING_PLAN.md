@@ -484,6 +484,18 @@ See `MANUFACTURING_RECONCILIATION.md`. Approved changes to the phase list: a **p
 
 ---
 
+## Phase 5b as built (deviations from the plan above)
+
+- **Migration:** `0035_mfg_capacity.sql`. Five new functions, no new table, nothing existing redefined (the Standard fingerprints are identical before and after).
+- **Capacity check (`mfg_capacity_load`, `mfg_capacity_orders`):** infinite-capacity planning with a capacity CHECK, like SAP's MRP + CM01: overload is shown, never fixed automatically. Work comes from open production orders (what is left of each operation: set-up if nothing is confirmed yet, run time for the quantity not yet confirmed, tear-down) and from open planned orders (the item's active first-alternative routing). It is spread evenly over the working days between the order's start and finish, using the work centre's shifts × hours per shift × utilisation %, its working weekdays and the company holidays (`mfg_holidays`). Work already late is placed from the first day shown; an order whose whole span has no working day is put on its first day so it still shows. Efficiency % is not applied (the existing `mfg_wc_available_hours` does not apply it either). Columns of 1, 7, 14 or 30 days, 60 at most. Readable by the owning student and the teacher.
+- **Collective conversion (`mfg_convert_planned_orders`):** up to 100 planned orders in one step through the existing single conversion; if any one fails nothing is created.
+- **Rescheduling:** `mfg_reschedule_planned_order` (open planned order; it becomes firm so the next run keeps the dates) and `mfg_reschedule_order` (production order still CREATED, PENDING APPROVAL or RELEASED; audit-logged). Dates only; nothing is posted.
+- **Gantt:** own SVG (no new dependency). Production orders and open planned orders as bars, week lines, today line, late bars outlined in red; click a bar to open the order or move its dates. The layout rules are in `src/lib/mfgGantt.ts` with unit tests.
+- **Screens:** the Planning page gains a Capacity tab (per work centre: load chart, table, which orders), a Gantt tab, a "Make selected" bulk action and a "Move" button on planned orders.
+- **Still not done:** the MRP run counts calendar days for lead times; only the capacity check uses the work-centre calendar. Making MRP calendar-aware would change `mfg_run_mrp`, so it is held back until you ask for it. There is no finite-capacity scheduling or levelling.
+
+---
+
 ## Manufacturing look and feel (before Phase 5)
 
 - The Manufacturing ERP now has its own **light theme**, modelled on the reference screenshot: a navy sidebar with a blue active item, a white top bar (search, company switcher, user), light cards and tables, a blue primary button. A Manufacturing company is drawn by `src/components/mfg/MfgShell.tsx` (`AppShell` hands over to it); the Standard ERP keeps its dark console look and its own shell code.
