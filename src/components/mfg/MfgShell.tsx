@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LogOut, ArrowLeft, LayoutDashboard, BookOpen, Truck, Package, ShoppingCart, Briefcase, FileBarChart, Landmark, Boxes, Building2,
-  ArrowLeftRight, Settings, Database, Calculator, Factory, Send, Plus, CalendarRange, ShieldCheck, Gauge,
+  ArrowLeftRight, Settings, Database, Calculator, Factory, Send, Plus, CalendarRange, ShieldCheck, Gauge, CalendarCheck,
 } from "lucide-react";
 import { useSession } from "@/lib/session";
 import GlobalSearch from "../GlobalSearch";
@@ -25,6 +25,7 @@ const NAV = [
   { href: "/mfg/shipping", label: "Shipping", icon: Send },
   { href: "/mfg/sales", label: "Sales", icon: ShoppingCart },
   { href: "/mfg/finance", label: "Finance", icon: BookOpen },
+  { href: "/mfg/period", label: "Period End", icon: CalendarCheck },
   { href: "/mfg/banking", label: "Banking", icon: Landmark },
   { href: "/mfg/fixed-assets", label: "Fixed Assets", icon: Boxes },
   { href: "/mfg/payroll", label: "Payroll", icon: Briefcase },
