@@ -514,6 +514,18 @@ See `MANUFACTURING_RECONCILIATION.md`. Approved changes to the phase list: a **p
 
 ---
 
+## Phase 6b as built (deviations from the plan above)
+
+- **Migration:** `0037_mfg_shopfloor.sql`. New tables `mfg_downtime` and `mfg_order_priority`; five functions (`mfg_dispatch_list`, `mfg_oee`, `mfg_log_downtime`, `mfg_void_downtime`, `mfg_set_order_priority`). Nothing existing is changed; the Standard fingerprints are identical before and after. With 6a this completes Phase 6 (quality, dispatch list, OEE, close-after-QC).
+- **Dispatch list:** per work centre, the operations of RELEASED and PARTIALLY_CONFIRMED orders that still have units to make, ordered by priority (1 most urgent, 5 when none is set), then earliest due date, start date, order number and operation. A step is READY only for the units the step before has finished beyond what it has done itself; the first step is ready for everything left. Hours left count set-up only until a unit has been confirmed. Deviation from the plan: no separate "shop-floor order" document; the list is read from the routing operations the order already carries. Priority is kept in its own table so the production order table is untouched.
+- **Downtime:** logged per work centre and day with a reason (breakdown, waiting for material, nobody to run it, other, planned stop), at most 24 h a day, never edited, only voided with a reason.
+- **OEE (`mfg_oee`):** per work centre and week (or 1/7/14/30-day columns, up to 60). Planned time = shifts × hours per shift on working days, less holidays and less planned stops (the work centre's utilisation % is not applied). Availability = (planned − stoppages − set-up hours) ÷ planned. Performance = ideal hours ÷ machine hours run, where ideal = units made (good + scrap) × the operation's machine minutes per unit (run minutes if none). Quality = good ÷ (good + scrap). The function returns hours and counts; the screen adds columns together first and then divides. A reversed confirmation takes its hours and units back out. Confirmations on orders without a routing cannot be placed at a work centre and are left out. Idle time with no work scheduled is not a loss. Performance above 100 % is shown as it is, with a hint to check the standard times.
+- **Close after quality:** already enforced in 6a (an order with undecided inspection lots cannot be closed).
+- **Screen:** `/mfg/shopfloor` (Shop Floor in the menu): dispatch list with priority and a Confirm shortcut, OEE per work centre with a weekly chart, the three ratios, the biggest loss in hours, and a downtime tab with void.
+- **Not in 6b:** machine-by-machine counters or sensors, shift handover notes, operator login by badge, a printed dispatch sheet beyond the CSV export.
+
+---
+
 ## Manufacturing look and feel (before Phase 5)
 
 - The Manufacturing ERP now has its own **light theme**, modelled on the reference screenshot: a navy sidebar with a blue active item, a white top bar (search, company switcher, user), light cards and tables, a blue primary button. A Manufacturing company is drawn by `src/components/mfg/MfgShell.tsx` (`AppShell` hands over to it); the Standard ERP keeps its dark console look and its own shell code.
