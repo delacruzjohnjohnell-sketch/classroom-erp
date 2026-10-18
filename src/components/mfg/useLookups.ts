@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { showQueryErrors } from "@/lib/queryErrors";
 import { useSession } from "@/lib/session";
 
 export type Uom = { code: string; name: string };
@@ -47,6 +48,7 @@ export function useLookups(): { data: Lookups; loading: boolean; reload: () => P
       supabase.from("mfg_activity_types").select("id, code, name, kind").eq("tenant_id", t).order("code"),
       supabase.from("mfg_item_quality").select("item_id, inspect_receipt, inspect_production").eq("tenant_id", t),
     ]);
+    showQueryErrors(u, l, i, w, c, a, q);
     type Raw = Omit<MasterItem, "sku" | "name" | "reorder_point"> & { items: { sku: string; name: string; reorder_point: number } | null };
     const items = ((i.data as unknown as Raw[]) ?? [])
       .map(({ items: it, ...m }) => ({ ...m, sku: it?.sku ?? "", name: it?.name ?? "", reorder_point: Number(it?.reorder_point ?? 0) }) as MasterItem)

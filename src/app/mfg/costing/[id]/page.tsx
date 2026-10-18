@@ -9,6 +9,7 @@ import ListReport, { Chip, type ListColumn } from "@/components/ListReport";
 import { useLookups } from "@/components/mfg/useLookups";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
+import { showQueryErrors } from "@/lib/queryErrors";
 import { mutate, ok } from "@/lib/mutate";
 import {
   ELEMENT_LABEL, ESTIMATE_STATUS_TONE, elementTotals, money, percentOf, revaluationEntry, sentenceFor, unitMoney, type Element,
@@ -63,6 +64,7 @@ function EstimateBody() {
       supabase.from("accounts").select("id, code, name").eq("tenant_id", effectiveTenantId),
       supabase.from("mfg_company_settings").select("explain_postings").eq("tenant_id", effectiveTenantId).maybeSingle(),
     ]);
+    showQueryErrors(h, l, it, rl, det, acc, st);
     setE((h.data as Estimate | null) ?? null);
     setLines((l.data as Line[]) ?? []);
     setItems((it.data as EItem[]) ?? []);

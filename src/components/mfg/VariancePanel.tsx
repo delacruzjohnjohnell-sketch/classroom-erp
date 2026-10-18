@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Empty, Panel } from "../ui";
 import { Chip } from "../ListReport";
 import { supabase } from "@/lib/supabase";
+import { showQueryErrors } from "@/lib/queryErrors";
 import { money } from "@/lib/costing";
 import { qtyText, VARIANCE_HELP } from "@/lib/mfgOps";
 
@@ -24,6 +25,7 @@ export default function VariancePanel({ orderId, status, costing, reloadKey }: {
   useEffect(() => {
     (async () => {
       const s = await supabase.from("mfg_settlements").select("id, document_number, posting_date, residual, reversal_of, detail").eq("order_id", orderId).order("created_at", { ascending: false });
+      showQueryErrors(s);
       const rows = (s.data as Settlement[]) ?? [];
       const reversed = new Set(rows.map((r) => r.reversal_of).filter((x): x is string => !!x));
       const active = rows.find((r) => r.reversal_of === null && !reversed.has(r.id)) ?? null;

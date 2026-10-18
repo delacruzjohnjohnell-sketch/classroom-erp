@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Empty } from "../ui";
 import { supabase } from "@/lib/supabase";
+import { showQueryErrors } from "@/lib/queryErrors";
 import { useSession } from "@/lib/session";
 import { money } from "@/lib/costing";
 
@@ -27,11 +28,13 @@ export default function PostingsPanel({ sourceIds, reloadKey }: { sourceIds: str
         supabase.from("journal_entries").select("id, entry_date, memo, source_id").eq("tenant_id", effectiveTenantId).in("source_id", sourceIds).order("entry_date").order("created_at"),
         supabase.from("accounts").select("id, code, name").eq("tenant_id", effectiveTenantId),
       ]);
+      showQueryErrors(e, a);
       const es = (e.data as Entry[]) ?? [];
       setEntries(es);
       setAccounts(Object.fromEntries(((a.data as { id: string; code: string; name: string }[]) ?? []).map((x) => [x.id, x])));
       if (es.length) {
         const l = await supabase.from("journal_lines").select("journal_entry_id, account_id, debit, credit").in("journal_entry_id", es.map((x) => x.id));
+        showQueryErrors(l);
         setLines((l.data as Line[]) ?? []);
       } else setLines([]);
     })();

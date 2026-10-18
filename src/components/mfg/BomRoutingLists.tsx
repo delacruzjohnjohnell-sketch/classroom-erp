@@ -7,6 +7,7 @@ import { Panel, GoldBtn } from "../ui";
 import ListReport, { Chip, statusTone, type ListColumn } from "../ListReport";
 import type { Lookups } from "./useLookups";
 import { supabase } from "@/lib/supabase";
+import { showQueryErrors } from "@/lib/queryErrors";
 import { useSession } from "@/lib/session";
 
 type BomRow = {
@@ -25,7 +26,7 @@ export function BomsTab({ lookups, readOnly }: { lookups: Lookups; readOnly: boo
   useEffect(() => {
     if (!effectiveTenantId) return;
     supabase.from("mfg_boms").select("*, mfg_bom_items(count)").eq("tenant_id", effectiveTenantId).order("document_number")
-      .then(({ data }) => setRows((data as unknown as BomRow[]) ?? []));
+      .then((r) => { showQueryErrors(r); setRows((r.data as unknown as BomRow[]) ?? []); });
   }, [effectiveTenantId]);
 
   const item = (id: string) => lookups.items.find((i) => i.item_id === id);
@@ -60,7 +61,7 @@ export function RoutingsTab({ lookups, readOnly }: { lookups: Lookups; readOnly:
   useEffect(() => {
     if (!effectiveTenantId) return;
     supabase.from("mfg_routings").select("*, mfg_routing_ops(count)").eq("tenant_id", effectiveTenantId).order("document_number")
-      .then(({ data }) => setRows((data as unknown as RoutingRow[]) ?? []));
+      .then((r) => { showQueryErrors(r); setRows((r.data as unknown as RoutingRow[]) ?? []); });
   }, [effectiveTenantId]);
 
   const columns: ListColumn<RoutingRow>[] = [

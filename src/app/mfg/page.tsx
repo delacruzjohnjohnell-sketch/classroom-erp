@@ -8,6 +8,7 @@ import DemoLoader from "@/components/mfg/DemoLoader";
 import { useLookups } from "@/components/mfg/useLookups";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
+import { showQueryErrors } from "@/lib/queryErrors";
 import { DOC_TYPE_LABEL, INVOICE_STATUS_LABEL } from "@/lib/mfgOps";
 import { firstName, greeting, isoDay, lastDays, outputByDay, pctChange, shareOf, shortDay, stockState, whenLabel } from "@/lib/mfgDash";
 
@@ -46,6 +47,7 @@ function Body() {
       supabase.from("mfg_inspection_lots").select("id", { count: "exact", head: true }).eq("tenant_id", t).in("status", ["CREATED", "IN_INSPECTION"]),
     ]);
 
+    showQueryErrors(o, c, st, set, po, hi, dc, cf, se, vi, rec, ql);
     const orders = (o.data as { id: string; document_number: string | null; item_id: string; qty_planned: number; qty_good: number; status: string; planned_end: string | null }[]) ?? [];
     const conf = (c.data as { order_id: string; posting_date: string; yield_qty: number; scrap_qty: number }[]) ?? [];
     const itemName = (id: string) => lk.items.find((i) => i.item_id === id)?.name ?? "—";
