@@ -8,6 +8,7 @@ import AppShell from "@/components/AppShell";
 import { Empty, GoldBtn, KpiCard, Label, Panel, TinyBtn, FormStyles } from "@/components/ui";
 import ListReport, { Chip, type ListColumn } from "@/components/ListReport";
 import ReverseModal from "@/components/mfg/ReverseModal";
+import UpkeepPanel from "@/components/mfg/UpkeepPanel";
 import { useLookups } from "@/components/mfg/useLookups";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
@@ -26,7 +27,7 @@ type Dispatch = {
 };
 type Downtime = { id: string; work_center_id: string; event_date: string; hours: number; category: string; note: string | null; voided_at: string | null; void_reason: string | null };
 
-const TABS = [["dispatch", "Dispatch list"], ["oee", "OEE"], ["downtime", "Downtime"]] as const;
+const TABS = [["dispatch", "Dispatch list"], ["oee", "OEE"], ["downtime", "Downtime"], ["upkeep", "Machines & upkeep"]] as const;
 const today = () => new Date().toISOString().slice(0, 10);
 const MONO = 'ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace';
 
@@ -179,6 +180,8 @@ function ShopFloorBody() {
             className={`px-3 py-2 text-[12.5px] font-semibold border-b-2 -mb-px transition-colors ${tab === id ? "text-gold border-[#F2B13C]" : "text-[#A3B1C2] border-transparent hover:text-ink"}`}>{label}</button>
         ))}
       </div>
+
+      {tab === "upkeep" && <UpkeepPanel readOnly={readOnly} />}
 
       {tab === "dispatch" && (
         <Panel title="What to run next">

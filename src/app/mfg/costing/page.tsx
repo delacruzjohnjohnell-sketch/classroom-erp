@@ -7,6 +7,7 @@ import AppShell from "@/components/AppShell";
 import { Panel, Modal, Label, GoldBtn, OutlineBtn, FormStyles } from "@/components/ui";
 import ListReport, { Chip, type ListColumn } from "@/components/ListReport";
 import { useLookups } from "@/components/mfg/useLookups";
+import CostDriftPanel from "@/components/mfg/CostDriftPanel";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
@@ -93,6 +94,8 @@ function CostingBody() {
           onRowClick={(r) => router.push(`/mfg/costing/${r.id}`)}
           toolbar={!readOnly ? <GoldBtn onClick={() => setModal(true)}><Plus size={13} /> New estimate</GoldBtn> : undefined} />
       </Panel>
+
+      {!readOnly && <CostDriftPanel items={lk.items} />}
 
       {modal && (
         <Modal title="New cost estimate" onClose={() => setModal(false)} wide>
