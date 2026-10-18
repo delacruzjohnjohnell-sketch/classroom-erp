@@ -19,6 +19,7 @@ export const poSchema = z.object({
     item_id: text("Choose an item on every line."),
     qty: pos("Quantity"),
     unit_price: nonNeg("Price"),
+    uom: optText,
   })).min(1, "Add at least one line."),
 }).superRefine((v, ctx) => {
   if (v.expected_date && v.expected_date < v.order_date) ctx.addIssue({ code: "custom", message: "The expected date can't be before the order date." });

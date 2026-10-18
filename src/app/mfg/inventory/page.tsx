@@ -7,6 +7,8 @@ import AppShell from "@/components/AppShell";
 import { Panel, Empty, Label, GoldBtn, TinyBtn, FormStyles } from "@/components/ui";
 import ListReport, { Chip, type ListColumn } from "@/components/ListReport";
 import PostingsPanel from "@/components/mfg/PostingsPanel";
+import AvailabilityPanel from "@/components/mfg/AvailabilityPanel";
+import LotsPanel from "@/components/mfg/LotsPanel";
 import ReverseModal from "@/components/mfg/ReverseModal";
 import { useLookups } from "@/components/mfg/useLookups";
 import { useSession } from "@/lib/session";
@@ -20,7 +22,7 @@ type StockRow = { id: string; item_id: string; location_id: string; batch_id: st
 type Doc = { id: string; document_number: string; doc_type: string; posting_date: string; memo: string | null; journal_entry_id: string | null; reference_type: string | null; reversal_of: string | null };
 type Rec = { area: string; account_code: string; account_name: string; subledger: number; ledger: number; difference: number };
 
-const TABS = [["stock", "Stock on hand"], ["documents", "Stock documents"], ["move", "Adjust and transfer"], ["reconcile", "Stock vs. books"]] as const;
+const TABS = [["stock", "Stock on hand"], ["position", "Availability"], ["lots", "Lots & expiry"], ["documents", "Stock documents"], ["move", "Adjust and transfer"], ["reconcile", "Stock vs. books"]] as const;
 const today = () => new Date().toISOString().slice(0, 10);
 
 export default function InventoryPage() {
@@ -156,6 +158,9 @@ function InventoryBody() {
           <div className="text-[13px] mt-3">Total value: <b className="text-gold">{money(total)}</b> <span className="text-[#7F8EA0]">({method === "STANDARD" ? "at standard cost" : "at moving average cost"})</span></div>
         </Panel>
       )}
+
+      {tab === "position" && <AvailabilityPanel items={lk.items} />}
+      {tab === "lots" && <LotsPanel items={lk.items} />}
 
       {tab === "documents" && (
         <Panel title="Stock documents">

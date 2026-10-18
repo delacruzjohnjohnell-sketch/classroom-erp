@@ -15,15 +15,17 @@ import { toast } from "@/lib/toast";
 import { money } from "@/lib/costing";
 import { firstIssue, outstanding, poSchema, qtyText, receiptSchema } from "@/lib/mfgOps";
 
-type PoLine = { id: string; description: string; qty: number; unit_cost: number; mfg_po_line_items: { item_id: string }[] | { item_id: string } | null };
+type PoLine = { id: string; description: string; qty: number; unit_cost: number; mfg_po_line_items: PoItem[] | PoItem | null };
+type PoItem = { item_id: string; pur_qty: number | null; pur_uom: string | null; pur_price: number | null };
 type Po = {
   id: string; document_number: string | null; order_date: string; expected_date: string | null; status: string; total: number;
   vendors: { name: string } | null; purchase_order_lines: PoLine[];
 };
-type Draft = { item_id: string; qty: string; unit_price: string };
+type Draft = { item_id: string; qty: string; unit_price: string; uom: string };
 
 const today = () => new Date().toISOString().slice(0, 10);
-const lineItem = (l: PoLine) => (Array.isArray(l.mfg_po_line_items) ? l.mfg_po_line_items[0]?.item_id : l.mfg_po_line_items?.item_id) ?? "";
+const lineInfo = (l: PoLine): PoItem | undefined => (Array.isArray(l.mfg_po_line_items) ? l.mfg_po_line_items[0] : l.mfg_po_line_items) ?? undefined;
+const lineItem = (l: PoLine) => lineInfo(l)?.item_id ?? "";
 
 export default function PurchasingPage() {
   return <AppShell><PurchasingBody /></AppShell>;
@@ -44,7 +46,7 @@ function PurchasingBody() {
   const [newVendor, setNewVendor] = useState("");
   const [orderDate, setOrderDate] = useState(today());
   const [expected, setExpected] = useState("");
-  const [lines, setLines] = useState<Draft[]>([{ item_id: "", qty: "1", unit_price: "0" }]);
+  const [lines, setLines] = useState<Draft[]>([{ item_id: "", qty: "1", unit_price: "0", uom: "" }]);
 
   const [rcv, setRcv] = useState<Po | null>(null);
   const [rcvDate, setRcvDate] = useState(today());
@@ -54,7 +56,7 @@ function PurchasingBody() {
   const load = useCallback(async () => {
     if (!effectiveTenantId) return;
     const [p, v, d] = await Promise.all([
-      supabase.from("purchase_orders").select("*, vendors(name), purchase_order_lines(id, description, qty, unit_cost, mfg_po_line_items(item_id))")
+      supabase.from("purchase_orders").select("*, vendors(name), purchase_order_lines(id, description, qty, unit_cost, mfg_po_line_items(item_id, pur_qty, pur_uom, pur_price))")
         .eq("tenant_id", effectiveTenantId).order("created_at", { ascending: false }),
       supabase.from("vendors").select("id, name").eq("tenant_id", effectiveTenantId).order("name"),
       supabase.from("mfg_material_doc_lines").select("po_line_id, qty_change").eq("tenant_id", effectiveTenantId).not("po_line_id", "is", null),
@@ -92,7 +94,7 @@ function PurchasingBody() {
     const res = await mutate(supabase.rpc("mfg_create_po", { p_vendor: parsed.data.vendor_id, p_date: parsed.data.order_date, p_expected: parsed.data.expected_date, p_lines: parsed.data.lines }),
       { successMessage: "Purchase order created." });
     setBusy(false);
-    if (ok(res)) { setNewPo(false); setVendorId(""); setNewVendor(""); setLines([{ item_id: "", qty: "1", unit_price: "0" }]); await load(); }
+    if (ok(res)) { setNewPo(false); setVendorId(""); setNewVendor(""); setLines([{ item_id: "", qty: "1", unit_price: "0", uom: "" }]); await load(); }
   };
 
   const openReceive = (po: Po) => {
@@ -179,18 +181,21 @@ function PurchasingBody() {
             </div>
             <Label>Lines</Label>
             {lines.map((l, i) => (
-              <div key={i} className="grid gap-2 mb-2" style={{ gridTemplateColumns: "1fr 90px 110px 30px" }}>
+              <div key={i} className="grid gap-2 mb-2" style={{ gridTemplateColumns: "1fr 90px 90px 110px 30px" }}>
                 <select className="input" value={l.item_id} aria-label={`Item on line ${i + 1}`}
-                  onChange={(e) => { const it = lk.items.find((x) => x.item_id === e.target.value); setLines(lines.map((x, j) => j === i ? { ...x, item_id: e.target.value, unit_price: it ? String(Number(it.planned_price) / (it.price_unit || 1)) : x.unit_price } : x)); }}>
+                  onChange={(e) => { const it = lk.items.find((x) => x.item_id === e.target.value); setLines(lines.map((x, j) => j === i ? { ...x, item_id: e.target.value, uom: it?.purchase_uom ?? "", unit_price: it && !it.purchase_uom ? String(Number(it.planned_price) / (it.price_unit || 1)) : it ? "0" : x.unit_price } : x)); }}>
                   <option value="">Choose an item…</option>
                   {stocked.map((it) => <option key={it.item_id} value={it.item_id}>{it.sku} — {it.name} ({it.base_uom})</option>)}
                 </select>
                 <input className="input" type="number" min={0} step="any" placeholder="Qty" value={l.qty} onChange={(e) => setLines(lines.map((x, j) => j === i ? { ...x, qty: e.target.value } : x))} />
+                <select className="input" aria-label={`Unit on line ${i + 1}`} value={l.uom} onChange={(e) => setLines(lines.map((x, j) => j === i ? { ...x, uom: e.target.value } : x))}>
+                  {(() => { const it = lk.items.find((x) => x.item_id === l.item_id); return (<><option value="">{it?.base_uom ?? "unit"}</option>{it?.purchase_uom && <option value={it.purchase_uom}>{it.purchase_uom}</option>}</>); })()}
+                </select>
                 <input className="input" type="number" min={0} step="any" placeholder="Price each" value={l.unit_price} onChange={(e) => setLines(lines.map((x, j) => j === i ? { ...x, unit_price: e.target.value } : x))} />
                 <TinyBtn type="button" onClick={() => setLines(lines.filter((_, j) => j !== i))} aria-label={`Remove line ${i + 1}`}><Trash2 size={11} /></TinyBtn>
               </div>
             ))}
-            <OutlineBtn type="button" onClick={() => setLines([...lines, { item_id: "", qty: "1", unit_price: "0" }])}><Plus size={13} /> Add line</OutlineBtn>
+            <OutlineBtn type="button" onClick={() => setLines([...lines, { item_id: "", qty: "1", unit_price: "0", uom: "" }])}><Plus size={13} /> Add line</OutlineBtn>
             <div className="text-[13px] mt-3">Total: <b>{money(lines.reduce((s, l) => s + (Number(l.qty) || 0) * (Number(l.unit_price) || 0), 0))}</b></div>
             <div className="flex gap-2 justify-end mt-5">
               <OutlineBtn type="button" onClick={() => setNewPo(false)} disabled={busy}>Cancel</OutlineBtn>
@@ -217,7 +222,7 @@ function PurchasingBody() {
                     const set = (patch: Partial<typeof st>) => setRcvLines({ ...rcvLines, [l.id]: { ...st, ...patch } });
                     return (
                       <tr key={l.id}>
-                        <td>{l.description}<div className="text-[11px] text-[#7F8EA0]">{money(l.unit_cost)} each</div></td>
+                        <td>{l.description}<div className="text-[11px] text-[#7F8EA0]">{money(l.unit_cost)} each{lineInfo(l)?.pur_uom ? ` · ordered as ${qtyText(lineInfo(l)?.pur_qty ?? 0)} ${lineInfo(l)?.pur_uom} at ${money(lineInfo(l)?.pur_price ?? 0)}` : ""}</div></td>
                         <td style={{ textAlign: "right" }}>{qtyText(l.qty)}</td><td style={{ textAlign: "right" }}>{qtyText(got)}</td>
                         <td><input className="input" style={{ width: 90 }} type="number" min={0} step="any" disabled={outstanding(Number(l.qty), got) === 0} value={st.qty} onChange={(e) => set({ qty: e.target.value })} aria-label={`Quantity received of ${l.description}`} /></td>
                         <td>

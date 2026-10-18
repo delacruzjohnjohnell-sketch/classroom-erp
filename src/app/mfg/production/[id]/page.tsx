@@ -26,7 +26,7 @@ type Op = {
   id: string; op_no: number; description: string | null; work_center_id: string; setup_min: number; run_min_per_unit: number; labor_min_per_unit: number | null;
   machine_min_per_unit: number | null; teardown_min: number; qty_confirmed: number; setup_h_actual: number; labor_h_actual: number; machine_h_actual: number;
 };
-type Avail = { component_id: string; on_hand: number; short: number };
+type Avail = { component_id: string; on_hand: number; reserved_by_others: number; short: number };
 type Cost = { element: string; amount: number };
 type DocRow = { id: string; document_number: string; doc_type: string; posting_date: string; memo: string | null; reversal_of: string | null };
 type ConfRow = { id: string; document_number: string | null; op_no: number | null; posting_date: string; yield_qty: number; scrap_qty: number; labor_h: number; machine_h: number; is_final: boolean; reversal_of: string | null };
@@ -227,7 +227,7 @@ function OrderBody() {
       <Panel title="Materials">
         <div className="overflow-x-auto">
           <table style={{ minWidth: 760 }}>
-            <thead><tr><th>Component</th><th style={{ textAlign: "right" }}>Needed</th><th style={{ textAlign: "right" }}>Issued</th><th style={{ textAlign: "right" }}>In stock</th><th>Backflush</th>{running && canEdit && <th>Issue now</th>}</tr></thead>
+            <thead><tr><th>Component</th><th style={{ textAlign: "right" }}>Needed</th><th style={{ textAlign: "right" }}>Issued</th><th style={{ textAlign: "right" }}>Usable stock</th><th>Backflush</th>{running && canEdit && <th>Issue now</th>}</tr></thead>
             <tbody>
               {comps.map((c) => {
                 const a = avail[c.id];
@@ -237,7 +237,7 @@ function OrderBody() {
                     <td>{name(c.item_id)} <span className="text-[#7F8EA0]">({uom(c.item_id)})</span></td>
                     <td style={{ textAlign: "right" }}>{qtyText(c.qty_required)}</td>
                     <td style={{ textAlign: "right" }}>{qtyText(c.qty_issued)}</td>
-                    <td style={{ textAlign: "right", color: short ? "#FF6B7A" : undefined }}>{qtyText(a?.on_hand ?? 0)}{short ? ` (short ${qtyText(a.short)})` : ""}</td>
+                    <td style={{ textAlign: "right", color: short ? "#FF6B7A" : undefined }}>{qtyText(a?.on_hand ?? 0)}{Number(a?.reserved_by_others) > 0 ? <span className="text-[#7F8EA0]" title="Promised to other released orders"> ({qtyText(a.reserved_by_others)} reserved elsewhere)</span> : null}{short ? ` (short ${qtyText(a.short)})` : ""}</td>
                     <td>
                       <input type="checkbox" checked={c.backflush} disabled={!canEdit || !["CREATED", "PENDING_APPROVAL", "RELEASED"].includes(o.status) || busy} aria-label={`Backflush ${name(c.item_id)}`}
                         onChange={(e) => run(() => supabase.rpc("mfg_set_component_backflush", { p_order: id, p_component: c.id, p_flag: e.target.checked }), "Saved.")} />

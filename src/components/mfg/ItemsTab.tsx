@@ -32,8 +32,9 @@ export default function ItemsTab({ lookups, reload, readOnly }: { lookups: Looku
   const [form, setForm] = useState<ItemForm>(BLANK);
   const [deleting, setDeleting] = useState<MasterItem | null>(null);
   const [busy, setBusy] = useState(false);
+  const [purUom, setPurUom] = useState("");
 
-  const open = (item: MasterItem | null) => { setForm(item ? toForm(item) : BLANK); setModal({ item }); };
+  const open = (item: MasterItem | null) => { setForm(item ? toForm(item) : BLANK); setPurUom(item?.purchase_uom ?? ""); setModal({ item }); };
   const set = (patch: Partial<Record<keyof ItemForm, string | boolean>>) => setForm({ ...form, ...patch } as ItemForm);
   const f = form as unknown as Record<string, string | boolean>;
 
@@ -44,8 +45,14 @@ export default function ItemsTab({ lookups, reload, readOnly }: { lookups: Looku
     if (!parsed.success) { toast.error(firstError(parsed.error)); return; }
     setBusy(true);
     const res = await mutate(supabase.rpc("mfg_save_item", { p_item_id: modal.item?.item_id ?? null, p_data: parsed.data }), { successMessage: "Item saved." });
-    setBusy(false);
-    if (ok(res)) { setModal(null); await reload(); }
+    if (ok(res)) {
+      const id = modal.item?.item_id ?? (res.data as string | null);
+      if (id && (purUom || "") !== (modal.item?.purchase_uom ?? "")) {
+        const pu = await mutate(supabase.rpc("mfg_set_purchase_uom", { p_item: id, p_uom: purUom || null }), { successMessage: "Purchasing unit saved." });
+        if (!ok(pu)) { setBusy(false); await reload(); return; }
+      }
+      setBusy(false); setModal(null); await reload();
+    } else setBusy(false);
   };
 
   const remove = async () => {
@@ -155,6 +162,12 @@ export default function ItemsTab({ lookups, reload, readOnly }: { lookups: Looku
               <div><Label>…for this many units</Label>{numIn("price_unit", "1")}</div>
             </div>
             <div className="text-[11.5px] text-[#7F8EA0] mt-1">What you expect to pay for a bought item, used in cost estimates (₱50 for 100 nails = price 50, units 100). The standard cost itself is set only when a cost estimate is released.</div>
+            <Label>Buy it in (optional)</Label>
+            <select className="input" value={purUom} onChange={(e) => setPurUom(e.target.value)} disabled={!modal.item}>
+              <option value="">{String(f.base_uom || "the stocking unit")} (same as stocking)</option>
+              {lookups.uoms.filter((u) => u.code !== String(f.base_uom)).map((u) => <option key={u.code} value={u.code}>{u.code} — {u.name}</option>)}
+            </select>
+            <div className="text-[11.5px] text-[#7F8EA0] mt-1">{modal.item ? "If you buy this item by the box or the roll, choose that unit. It needs a conversion to the stocking unit under Unit conversions. Purchase orders then take quantity and price in that unit; stock, receipts and invoices stay in the stocking unit." : "Save the item first, then edit it to choose a purchasing unit."}</div>
             <Label>Usual storage location</Label>
             <select className="input" value={String(f.default_location_id ?? "")} onChange={(e) => set({ default_location_id: e.target.value })}>
               <option value="">None</option>

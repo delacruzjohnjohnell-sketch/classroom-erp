@@ -8,6 +8,15 @@ import {
 
 const msg = (r: { success: boolean; error?: { issues: { message: string }[] } }) => (r.success ? "OK" : r.error!.issues[0].message);
 
+test("a purchase order line may carry the unit it is bought in; blank means the stocking unit", () => {
+  const po = { vendor_id: "v1", order_date: "2026-11-10", expected_date: "", lines: [{ item_id: "scr", qty: "5", unit_price: "80", uom: "BOX" }] };
+  const r = poSchema.safeParse(po);
+  assert.equal(r.success, true);
+  assert.equal(r.success && r.data.lines[0].uom, "BOX");
+  const blank = poSchema.safeParse({ ...po, lines: [{ ...po.lines[0], uom: "" }] });
+  assert.equal(blank.success && blank.data.lines[0].uom, null);
+});
+
 test("a purchase order needs a vendor, lines with a quantity, and sensible dates", () => {
   const line = { item_id: "lum", qty: "200", unit_price: "65" };
   const po = { vendor_id: "v1", order_date: "2026-11-10", expected_date: "2026-11-12", lines: [line] };

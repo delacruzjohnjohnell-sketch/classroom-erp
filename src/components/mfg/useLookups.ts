@@ -13,7 +13,7 @@ export type MasterItem = {
   safety_stock: number; scrap_pct: number; batch_tracked: boolean; default_location_id: string | null; low_level_code: number;
   active: boolean; reorder_point: number;
   planned_price: number; price_unit: number; standard_cost: number; previous_standard_cost: number; future_cost: number | null;
-  moving_avg_cost: number; cost_version: number; standard_cost_date: string | null;
+  moving_avg_cost: number; cost_version: number; standard_cost_date: string | null; purchase_uom: string | null;
 };
 export type WorkCenter = {
   id: string; document_number: string | null; code: string; name: string; cost_center_id: string | null; shifts: number;
