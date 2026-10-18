@@ -165,6 +165,7 @@ export default function ChoosePage() {
           </div>
         )}
         {isTeacher && <button onClick={() => router.push("/teacher")} className="mt-4 text-[12.5px] text-teal font-semibold">Go to the class overview →</button>}
+        {isTeacher && <button onClick={() => router.push("/mfg/compare")} className="mt-2 block text-[12.5px] text-teal font-semibold">Compare the Manufacturing companies →</button>}
       </div>
     </div>
   );
