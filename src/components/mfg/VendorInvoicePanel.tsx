@@ -54,9 +54,11 @@ export default function VendorInvoicePanel({ reloadKey, onChanged }: { reloadKey
       supabase.from("mfg_vendor_invoices").select("id, document_number, vendor_ref, invoice_date, due_date, status, total, tolerance_pct, hold_reason, note, bill_id, po_id, vendors(name), purchase_orders(document_number)")
         .eq("tenant_id", t).order("created_at", { ascending: false }),
       supabase.from("bill_payments").select("bill_id, amount").eq("tenant_id", t),
-      supabase.from("purchase_orders").select("id, document_number, vendors(name), purchase_order_lines(id, mfg_po_line_items(item_id))").eq("tenant_id", t).order("created_at", { ascending: false }),
+      supabase.from("purchase_orders").select("id, document_number, vendors(name), purchase_order_lines(id, mfg_po_line_items(item_id))").eq("tenant_id", t).order("order_date", { ascending: false }),
       supabase.from("mfg_company_settings").select("match_tolerance_pct").eq("tenant_id", t).maybeSingle(),
     ]);
+    const failed = [i, p, o, s].find((r) => r.error);
+    if (failed?.error) toast.error(failed.error.message);          // a failed query must never look like "nothing here"
     setInvoices((i.data as unknown as Invoice[]) ?? []);
     const sums: Record<string, number> = {};
     for (const r of (p.data as { bill_id: string; amount: number }[]) ?? []) sums[r.bill_id] = (sums[r.bill_id] ?? 0) + Number(r.amount);

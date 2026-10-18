@@ -59,16 +59,19 @@ export default function LandedCostPanel({ reloadKey, onChanged }: { reloadKey: n
       supabase.from("mfg_landed_cost_vouchers").select("id, document_number, vendor_ref, description, voucher_date, basis, amount, total, status, note, bill_id, vendors(name)").eq("tenant_id", t).order("created_at", { ascending: false }),
       supabase.from("bill_payments").select("bill_id, amount").eq("tenant_id", t),
       supabase.from("vendors").select("id, name").eq("tenant_id", t).order("name"),
-      supabase.from("mfg_material_doc_lines").select("id, doc_id, item_id, qty_change, total_cost, mfg_material_documents(document_number, doc_type, posting_date)").eq("tenant_id", t).gt("qty_change", 0).order("created_at", { ascending: false }).limit(400),
+      supabase.from("mfg_material_doc_lines").select("id, doc_id, item_id, qty_change, total_cost, mfg_material_documents(document_number, doc_type, posting_date)").eq("tenant_id", t).gt("qty_change", 0).limit(400),
       supabase.from("mfg_material_documents").select("id, reversal_of").eq("tenant_id", t).eq("doc_type", "REV"),
     ]);
+    const failed = [v, p, vd, dl, rv].find((r) => r.error);
+    if (failed?.error) toast.error(failed.error.message);          // a failed query must never look like "nothing here"
     setVouchers((v.data as unknown as Voucher[]) ?? []);
     const sums: Record<string, number> = {};
     for (const r of (p.data as { bill_id: string; amount: number }[]) ?? []) sums[r.bill_id] = (sums[r.bill_id] ?? 0) + Number(r.amount);
     setPaid(sums);
     setVendors((vd.data as { id: string; name: string }[]) ?? []);
     const reversed = reversedIds(((rv.data as { id: string; reversal_of: string | null }[]) ?? []));
-    setCands(((dl.data as unknown as Cand[]) ?? []).filter((c) => c.mfg_material_documents?.doc_type === "GR" && !reversed.has(c.doc_id)));
+    setCands(((dl.data as unknown as Cand[]) ?? []).filter((c) => c.mfg_material_documents?.doc_type === "GR" && !reversed.has(c.doc_id))
+      .sort((a, b) => (b.mfg_material_documents?.posting_date ?? "").localeCompare(a.mfg_material_documents?.posting_date ?? "")));       // newest receipts first
   }, [effectiveTenantId]);
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { load(); }, [load, reloadKey]);
