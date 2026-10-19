@@ -11,7 +11,6 @@ import { money } from "@/lib/costing";
 import { qtyText } from "@/lib/mfgOps";
 
 type Expiry = { item_id: string; batch_id: string; batch_no: string; qty: number; value: number; expiry_date: string | null; days_left: number | null; bucket: string };
-type Dead = { item_id: string; qty: number; value: number; last_movement: string | null; idle_days: number };
 type Batch = { id: string; batch_no: string; item_id: string; expiry_date: string | null };
 type Trace = { level: number; kind: string; ref_no: string | null; ref_date: string | null; item_id: string | null; batch_no: string | null; qty: number | null; party: string | null; note: string | null };
 
@@ -23,13 +22,11 @@ const KIND: Record<string, string> = {
   USED_IN: "Used in order", OUTPUT: "Produced", DELIVERED: "Delivered to customer",
 };
 
-/** Lots in stock by expiry, slow-moving stock, and a two-way trace of any lot (where it came from, where it went). */
+/** Lots in stock by expiry, and a two-way trace of any lot (where it came from, where it went). */
 export default function LotsPanel({ items }: { items: MasterItem[] }) {
   const { effectiveTenantId } = useSession();
   const [expiry, setExpiry] = useState<Expiry[]>([]);
-  const [dead, setDead] = useState<Dead[]>([]);
   const [batches, setBatches] = useState<Batch[]>([]);
-  const [days, setDays] = useState("90");
   const [batchId, setBatchId] = useState("");
   const [dir, setDir] = useState<"BACKWARD" | "FORWARD">("BACKWARD");
   const [trace, setTrace] = useState<Trace[] | null>(null);
@@ -50,15 +47,6 @@ export default function LotsPanel({ items }: { items: MasterItem[] }) {
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { load(); }, [load]);
 
-  const loadDead = useCallback(async () => {
-    if (!effectiveTenantId) return;
-    const r = await supabase.rpc("mfg_dead_stock", { p_tenant: effectiveTenantId, p_days: Math.max(0, Math.floor(Number(days) || 0)) });
-    showQueryErrors(r);
-    setDead((r.data as Dead[]) ?? []);
-  }, [effectiveTenantId, days]);
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { loadDead(); }, [loadDead]);
-
   const runTrace = async () => {
     if (!effectiveTenantId || !batchId || busy) return;
     setBusy(true);
@@ -77,28 +65,11 @@ export default function LotsPanel({ items }: { items: MasterItem[] }) {
     { key: "left", label: "Days left", value: (r) => r.days_left ?? 99999, align: "right", width: 90, render: (r) => (r.days_left == null ? "—" : r.days_left) },
     { key: "bucket", label: "Status", value: (r) => BUCKET[r.bucket]?.[0] ?? r.bucket, filter: true, width: 140, render: (r) => <Chip label={BUCKET[r.bucket]?.[0] ?? r.bucket} tone={BUCKET[r.bucket]?.[1] ?? "muted"} /> },
   ];
-  const deadCols: ListColumn<Dead>[] = [
-    { key: "item", label: "Item", value: (r) => item(r.item_id)?.name ?? "—", width: 200 },
-    { key: "qty", label: "On hand", value: (r) => Number(r.qty), align: "right", width: 100, render: (r) => `${qtyText(r.qty)} ${item(r.item_id)?.base_uom ?? ""}` },
-    { key: "value", label: "Value tied up", value: (r) => Number(r.value), align: "right", width: 130, render: (r) => money(r.value) },
-    { key: "last", label: "Last used or sold", value: (r) => r.last_movement ?? "", width: 140 },
-    { key: "idle", label: "Idle days", value: (r) => Number(r.idle_days), align: "right", width: 90 },
-  ];
-
   return (
     <>
       <Panel title="Lots in stock, by expiry">
         <ListReport listKey="mfg-expiry" rows={expiry} columns={expCols} rowKey={(r) => `${r.batch_id}`} exportName="lots-by-expiry"
           emptyText="No lot-tracked stock yet. Turn on “Track batches / lots” for an item and give its receipts a lot number." />
-      </Panel>
-
-      <Panel title="Slow-moving and dead stock">
-        <div className="text-[12px] text-[#7F8EA0] mb-2">Items you hold that have not been issued to production or delivered to a customer for the number of days below. Money sitting in stock that does not move is a cost of its own.</div>
-        <div className="flex items-end gap-2 mb-3">
-          <div><Label>Idle for at least (days)</Label><input className="input" style={{ width: 120 }} type="number" min={0} step={1} value={days} onChange={(e) => setDays(e.target.value)} /></div>
-        </div>
-        <ListReport listKey="mfg-dead" rows={dead} columns={deadCols} rowKey={(r) => r.item_id} exportName="slow-moving-stock" emptyText="Nothing has been idle that long." />
-        <div className="text-[13px] mt-3">Value tied up: <b className="text-gold">{money(dead.reduce((s, r) => s + Number(r.value), 0))}</b></div>
       </Panel>
 
       <Panel title="Trace a lot">

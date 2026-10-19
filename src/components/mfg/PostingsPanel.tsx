@@ -1,13 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { FileText } from "lucide-react";
 import { Empty } from "../ui";
+import VoucherView from "@/components/mfg/VoucherView";
 import { supabase } from "@/lib/supabase";
 import { showQueryErrors } from "@/lib/queryErrors";
 import { useSession } from "@/lib/session";
 import { money } from "@/lib/costing";
 
 type Entry = { id: string; entry_date: string; memo: string | null; source_id: string | null };
+type Vch = { id: string; voucher_no: string; journal_entry_id: string };
 type Line = { journal_entry_id: string; account_id: string; debit: number; credit: number };
 
 /**
@@ -19,6 +22,8 @@ export default function PostingsPanel({ sourceIds, reloadKey }: { sourceIds: str
   const [entries, setEntries] = useState<Entry[]>([]);
   const [lines, setLines] = useState<Line[]>([]);
   const [accounts, setAccounts] = useState<Record<string, { code: string; name: string }>>({});
+  const [vouchers, setVouchers] = useState<Record<string, Vch>>({});
+  const [viewing, setViewing] = useState<string | null>(null);
   const key = sourceIds.join(",");
 
   useEffect(() => {
@@ -33,10 +38,14 @@ export default function PostingsPanel({ sourceIds, reloadKey }: { sourceIds: str
       setEntries(es);
       setAccounts(Object.fromEntries(((a.data as { id: string; code: string; name: string }[]) ?? []).map((x) => [x.id, x])));
       if (es.length) {
-        const l = await supabase.from("journal_lines").select("journal_entry_id, account_id, debit, credit").in("journal_entry_id", es.map((x) => x.id));
-        showQueryErrors(l);
+        const [l, v] = await Promise.all([
+          supabase.from("journal_lines").select("journal_entry_id, account_id, debit, credit").in("journal_entry_id", es.map((x) => x.id)),
+          supabase.from("mfg_vouchers").select("id, voucher_no, journal_entry_id").in("journal_entry_id", es.map((x) => x.id)),
+        ]);
+        showQueryErrors(l, v);
         setLines((l.data as Line[]) ?? []);
-      } else setLines([]);
+        setVouchers(Object.fromEntries(((v.data as Vch[]) ?? []).map((x) => [x.journal_entry_id, x])));
+      } else { setLines([]); setVouchers({}); }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effectiveTenantId, key, reloadKey]);
@@ -51,6 +60,12 @@ export default function PostingsPanel({ sourceIds, reloadKey }: { sourceIds: str
             <summary className="px-3 py-2 text-[12.5px] cursor-pointer flex gap-3 flex-wrap">
               <span className="text-[#7F8EA0]">{e.entry_date}</span><span>{e.memo}</span>
               <span className="ml-auto text-[#A3B1C2]">{money(ls.reduce((s, l) => s + Number(l.debit), 0))}</span>
+              {vouchers[e.id] && (
+                <button type="button" onClick={(ev) => { ev.preventDefault(); setViewing(vouchers[e.id].id); }}
+                  className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-gold border border-hairline rounded px-2 py-0.5" aria-label={`View journal voucher ${vouchers[e.id].voucher_no}`}>
+                  <FileText size={11} /> View {vouchers[e.id].voucher_no}
+                </button>
+              )}
             </summary>
             <table>
               <thead><tr><th>Account</th><th style={{ textAlign: "right" }}>Debit</th><th style={{ textAlign: "right" }}>Credit</th></tr></thead>
@@ -67,6 +82,7 @@ export default function PostingsPanel({ sourceIds, reloadKey }: { sourceIds: str
           </details>
         );
       })}
+      {viewing && <VoucherView voucherId={viewing} onClose={() => setViewing(null)} />}
     </div>
   );
 }

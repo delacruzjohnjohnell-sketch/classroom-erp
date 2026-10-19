@@ -1,2 +1,6 @@
-// The Standard Reports screen (cash flows, receivables ageing, and the simple statements), reused unchanged for a Manufacturing company.
-export { default } from "@/app/reports/page";
+import { redirect } from "next/navigation";
+
+// The Standard Reports screen is no longer used for a Manufacturing company: cash flows and the receivables and payables ageing are in the Reports hub.
+export default function OldFinancialReports() {
+  redirect("/mfg/reports?r=cashflow");
+}

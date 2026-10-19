@@ -2,7 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import AppShell from "@/components/AppShell";
 import { Panel, Empty, Label, GoldBtn, TinyBtn, FormStyles } from "@/components/ui";
 import ListReport, { Chip, type ListColumn } from "@/components/ListReport";
@@ -20,9 +20,8 @@ import { adjustmentSchema, canReverse, DOC_TYPE_LABEL, expiresSoon, firstIssue, 
 
 type StockRow = { id: string; item_id: string; location_id: string; batch_id: string | null; qty: number; mfg_batches: { batch_no: string; expiry_date: string | null; received_on: string } | null };
 type Doc = { id: string; document_number: string; doc_type: string; posting_date: string; memo: string | null; journal_entry_id: string | null; reference_type: string | null; reversal_of: string | null };
-type Rec = { area: string; account_code: string; account_name: string; subledger: number; ledger: number; difference: number };
 
-const TABS = [["stock", "Stock on hand"], ["position", "Availability"], ["lots", "Lots & expiry"], ["documents", "Stock documents"], ["move", "Adjust and transfer"], ["reconcile", "Stock vs. books"]] as const;
+const TABS = [["stock", "Stock on hand"], ["position", "Availability"], ["lots", "Lots & expiry"], ["documents", "Stock documents"], ["move", "Adjust and transfer"]] as const;
 const today = () => new Date().toISOString().slice(0, 10);
 
 export default function InventoryPage() {
@@ -45,7 +44,6 @@ function InventoryBody() {
 
   const [stock, setStock] = useState<StockRow[]>([]);
   const [docs, setDocs] = useState<Doc[]>([]);
-  const [rec, setRec] = useState<Rec[]>([]);
   const [method, setMethod] = useState("STANDARD");
   const [openDoc, setOpenDoc] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -55,15 +53,13 @@ function InventoryBody() {
 
   const load = useCallback(async () => {
     if (!effectiveTenantId) return;
-    const [s, d, r, m] = await Promise.all([
+    const [s, d, m] = await Promise.all([
       supabase.from("mfg_stock").select("id, item_id, location_id, batch_id, qty, mfg_batches(batch_no, expiry_date, received_on)").eq("tenant_id", effectiveTenantId),
       supabase.from("mfg_material_documents").select("id, document_number, doc_type, posting_date, memo, journal_entry_id, reference_type, reversal_of").eq("tenant_id", effectiveTenantId).order("created_at", { ascending: false }).limit(200),
-      supabase.rpc("mfg_reconciliation", { p_tenant: effectiveTenantId }),
       supabase.from("mfg_company_settings").select("costing_method").eq("tenant_id", effectiveTenantId).maybeSingle(),
     ]);
     setStock((s.data as unknown as StockRow[]) ?? []);
     setDocs((d.data as Doc[]) ?? []);
-    setRec((r.data as Rec[]) ?? []);
     setMethod((m.data as { costing_method?: string } | null)?.costing_method ?? "STANDARD");
   }, [effectiveTenantId]);
   // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -134,7 +130,6 @@ function InventoryBody() {
   };
 
   if (loading) return <div className="py-16 flex justify-center"><Loader2 className="animate-spin" size={20} color="#F2B13C" /></div>;
-  const off = rec.filter((r) => Math.abs(Number(r.difference)) >= 0.05);
 
   return (
     <>
@@ -206,27 +201,6 @@ function InventoryBody() {
         </>
       ))}
 
-      {tab === "reconcile" && (
-        <Panel title="Does the stock agree with the books?">
-          <div className="text-[12px] text-[#7F8EA0] mb-3">Each row compares what the stock records say (quantities × cost, order costs, goods received but not invoiced) with the balance of the matching general-ledger account. They should agree to the centavo, apart from rounding.</div>
-          <table>
-            <thead><tr><th>Area</th><th>Ledger account</th><th style={{ textAlign: "right" }}>Stock records</th><th style={{ textAlign: "right" }}>General ledger</th><th style={{ textAlign: "right" }}>Difference</th><th /></tr></thead>
-            <tbody>
-              {rec.map((r) => {
-                const good = Math.abs(Number(r.difference)) < 0.05;
-                return (
-                  <tr key={r.area}>
-                    <td>{r.area}</td><td>{r.account_code} {r.account_name}</td>
-                    <td style={{ textAlign: "right" }}>{money(r.subledger)}</td><td style={{ textAlign: "right" }}>{money(r.ledger)}</td><td style={{ textAlign: "right" }}>{money(r.difference)}</td>
-                    <td>{good ? <CheckCircle2 size={15} color="#22D3C5" aria-label="Agrees" /> : <AlertTriangle size={15} color="#FF6B7A" aria-label="Differs" />}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          <div className="text-[13px] mt-3">{off.length === 0 ? "Everything agrees." : `${off.length} area${off.length > 1 ? "s differ" : " differs"}. Look for a manual journal entry or a document posted outside these screens.`}</div>
-        </Panel>
-      )}
       <FormStyles />
     </>
   );

@@ -6,6 +6,7 @@ import { Panel, Modal, Label, GoldBtn, OutlineBtn, TinyBtn, FormStyles } from ".
 import ListReport, { Chip, type ListColumn } from "../ListReport";
 import { RecordPaymentForm } from "../PaymentUI";
 import ReverseModal from "./ReverseModal";
+import VoucherBadge from "@/components/mfg/VoucherBadge";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
@@ -143,9 +144,10 @@ export default function VendorInvoicePanel({ reloadKey, onChanged }: { reloadKey
     { key: "status", label: "Status", value: (v) => INVOICE_STATUS_LABEL[v.status] ?? v.status, filter: true, width: 110,
       render: (v) => <Chip label={INVOICE_STATUS_LABEL[v.status] ?? v.status} tone={INVOICE_STATUS_TONE[v.status] ?? "muted"} /> },
     { key: "why", label: "Why", value: (v) => (v.status === "HELD" ? v.hold_reason ?? "" : v.note ?? ""), width: 340 },
-    { key: "_a", label: "", width: 190, value: () => "",
+    { key: "_a", label: "", width: 260, value: () => "",
       render: (v) => (
         <span className="inline-flex gap-1" onClick={(e) => e.stopPropagation()}>
+          {v.status !== "HELD" && <VoucherBadge sourceId={v.id} />}
           {v.status === "HELD" && isTeacher && <TinyBtn onClick={() => release(v)} disabled={busy}>Release</TinyBtn>}
           {v.status === "HELD" && !isTeacher && <TinyBtn onClick={() => setActing({ kind: "reject", inv: v })} disabled={busy}>Reject</TinyBtn>}
           {v.status === "POSTED" && !isTeacher && balance(v) > 0.004 && <TinyBtn onClick={() => setPaying(v)} disabled={busy}>Pay</TinyBtn>}

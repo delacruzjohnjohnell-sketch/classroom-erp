@@ -3,7 +3,6 @@
 import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
-import ChangeHistoryPanel from "@/components/mfg/ChangeHistoryPanel";
 import AppShell from "@/components/AppShell";
 import { Empty } from "@/components/ui";
 import { useSession } from "@/lib/session";
@@ -26,7 +25,6 @@ const TABS = [
   { id: "locations", label: "Locations" },
   { id: "costcenters", label: "Cost centers" },
   { id: "costing", label: "Costing sheet" },
-  { id: "history", label: "Change history" },
 ] as const;
 
 export default function MasterDataPage() {
@@ -80,7 +78,6 @@ function MasterBody() {
           {tab === "locations" && <LocationsTab {...props} />}
           {tab === "costcenters" && <CostCentersTab {...props} />}
           {tab === "costing" && <CostingSheetTab {...props} />}
-          {tab === "history" && <ChangeHistoryPanel />}
           {!TABS.some((t) => t.id === tab) && <Empty>Choose a tab above.</Empty>}
         </>
       )}

@@ -112,7 +112,7 @@ function Body() {
         { label: "Orders finished and ready to settle", count: open.filter((x) => x.status === "CONFIRMED" || x.status === "DELIVERED").length, href: "/mfg/production", tone: "warn" },
         { label: "Items out of stock or below the reorder level", count: lowCount, href: "/mfg/inventory", tone: "warn" },
         { label: "Inspection lots waiting for a decision", count: ql.count ?? 0, href: "/mfg/quality", tone: "warn" },
-        { label: "Stock-versus-books differences", count: off, href: "/mfg/inventory?tab=reconcile", tone: "bad" },
+        { label: "Stock-versus-books differences", count: off, href: "/mfg/reports?r=integrity", tone: "bad" },
       ],
     });
   }, [effectiveTenantId, profile, tenants, lk.items]);

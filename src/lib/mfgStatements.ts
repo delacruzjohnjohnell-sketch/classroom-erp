@@ -189,6 +189,76 @@ export function buildIncomeStatement(cols: Cols): Income {
   return { lines, revenue, grossProfit: gross, profit };
 }
 
+// ---------- statement of cash flows (PAS 7, indirect method) ----------
+export type CashFlow = { lines: Line[]; operating: number; investing: number; financing: number; netChange: number; openingCash: number; closingCash: number; reconciles: boolean };
+/**
+ * Built from two sets of cumulative balances: the day before the period starts (`open`) and the last day of the period (`close`).
+ * Profit is the change in the income and expense accounts between them; depreciation is the change in the depreciation expense account.
+ * Because the balance sheet always balances, operating + investing + financing equals the change in cash; `reconciles` says whether it does.
+ */
+export function buildCashFlow(open: Bal[], close: Bal[]): CashFlow {
+  const codes = new Map<string, Bal>();
+  for (const b of [...open, ...close]) if (!codes.has(b.code)) codes.set(b.code, b);
+  const bal = (rows: Bal[], code: string) => find(rows, code)?.closing ?? 0;
+  const change = (code: string) => r2(bal(close, code) - bal(open, code));   // debit-positive
+  const accs = [...codes.values()].sort((a, b) => a.code.localeCompare(b.code));
+
+  const cash = accs.filter((a) => a.type === "asset" && assetClass(a.code) === "cash");
+  const openingCash = r2(cash.reduce((s, a) => s + bal(open, a.code), 0));
+  const closingCash = r2(cash.reduce((s, a) => s + bal(close, a.code), 0));
+
+  const profit = r2(-accs.filter((a) => a.type === "revenue" || a.type === "expense").reduce((s, a) => s + change(a.code), 0));
+  const dep = r2(change("5400"));
+  const one = (v: number): (number | null)[] => [r2(v)];
+  const lines: Line[] = [];
+  const heading = (label: string, indent = 0) => lines.push({ label, values: [null], kind: "heading", indent });
+  const push = (label: string, v: number, indent = 1) => { if (!isZero(v)) lines.push({ label, values: one(v), kind: "line", indent }); };
+
+  heading("Cash flows from operating activities");
+  lines.push({ label: "Profit for the period", values: one(profit), kind: "line", indent: 1 });
+  let operating = profit;
+  if (!isZero(dep)) { heading("Adjustments for", 1); push("Depreciation", dep, 2); operating += dep; }
+  const wc: Line[] = [];
+  for (const a of accs) {
+    if (a.type === "asset" && ["receivables", "inventories", "othercurrent"].includes(assetClass(a.code))) {
+      const v = r2(-change(a.code));
+      if (!isZero(v)) { wc.push({ label: `${v < 0 ? "Increase" : "Decrease"} in ${a.name.toLowerCase()}`, values: one(v), kind: "line", indent: 2 }); operating += v; }
+    } else if (a.type === "liability" && liabClass(a.code) === "current") {
+      const v = r2(-change(a.code));
+      if (!isZero(v)) { wc.push({ label: `${v > 0 ? "Increase" : "Decrease"} in ${a.name.toLowerCase()}`, values: one(v), kind: "line", indent: 2 }); operating += v; }
+    }
+  }
+  if (wc.length) { heading("Changes in working capital", 1); lines.push(...wc); }
+  operating = r2(operating);
+  lines.push({ label: "Net cash from operating activities", values: one(operating), kind: "subtotal" });
+
+  // investing: non-current assets other than the depreciation already added back
+  heading("Cash flows from investing activities");
+  const nc = accs.filter((a) => a.type === "asset" && assetClass(a.code) === "noncurrent");
+  const investing = r2(-(nc.reduce((s, a) => s + change(a.code), 0) + dep));
+  for (const a of nc.filter((x) => x.code !== "1590")) push(`${change(a.code) >= 0 ? "Acquisition of" : "Disposal of"} ${a.name.toLowerCase()}`, -change(a.code));
+  lines.push({ label: "Net cash used in investing activities", values: one(investing), kind: "subtotal" });
+
+  // financing: owner's equity accounts and non-current borrowings
+  heading("Cash flows from financing activities");
+  let financing = 0;
+  for (const a of accs) {
+    const isEq = a.type === "equity", isLoan = a.type === "liability" && liabClass(a.code) === "noncurrent";
+    if (!isEq && !isLoan) continue;
+    const v = r2(-change(a.code));
+    financing += v;
+    push(isEq ? (v >= 0 ? `Contributions to ${a.name.toLowerCase()}` : `Withdrawals from ${a.name.toLowerCase()}`) : (v >= 0 ? `Proceeds from ${a.name.toLowerCase()}` : `Repayment of ${a.name.toLowerCase()}`), v);
+  }
+  financing = r2(financing);
+  lines.push({ label: "Net cash from financing activities", values: one(financing), kind: "subtotal" });
+
+  const netChange = r2(operating + investing + financing);
+  lines.push({ label: "NET INCREASE (DECREASE) IN CASH AND CASH EQUIVALENTS", values: one(netChange), kind: "total" });
+  lines.push({ label: "Cash and cash equivalents at the beginning of the period", values: one(openingCash), kind: "line" });
+  lines.push({ label: "CASH AND CASH EQUIVALENTS AT THE END OF THE PERIOD", values: one(closingCash), kind: "grand" });
+  return { lines, operating, investing, financing, netChange, openingCash, closingCash, reconciles: Math.abs(openingCash + netChange - closingCash) < 0.01 };
+}
+
 /** A statement as plain rows for CSV: the account (with its code), then one cell per column. */
 export function toCsvRows(lines: Line[], headers: string[]): string[][] {
   const rows: string[][] = [["Account", ...headers]];

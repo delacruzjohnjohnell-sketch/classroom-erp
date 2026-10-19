@@ -92,7 +92,7 @@ begin
     check_no := c; area := 'Sub-ledger'; title := r.area || ' agree with account ' || r.account_code || ' ' || r.account_name;
     status := case when abs(r.difference) < 0.10 then 'PASS' else 'FAIL' end;
     expected := to_char(r.ledger, 'FM999,999,999,990.00'); actual := to_char(r.subledger, 'FM999,999,999,990.00');
-    detail := 'Difference ' || to_char(r.difference, 'FM999,999,999,990.00') || ' — Inventory → Stock vs. books'; return next;
+    detail := 'Difference ' || to_char(r.difference, 'FM999,999,999,990.00') || ' — post the missing correction, or reverse the document that caused it'; return next;
   end loop;
 
   select round(coalesce(sum(i.total - coalesce((select sum(p.amount) from invoice_payments p where p.invoice_id = i.id), 0)), 0), 2) into n

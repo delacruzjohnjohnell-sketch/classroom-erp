@@ -7,6 +7,7 @@ import AppShell from "@/components/AppShell";
 import { Empty, GoldBtn, KpiCard, Label, Panel } from "@/components/ui";
 import { Chip } from "@/components/ListReport";
 import { useLookups } from "@/components/mfg/useLookups";
+import DeadStockPanel from "@/components/mfg/DeadStockPanel";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { toast } from "@/lib/toast";
@@ -262,6 +263,7 @@ function AnalyticsBody() {
           })()}
         </Panel>
       )}
+      {tab === "inventory" && <DeadStockPanel items={lk.items} />}
 
       {tab === "suppliers" && (
         <Panel title="Supplier performance">

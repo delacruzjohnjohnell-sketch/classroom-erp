@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  assetClass, buildFinancialPosition, buildIncomeStatement, buildTrialBalance, fmtAmount, liabClass, longDate, monthEndBefore, plClass, priorPeriod, shortDate, toCsvRows, type Bal,
+  assetClass, buildCashFlow, buildFinancialPosition, buildIncomeStatement, buildTrialBalance, fmtAmount, liabClass, longDate, monthEndBefore, plClass, priorPeriod, shortDate, toCsvRows, type Bal,
 } from "../src/lib/mfgStatements.ts";
 
 const b = (code: string, name: string, type: Bal["type"], closing: number): Bal => ({
@@ -112,4 +112,33 @@ test("dates on a report read in full, and the comparative period is the stretch 
   assert.equal(monthEndBefore("2026-03-01"), "2026-02-28");
   assert.deepEqual(priorPeriod("2026-11-01", "2026-11-30"), { from: "2026-10-02", to: "2026-10-31" });
   assert.deepEqual(priorPeriod("2026-11-15", "2026-11-15"), { from: "2026-11-14", to: "2026-11-14" });
+});
+
+test("the cash flow statement (indirect) reconciles opening cash to closing cash from two sets of balances", () => {
+  const open = [b("1000", "Cash", "asset", 100000), b("3000", "Owner's Equity", "equity", -100000)];
+  const close = [
+    b("1000", "Cash", "asset", 90000), b("1100", "Accounts Receivable", "asset", 30000), b("1200", "Raw Materials Inventory", "asset", 10000),
+    b("1500", "Fixed Assets", "asset", 20000), b("1590", "Accumulated Depreciation", "asset", -2000),
+    b("2000", "Accounts Payable", "liability", -10000), b("3000", "Owner's Equity", "equity", -115000),
+    b("4000", "Sales Revenue", "revenue", -30000), b("5100", "Operating Expenses", "expense", 5000), b("5400", "Depreciation Expense", "expense", 2000),
+  ];
+  const cf = buildCashFlow(open, close);
+  assert.equal(cf.operating, -5000);      // profit 23,000 + depreciation 2,000 − receivables 30,000 − inventory 10,000 + payables 10,000
+  assert.equal(cf.investing, -20000);     // fixed assets bought for cash
+  assert.equal(cf.financing, 15000);      // owner put in more capital
+  assert.equal(cf.netChange, -10000);
+  assert.equal(cf.openingCash, 100000);
+  assert.equal(cf.closingCash, 90000);
+  assert.equal(cf.reconciles, true);
+  const labels = cf.lines.map((l) => l.label);
+  assert.ok(labels.includes("Depreciation"));
+  assert.ok(labels.includes("Increase in accounts receivable"));
+  assert.ok(labels.includes("Acquisition of fixed assets"));
+});
+
+test("a period with no activity gives a cash flow of nil that still reconciles", () => {
+  const rows = [b("1000", "Cash", "asset", 5000), b("3000", "Owner's Equity", "equity", -5000)];
+  const cf = buildCashFlow(rows, rows);
+  assert.equal(cf.netChange, 0);
+  assert.equal(cf.reconciles, true);
 });

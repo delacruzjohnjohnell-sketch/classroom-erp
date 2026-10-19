@@ -11,7 +11,7 @@ import { showQueryErrors } from "@/lib/queryErrors";
 import { fmtAmount, longDate, shortDate } from "@/lib/mfgStatements";
 import { qtyText } from "@/lib/mfgOps";
 
-export type ControlKind = "grir" | "match" | "integrity";
+export type ControlKind = "grir" | "match" | "integrity" | "ageing" | "audit";
 const today = () => new Date().toISOString().slice(0, 10);
 const monthStart = () => `${today().slice(0, 8)}01`;
 const yearAgo = () => { const d = new Date(); d.setFullYear(d.getFullYear() - 1); return d.toISOString().slice(0, 10); };
@@ -20,9 +20,12 @@ const csvN = (n: number | null | undefined) => (n == null ? "" : Number(n).toFix
 type Grir = { po_no: string; vendor: string | null; item_id: string; ordered: number; received: number; invoiced: number; uninvoiced: number; unit_cost: number; value: number; first_receipt: string | null; age_days: number | null; bucket: string };
 type Match = { invoice_no: string; vendor: string | null; vendor_ref: string | null; invoice_date: string; total: number; status: string; reason: string | null; worst_qty_var_pct: number | null; worst_price_var_pct: number | null; tolerance_pct: number | null; decided_by: string | null; decided_at: string | null };
 type Check = { check_no: number; area: string; title: string; status: "PASS" | "FAIL" | "WARN"; expected: string; actual: string; detail: string };
+type Open = { side: "AR" | "AP"; doc_no: string; party: string | null; doc_date: string; due_date: string | null; total: number; paid: number; balance: number; days_overdue: number; bucket: string };
+type Trail = { at: string; kind: string; who: string | null; what: string; ref: string | null };
+const BUCKETS = ["Current", "1-30", "31-60", "61-90", "Over 90"];
 const STATUS_TEXT: Record<string, string> = { HELD: "On hold", POSTED: "Approved and posted", REJECTED: "Rejected", VOID: "Voided" };
 
-/** GR/IR ageing, three-way-match exceptions, and the books integrity check. */
+/** GR/IR ageing, three-way-match exceptions, the books integrity check, receivables and payables ageing, and the audit trail. */
 export default function ControlReports({ kind, company, preparedBy }: { kind: ControlKind; company: string; preparedBy?: string }) {
   const { effectiveTenantId } = useSession();
   const { data: lk } = useLookups();
@@ -33,6 +36,8 @@ export default function ControlReports({ kind, company, preparedBy }: { kind: Co
   const [gl, setGl] = useState<number | null>(null);
   const [match, setMatch] = useState<Match[] | null>(null);
   const [checks, setChecks] = useState<Check[] | null>(null);
+  const [open, setOpen] = useState<Open[] | null>(null);
+  const [trail, setTrail] = useState<Trail[] | null>(null);
   const name = (id: string) => lk.items.find((i) => i.item_id === id)?.name ?? "—";
 
   const load = useCallback(async () => {
@@ -46,6 +51,13 @@ export default function ControlReports({ kind, company, preparedBy }: { kind: Co
       if (!from || !to || to < from) return;
       const r = await supabase.rpc("mfg_match_exceptions", { p_tenant: t, p_from: from, p_to: to });
       showQueryErrors(r); setMatch((r.data as Match[]) ?? []);
+    } else if (kind === "ageing") {
+      const r = await supabase.rpc("mfg_open_items", { p_tenant: t, p_as_of: asOf });
+      showQueryErrors(r); setOpen(((r.data as Open[]) ?? []).map((x) => ({ ...x, total: Number(x.total), paid: Number(x.paid), balance: Number(x.balance) })));
+    } else if (kind === "audit") {
+      if (!from || !to || to < from) return;
+      const r = await supabase.rpc("mfg_audit_trail", { p_tenant: t, p_from: from, p_to: to });
+      showQueryErrors(r); setTrail((r.data as Trail[]) ?? []);
     } else {
       const r = await supabase.rpc("mfg_integrity_check", { p_tenant: t });
       showQueryErrors(r); setChecks((r.data as Check[]) ?? []);
@@ -56,8 +68,8 @@ export default function ControlReports({ kind, company, preparedBy }: { kind: Co
 
   return (
     <div>
-      {kind === "grir" && <div className="flex flex-wrap items-end gap-3 mb-3"><div><Label>As at</Label><input className="input" type="date" value={asOf} onChange={(e) => setAsOf(e.target.value)} /></div></div>}
-      {kind === "match" && (
+      {(kind === "grir" || kind === "ageing") && <div className="flex flex-wrap items-end gap-3 mb-3"><div><Label>As at</Label><input className="input" type="date" value={asOf} onChange={(e) => setAsOf(e.target.value)} /></div></div>}
+      {(kind === "match" || kind === "audit") && (
         <div className="flex flex-wrap items-end gap-3 mb-3">
           <div><Label>From</Label><input className="input" type="date" value={from} max={to} onChange={(e) => setFrom(e.target.value)} /></div>
           <div><Label>To</Label><input className="input" type="date" value={to} min={from} onChange={(e) => setTo(e.target.value)} /></div>
@@ -104,6 +116,49 @@ export default function ControlReports({ kind, company, preparedBy }: { kind: Co
             </tbody>
           </table>
           {match.length === 0 && <div style={{ marginTop: 10, fontSize: 12.5, color: "#555" }}>No vendor invoice failed the match in this period.</div>}
+        </ReportSheet>
+      )}
+
+
+      {kind === "ageing" && open && (["AR", "AP"] as const).map((side) => {
+        const rows = open.filter((r) => r.side === side);
+        const tot = rows.reduce((s, r) => s + r.balance, 0);
+        const title = side === "AR" ? "Receivables Ageing" : "Payables Ageing";
+        return (
+          <div key={side} style={{ marginBottom: 24 }}>
+            <ReportSheet company={company} title={title} period={`As at ${longDate(asOf)}`} exportName={side === "AR" ? "receivables-ageing" : "payables-ageing"} preparedBy={preparedBy}
+              csv={[["Document", side === "AR" ? "Customer" : "Vendor", "Date", "Due", "Total", "Paid", "Balance", "Days overdue", "Bucket"],
+                ...rows.map((r) => [r.doc_no, r.party ?? "", r.doc_date, r.due_date ?? "", csvN(r.total), csvN(r.paid), csvN(r.balance), String(r.days_overdue), r.bucket])]}
+              notes={[side === "AR" ? "Amounts customers still owe, grouped by how many days past the due date they are. “Current” means not yet due." : "Amounts owed to vendors, grouped by how many days past the due date they are. “Current” means not yet due.",
+                "The total agrees with the control account (Accounts " + (side === "AR" ? "Receivable" : "Payable") + ") when nothing was posted to it by hand; the integrity check tests this."]}>
+              <table className="rs-table">
+                <thead><tr><th>Document</th><th>{side === "AR" ? "Customer" : "Vendor"}</th><th>Date</th><th>Due</th><th className="num">Total</th><th className="num">Paid</th><th className="num">Balance</th><th className="num">Days overdue</th></tr></thead>
+                <tbody>
+                  {rows.map((r) => <tr key={r.doc_no}><td>{r.doc_no}</td><td>{r.party}</td><td>{shortDate(r.doc_date)}</td><td>{r.due_date ? shortDate(r.due_date) : ""}</td>
+                    <td className="num">{fmtAmount(r.total)}</td><td className="num">{fmtAmount(r.paid)}</td><td className="num">{fmtAmount(r.balance)}</td><td className="num">{r.days_overdue > 0 ? r.days_overdue : ""}</td></tr>)}
+                  <tr className="tot"><td colSpan={6}>Total</td><td className="num">{fmtAmount(tot)}</td><td /></tr>
+                </tbody>
+              </table>
+              <h4>Ageing</h4>
+              <table className="rs-table"><thead><tr><th>Days past due</th><th className="num">Documents</th><th className="num">Balance</th></tr></thead>
+                <tbody>{BUCKETS.map((b) => { const x = rows.filter((r) => r.bucket === b); return <tr key={b}><td>{b}</td><td className="num">{x.length}</td><td className="num">{fmtAmount(x.reduce((s, r) => s + r.balance, 0))}</td></tr>; })}</tbody></table>
+              {rows.length === 0 && <div style={{ marginTop: 10, fontSize: 12.5, color: "#555" }}>Nothing is outstanding.</div>}
+            </ReportSheet>
+          </div>
+        );
+      })}
+
+      {kind === "audit" && trail && (
+        <ReportSheet company={company} title="Audit Trail" period={`${longDate(from)} to ${longDate(to)}`} unitNote="(Changes to master data and control events)" exportName="audit-trail" preparedBy={preparedBy}
+          csv={[["When", "Kind", "Who", "What", "Reference"], ...trail.map((r) => [r.at, r.kind, r.who ?? "", r.what, r.ref ?? ""])]}
+          notes={["Who changed what, and when: master-data changes (items, vendors, rates, work centers) and control events (overrides, approvals, reversals, price-variance decisions). Journal postings themselves are in the journal voucher register."]}>
+          <table className="rs-table">
+            <thead><tr><th>When</th><th>Kind</th><th>Who</th><th>What</th><th>Reference</th></tr></thead>
+            <tbody>
+              {trail.map((r, i) => <tr key={i}><td>{shortDate(r.at.slice(0, 10))} {r.at.slice(11, 16)}</td><td>{r.kind}</td><td>{r.who ?? ""}</td><td>{r.what}</td><td>{r.ref ?? ""}</td></tr>)}
+            </tbody>
+          </table>
+          {trail.length === 0 && <div style={{ marginTop: 10, fontSize: 12.5, color: "#555" }}>Nothing was recorded in this period.</div>}
         </ReportSheet>
       )}
 

@@ -7,6 +7,7 @@ import ListReport, { Chip, type ListColumn } from "../ListReport";
 import { RecordPaymentForm } from "../PaymentUI";
 import ReverseModal from "./ReverseModal";
 import { useLookups } from "./useLookups";
+import VoucherBadge from "@/components/mfg/VoucherBadge";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
@@ -122,15 +123,18 @@ export default function LandedCostPanel({ reloadKey, onChanged }: { reloadKey: n
     { key: "amount", label: "Amount", value: (v) => Number(v.amount), align: "right", width: 120, render: (v) => money(v.amount) },
     { key: "bal", label: "Still owed", value: (v) => balance(v), align: "right", width: 120, render: (v) => (v.status === "POSTED" ? money(balance(v)) : "—") },
     { key: "status", label: "Status", value: (v) => (v.status === "VOID" ? "Voided" : "Posted"), filter: true, width: 100, render: (v) => <Chip label={v.status === "VOID" ? "Voided" : "Posted"} tone={v.status === "VOID" ? "muted" : "good"} /> },
-    ...(isTeacher ? [] : [{
-      key: "_a", label: "", width: 130, value: () => "",
+    {
+      key: "_a", label: "", width: 230, value: () => "",
       render: (v: Voucher) => (
         <span className="inline-flex gap-1" onClick={(e) => e.stopPropagation()}>
+          <VoucherBadge sourceId={v.id} />
+          {!isTeacher && <>
           {v.status === "POSTED" && balance(v) > 0.004 && <TinyBtn onClick={() => setPaying(v)} disabled={busy}>Pay</TinyBtn>}
           {v.status === "POSTED" && (paid[v.bill_id ?? ""] ?? 0) === 0 && <TinyBtn onClick={() => setVoiding(v)} disabled={busy}>Void</TinyBtn>}
+          </>}
         </span>
       ),
-    } as ListColumn<Voucher>]),
+    } as ListColumn<Voucher>,
   ];
 
   return (

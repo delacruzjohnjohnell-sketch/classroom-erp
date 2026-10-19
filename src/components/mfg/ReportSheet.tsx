@@ -24,6 +24,12 @@ export type SheetProps = {
   preparedBy?: string;
   /** "Amounts in Philippine peso" unless the report is not in money (quantities, hours) */
   unitNote?: string;
+  /** replaces "Prepared by / Reviewed by / Approved by": who signed, and when */
+  signoff?: { role: string; name?: string | null; at?: string | null }[];
+  /** extra buttons next to Print and CSV (for a voucher: Reverse, Approve…) */
+  actions?: React.ReactNode;
+  /** a line under the heading, e.g. the voucher's status */
+  badge?: React.ReactNode;
 };
 
 const csvCell = (v: string) => (/[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
@@ -35,12 +41,13 @@ function download(name: string, rows: string[][]) {
 }
 
 const RULE = "1px solid #111";
-export default function ReportSheet({ company, title, period, columns, lines, children, notes, csv, exportName, preparedBy, unitNote }: SheetProps) {
+export default function ReportSheet({ company, title, period, columns, lines, children, notes, csv, exportName, preparedBy, unitNote, signoff, actions, badge }: SheetProps) {
   const cols = columns ?? [];
   const generated = new Date().toLocaleString("en-PH", { dateStyle: "long", timeStyle: "short" });
   return (
     <div>
-      <div className="report-actions flex gap-2 justify-end mb-2">
+      <div className="report-actions flex gap-2 justify-end mb-2 flex-wrap">
+        {actions}
         {csv && <button type="button" onClick={() => download(exportName, csv)} className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-[#A3B1C2] hover:text-ink border border-hairline rounded px-2.5 py-1.5"><Download size={13} /> CSV</button>}
         <button type="button" onClick={() => window.print()} className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-[#A3B1C2] hover:text-ink border border-hairline rounded px-2.5 py-1.5"><Printer size={13} /> Print</button>
       </div>
@@ -50,6 +57,7 @@ export default function ReportSheet({ company, title, period, columns, lines, ch
           <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", marginTop: 2 }}>{title}</div>
           <div style={{ fontSize: 12.5, marginTop: 2 }}>{period}</div>
           <div style={{ fontSize: 11.5, color: "#555", fontStyle: "italic", marginTop: 1 }}>{unitNote ?? "(Amounts in Philippine peso)"}</div>
+          {badge && <div style={{ marginTop: 6 }}>{badge}</div>}
         </header>
 
         {lines ? (
@@ -90,10 +98,10 @@ export default function ReportSheet({ company, title, period, columns, lines, ch
 
         <footer style={{ marginTop: 28, fontSize: 11.5, color: "#333" }}>
           <div style={{ display: "flex", gap: 28, justifyContent: "space-between" }}>
-            {["Prepared by", "Reviewed by", "Approved by"].map((r) => (
-              <div key={r} style={{ flex: 1 }}>
-                <div style={{ borderBottom: RULE, height: 26, fontWeight: 600, paddingTop: 8 }}>{r === "Prepared by" ? preparedBy ?? "" : ""}</div>
-                <div style={{ marginTop: 2 }}>{r}</div>
+            {(signoff ?? [{ role: "Prepared by", name: preparedBy }, { role: "Reviewed by" }, { role: "Approved by" }]).map((r) => (
+              <div key={r.role} style={{ flex: 1 }}>
+                <div style={{ borderBottom: RULE, height: 26, fontWeight: 600, paddingTop: 8 }}>{r.name ?? ""}</div>
+                <div style={{ marginTop: 2 }}>{r.role}{r.at ? ` — ${new Date(r.at).toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short" })}` : ""}</div>
               </div>
             ))}
           </div>

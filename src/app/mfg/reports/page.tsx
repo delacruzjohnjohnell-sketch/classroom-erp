@@ -13,22 +13,23 @@ import { useSession } from "@/lib/session";
 type Entry = { id: string; label: string } | { href: string; label: string };
 const GROUPS: { title: string; items: Entry[] }[] = [
   { title: "Financial statements (PAS 1)", items: [
-    { id: "position", label: "Statement of financial position" }, { id: "income", label: "Statement of comprehensive income" }, { id: "trial", label: "Trial balance" },
-    { href: "/mfg/period?tab=cogm", label: "Cost of goods manufactured and sold" }, { href: "/mfg/reports/financial", label: "Cash flows and receivables ageing" },
+    { id: "position", label: "Statement of financial position" }, { id: "income", label: "Statement of comprehensive income" }, { id: "cashflow", label: "Statement of cash flows (PAS 7)" },
+    { id: "trial", label: "Trial balance" }, { href: "/mfg/period?tab=cogm", label: "Cost of goods manufactured and sold" },
+    { id: "ageing", label: "Receivables and payables ageing" }, { href: "/mfg/finance", label: "Journal vouchers" },
   ] },
   { title: "Inventories and production", items: [
     { id: "schedule", label: "Schedule of inventories (PAS 2)" }, { id: "stockcard", label: "Stock card" }, { id: "wip", label: "Work in process: valuation and ageing" }, { id: "scrap", label: "Scrap loss in pesos" },
-    { href: "/mfg/inventory?tab=lots", label: "Lots, expiry and slow-moving stock" }, { href: "/mfg/analytics", label: "Profitability, variances and KPIs" },
+    { href: "/mfg/inventory?tab=lots", label: "Lots, expiry and traceability" }, { href: "/mfg/analytics?tab=inventory", label: "Slow-moving and dead stock" }, { href: "/mfg/analytics", label: "Profitability, variances and KPIs" },
   ] },
   { title: "Purchasing", items: [{ id: "grir", label: "Goods received, not invoiced (GR/IR)" }, { id: "match", label: "Three-way match exceptions" }] },
   { title: "Controls", items: [
-    { id: "integrity", label: "Books integrity check" }, { href: "/mfg/master?tab=history", label: "Change history of master data" }, { href: "/mfg/costing", label: "Is the standard cost still right?" },
+    { id: "integrity", label: "Books integrity check" }, { id: "audit", label: "Audit trail" }, { href: "/mfg/costing", label: "Is the standard cost still right?" },
     { href: "/mfg/shopfloor?tab=upkeep", label: "Machines and upkeep" },
   ] },
 ];
-const FIN: FinancialKind[] = ["position", "income", "trial"];
+const FIN: FinancialKind[] = ["position", "income", "cashflow", "trial"];
 const INV: InventoryKind[] = ["schedule", "stockcard", "wip", "scrap"];
-const CTL: ControlKind[] = ["grir", "match", "integrity"];
+const CTL: ControlKind[] = ["grir", "match", "integrity", "ageing", "audit"];
 
 export default function ReportsPage() {
   return (

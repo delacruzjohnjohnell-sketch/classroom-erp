@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CalendarCheck, CheckCircle2, Loader2, Lock, TriangleAlert } from "lucide-react";
 import AppShell from "@/components/AppShell";
@@ -169,7 +170,7 @@ function PeriodBody() {
             {rows.length === 0 ? <Empty>No months yet.</Empty> : (
               <div className="overflow-x-auto">
                 <table style={{ minWidth: 720 }}>
-                  <thead><tr><th>Month</th><th>Status</th><th style={{ textAlign: "right" }}>Journal entries</th><th style={{ textAlign: "right" }}>Variances closed</th><th /></tr></thead>
+                  <thead><tr><th>Month</th><th>Status</th><th style={{ textAlign: "right" }}>Journal vouchers</th><th style={{ textAlign: "right" }}>Variances closed</th><th /></tr></thead>
                   <tbody>
                     {rows.map((r) => {
                       const act = monthAction(rows, r.period_start);
@@ -178,7 +179,7 @@ function PeriodBody() {
                         <tr key={r.period_start}>
                           <td><b>{monthLabel(r.period_start)}</b></td>
                           <td><Chip label={STATUS_LABEL[r.status]} tone={STATUS_TONE[r.status]} /></td>
-                          <td style={{ textAlign: "right" }}>{r.entries}</td>
+                          <td style={{ textAlign: "right" }}>{r.entries > 0 ? <Link href={`/mfg/finance?tab=vouchers&period=${r.period_start.slice(0, 7)}`} className="text-gold underline" aria-label={`Vouchers of ${monthLabel(r.period_start)}`}>{r.entries}</Link> : r.entries}</td>
                           <td style={{ textAlign: "right" }}>{r.status === "OPEN" ? "—" : acct(closedTotal)}</td>
                           <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
                             {!isTeacher && act === "settle" && <TinyBtn type="button" disabled={busy} onClick={() => openWizard(r.period_start)}>Settle…</TinyBtn>}
