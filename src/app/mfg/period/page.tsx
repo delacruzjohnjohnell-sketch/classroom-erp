@@ -20,11 +20,12 @@ import {
 type Preview = {
   period_start: string; period_end: string; costing: string;
   labor: { hours: number; applied: number; actual: number; variance: number };
+  machine?: { hours: number; applied: number; actual: number; variance: number; assets: number };
   variances: { code: string; name: string; amount: number; method: "COGS" | "PRORATE"; wip: number; fg: number; cogs: number }[];
   to_wip: number; to_fg: number; to_cogs: number;
   bases: { wip: number; fg: number; cogs: number };
   methods: { variance: "COGS" | "PRORATE"; overhead: "COGS" | "PRORATE" };
-  display: { entry: "labor" | "variances"; code: string; name: string; debit: number; credit: number }[];
+  display: { entry: "labor" | "machine" | "variances"; code: string; name: string; debit: number; credit: number }[];
 };
 type Cogm = { lines: StatementLine[]; checks: TieOut[]; cogs: StatementLine[]; allocated: { wip: number; fg: number; cogs: number } };
 
@@ -144,7 +145,7 @@ function PeriodBody() {
         <div className="text-[11px] uppercase tracking-[0.1em] text-[#7F8EA0]" style={{ fontFamily: MONO }}>Manufacturing</div>
         <h1 className="text-[20px] font-semibold">Period end</h1>
         <div className="text-[12.5px] text-[#A3B1C2] mt-1 max-w-[800px]">
-          At the end of each month you <b>settle</b> it: production labor is restated at the wage actually paid, and the cost variances that built up in the month are closed to cost of goods sold or shared out over inventory.
+          At the end of each month you <b>settle</b> it: production labor is restated at the wage actually paid, machine cost at the depreciation actually recorded, and the cost variances that built up in the month are closed to cost of goods sold or shared out over inventory.
           Then you <b>close</b> it, which locks the books through the last day so nothing can be posted into it. Months are closed oldest first.
           {isTeacher && " You are looking at a student’s company; only you can re-open a closed month."}
         </div>
@@ -210,14 +211,14 @@ function PeriodBody() {
                   </ul>
 
                   <div className="text-[12px] uppercase tracking-[0.08em] text-[#7F8EA0] mt-4 mb-1" style={{ fontFamily: MONO }}>2 · What will be posted, dated {monthEnd(wizard)}</div>
-                  {preview.display.length === 0 ? <Empty>Nothing to post: there are no variances to close and no production labor to restate.</Empty> : (
+                  {preview.display.length === 0 ? <Empty>Nothing to post: there are no variances to close and no production labor or machine cost to restate.</Empty> : (
                     <div className="overflow-x-auto">
                       <table style={{ minWidth: 560, fontFamily: MONO, fontSize: 12 }}>
                         <thead><tr><th>Entry</th><th>Account</th><th style={{ textAlign: "right" }}>Debit</th><th style={{ textAlign: "right" }}>Credit</th></tr></thead>
                         <tbody>
                           {preview.display.map((d, i) => (
                             <tr key={i}>
-                              <td>{d.entry === "labor" ? "Labor at the real wage" : "Close the variances"}</td>
+                              <td>{d.entry === "labor" ? "Labor at the real wage" : d.entry === "machine" ? "Machine cost at the real depreciation" : "Close the variances"}</td>
                               <td>{d.code} {d.name}</td>
                               <td style={{ textAlign: "right" }}>{Number(d.debit) ? acct(d.debit) : ""}</td>
                               <td style={{ textAlign: "right" }}>{Number(d.credit) ? acct(d.credit) : ""}</td>
@@ -230,6 +231,9 @@ function PeriodBody() {
                   <div className="text-[12px] text-[#A3B1C2] mt-2 max-w-[860px] space-y-1">
                     {Number(preview.labor.hours) > 0 && (
                       <div><b>Labor:</b> {Number(preview.labor.hours)} h on orders that name the employee were costed at {acct(preview.labor.applied)}; at the wages actually paid they cost {acct(preview.labor.actual)}. The {acct(preview.labor.variance)} difference is the labor rate variance.</div>
+                    )}
+                    {preview.machine && Number(preview.machine.assets) > 0 && (
+                      <div><b>Machines:</b> production absorbed {acct(preview.machine.applied)} of machine cost over {Number(preview.machine.hours)} machine hours at the planned rate; the machines’ depreciation actually recorded for the month is {acct(preview.machine.actual)}. The {acct(preview.machine.variance)} difference is closed with the overhead variances. See Reports → Machine cost for the real rate per machine hour.</div>
                     )}
                     {preview.variances.length > 0 && (
                       <div><b>Variances:</b> {preview.variances.map((v) => `${v.name} ${acct(v.amount)}`).join(" · ")}. Material and labor variances follow the company’s <i>{preview.methods.variance === "COGS" ? "close to cost of goods sold" : "prorate"}</i> setting, overhead variances its <i>{preview.methods.overhead === "COGS" ? "close to cost of goods sold" : "prorate"}</i> setting. {allocationText(preview.methods.variance === "PRORATE" || preview.methods.overhead === "PRORATE" ? "PRORATE" : "COGS", preview.to_wip, preview.to_fg, preview.to_cogs)}</div>

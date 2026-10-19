@@ -581,7 +581,7 @@ Source: the audit of 2026-10-18 (`MANUFACTURING_AUDIT.md`) and the "Principal ER
 
 ---
 
-## Phase 9 as built (journal vouchers, Finance rebuild, consolidation — migrations 0046–0047, not yet deployed)
+## Phase 9 as built (journal vouchers, Finance rebuild, consolidation — migrations 0046–0047, deployed 2026-10-20)
 
 Source: the "Module Relevance & Redundancy Audit + Visible Journal Voucher" brief. The step-1 report was approved with "do it" (seven decisions, all as recommended). Everything is additive; the only trigger on a Standard table is `trg_mfg_register_voucher` on `journal_entries` (insert only; does nothing for a Standard company).
 
@@ -593,3 +593,16 @@ Source: the "Module Relevance & Redundancy Audit + Visible Journal Voucher" brie
 - **Consolidation.** Removed: Inventory → "Stock vs. books" tab (the integrity check carries it; the home-page counter now links to it), Master Data → "Change history" tab (Reports → Audit trail shows the same changes with old → new values; `ChangeHistoryPanel` deleted), the reused Standard Reports page (`/mfg/reports/financial` now redirects to the cash-flow report). Moved: slow-moving and dead stock from Lots & expiry to Analytics → Inventory (`DeadStockPanel`). Left as they are: Sales, Banking, Payroll, Fixed Assets.
 - **Tests.** `supabase/tests/integration_mfg_phase9.sql` (50 checks: fingerprints of every Standard function/column/policy/trigger unchanged, numbering, the whole manual-voucher story, thresholds, closed month, reversal, document reversal, viewer data, ageing ties to 1100/2000, audit trail, Standard company untouched, who may look); `tests/mfgVouchers.test.ts` (form rules), two cash-flow tests in `tests/mfgStatements.test.ts`.
 - **Known limits.** An approved override on a control account makes the integrity check flag that sub-ledger (the audit adjustment has no stock document behind it) — intended. The cash-flow statement has no interest or tax lines (none are recorded).
+
+---
+
+## Phase 10 as built (machine cost at the real depreciation, and the voucher gaps — migration 0048, not yet deployed)
+
+**Correction to the Step 1 audit.** The audit said machine depreciation "never reaches production cost". That overstated it: a production confirmation already puts machine cost into work in process at the *planned* machine rate (Dr Work in process, Cr Applied Machine Overhead), so a rate is always in the product cost. What was missing is the link to the machine's *real* cost: the rate is typed by hand, Fixed Assets records depreciation as Dr Depreciation Expense (5400), and the difference between the two was never measured or settled — it stayed in operating expenses.
+
+- **Month end (0048, redefines our own `mfg__period_plan`, `mfg_period_checks`, `mfg_period_preview`, `mfg_settle_period`).** For each fixed asset a work center is linked to (Shop Floor → Machines & upkeep), settling posts in the labor entry: Dr Applied Machine Overhead (the machine cost the month's confirmations applied for that asset's work centers), Dr/Cr Machine overhead variance (the difference), Cr Depreciation Expense (the depreciation recorded for the asset in the month). The variance then closes with the other overhead variances by the company's *overhead close* setting (to cost of goods sold, or prorated over WIP, finished goods and cost of goods sold). Undo reverses it with the rest of the entry. With no linked machine the plan is unchanged. New warning `DEPRECIATION_MISSING`: a linked machine worked and no depreciation was recorded that month. Period End shows the machine entry and a sentence about it.
+- **Report (`mfg_machine_cost`, Reports → Machine cost).** Per linked machine: machine hours, planned rate, cost applied, depreciation recorded, difference, and the real rate per machine hour (what the activity rate should be).
+- **Depreciation vouchers.** Standard's `record_depreciation` writes a journal entry with no source link; `mfg_register_voucher` now types an entry whose memo is "Depreciation, <asset>" as a *Depreciation Voucher*.
+- **Voucher gaps closed.** Shipping has a "Sales invoices from deliveries" panel with each invoice's journal voucher (the Sales page is the Standard screen and was not edited). Quality: a decided lot shows the vouchers of its scrap/return documents (`VoucherBadge lotId`); a release to usable stock only moves stock and has no voucher.
+- **Left as designed.** A voucher written by a document is reversed through the document, not the voucher. The planned machine rate is still typed by hand — the report tells the student what it should be, it does not change it.
+- **Tests.** `supabase/tests/integration_mfg_phase10.sql` (25 checks: Standard fingerprints, nothing linked = nothing changes, the saw link, the missing-depreciation warning, report figures, preview, settle with books tying and the cost of goods manufactured statement tying out, vouchers, integrity check, undo and settle again, who may read it). Run live with 0048 pasted in front, rolled back: 25/25 PASS.

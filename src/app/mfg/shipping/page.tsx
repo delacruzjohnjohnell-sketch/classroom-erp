@@ -6,6 +6,7 @@ import AppShell from "@/components/AppShell";
 import { Panel, Modal, Label, GoldBtn, OutlineBtn, TinyBtn, FormStyles } from "@/components/ui";
 import ListReport, { Chip, type ListColumn } from "@/components/ListReport";
 import PostingsPanel from "@/components/mfg/PostingsPanel";
+import SalesInvoicesPanel from "@/components/mfg/SalesInvoicesPanel";
 import ReverseModal from "@/components/mfg/ReverseModal";
 import { useLookups } from "@/components/mfg/useLookups";
 import { useSession } from "@/lib/session";
@@ -174,6 +175,8 @@ function ShippingBody() {
           onRowClick={(r) => setShowDoc(showDoc === r.id ? null : r.id)} />
         {showDoc && <div className="mt-4"><div className="text-[11.5px] uppercase tracking-[0.08em] text-[#7F8EA0] mb-1.5">What this document posted to the books</div><PostingsPanel sourceIds={[showDoc]} /></div>}
       </Panel>
+
+      <SalesInvoicesPanel reloadKey={orders.length + delivered.length} />
 
       {so && (
         <Modal title={`${so.document_number ?? "Sales order"} · ${so.customer_id ? customers[so.customer_id] ?? "" : ""}`} onClose={() => setOpen(null)} wide>

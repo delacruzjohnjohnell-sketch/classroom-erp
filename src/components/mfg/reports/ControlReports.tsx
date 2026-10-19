@@ -11,7 +11,7 @@ import { showQueryErrors } from "@/lib/queryErrors";
 import { fmtAmount, longDate, shortDate } from "@/lib/mfgStatements";
 import { qtyText } from "@/lib/mfgOps";
 
-export type ControlKind = "grir" | "match" | "integrity" | "ageing" | "audit";
+export type ControlKind = "grir" | "match" | "integrity" | "ageing" | "audit" | "machine";
 const today = () => new Date().toISOString().slice(0, 10);
 const monthStart = () => `${today().slice(0, 8)}01`;
 const yearAgo = () => { const d = new Date(); d.setFullYear(d.getFullYear() - 1); return d.toISOString().slice(0, 10); };
@@ -21,6 +21,7 @@ type Grir = { po_no: string; vendor: string | null; item_id: string; ordered: nu
 type Match = { invoice_no: string; vendor: string | null; vendor_ref: string | null; invoice_date: string; total: number; status: string; reason: string | null; worst_qty_var_pct: number | null; worst_price_var_pct: number | null; tolerance_pct: number | null; decided_by: string | null; decided_at: string | null };
 type Check = { check_no: number; area: string; title: string; status: "PASS" | "FAIL" | "WARN"; expected: string; actual: string; detail: string };
 type Open = { side: "AR" | "AP"; doc_no: string; party: string | null; doc_date: string; due_date: string | null; total: number; paid: number; balance: number; days_overdue: number; bucket: string };
+type Mach = { asset_id: string; asset_name: string; work_centers: string | null; machine_h: number; applied: number; depreciation: number; difference: number; applied_rate: number | null; actual_rate: number | null };
 type Trail = { at: string; kind: string; who: string | null; what: string; ref: string | null };
 const BUCKETS = ["Current", "1-30", "31-60", "61-90", "Over 90"];
 const STATUS_TEXT: Record<string, string> = { HELD: "On hold", POSTED: "Approved and posted", REJECTED: "Rejected", VOID: "Voided" };
@@ -38,6 +39,7 @@ export default function ControlReports({ kind, company, preparedBy }: { kind: Co
   const [checks, setChecks] = useState<Check[] | null>(null);
   const [open, setOpen] = useState<Open[] | null>(null);
   const [trail, setTrail] = useState<Trail[] | null>(null);
+  const [mach, setMach] = useState<Mach[] | null>(null);
   const name = (id: string) => lk.items.find((i) => i.item_id === id)?.name ?? "—";
 
   const load = useCallback(async () => {
@@ -54,6 +56,10 @@ export default function ControlReports({ kind, company, preparedBy }: { kind: Co
     } else if (kind === "ageing") {
       const r = await supabase.rpc("mfg_open_items", { p_tenant: t, p_as_of: asOf });
       showQueryErrors(r); setOpen(((r.data as Open[]) ?? []).map((x) => ({ ...x, total: Number(x.total), paid: Number(x.paid), balance: Number(x.balance) })));
+    } else if (kind === "machine") {
+      if (!from || !to || to < from) return;
+      const r = await supabase.rpc("mfg_machine_cost", { p_tenant: t, p_from: from, p_to: to });
+      showQueryErrors(r); setMach(((r.data as Mach[]) ?? []).map((x) => ({ ...x, machine_h: Number(x.machine_h), applied: Number(x.applied), depreciation: Number(x.depreciation), difference: Number(x.difference), applied_rate: x.applied_rate == null ? null : Number(x.applied_rate), actual_rate: x.actual_rate == null ? null : Number(x.actual_rate) })));
     } else if (kind === "audit") {
       if (!from || !to || to < from) return;
       const r = await supabase.rpc("mfg_audit_trail", { p_tenant: t, p_from: from, p_to: to });
@@ -69,7 +75,7 @@ export default function ControlReports({ kind, company, preparedBy }: { kind: Co
   return (
     <div>
       {(kind === "grir" || kind === "ageing") && <div className="flex flex-wrap items-end gap-3 mb-3"><div><Label>As at</Label><input className="input" type="date" value={asOf} onChange={(e) => setAsOf(e.target.value)} /></div></div>}
-      {(kind === "match" || kind === "audit") && (
+      {(kind === "match" || kind === "audit" || kind === "machine") && (
         <div className="flex flex-wrap items-end gap-3 mb-3">
           <div><Label>From</Label><input className="input" type="date" value={from} max={to} onChange={(e) => setFrom(e.target.value)} /></div>
           <div><Label>To</Label><input className="input" type="date" value={to} min={from} onChange={(e) => setTo(e.target.value)} /></div>
@@ -147,6 +153,28 @@ export default function ControlReports({ kind, company, preparedBy }: { kind: Co
           </div>
         );
       })}
+
+      {kind === "machine" && mach && (() => {
+        const tot = mach.reduce((s, r) => ({ h: s.h + r.machine_h, a: s.a + r.applied, d: s.d + r.depreciation }), { h: 0, a: 0, d: 0 });
+        return (
+          <ReportSheet company={company} title="Machine Cost: Real Depreciation against Cost Applied" period={`For the period ${longDate(from)} to ${longDate(to)}`} exportName="machine-cost" preparedBy={preparedBy}
+            csv={[["Machine", "Work centers", "Machine hours", "Applied", "Depreciation", "Difference", "Planned rate / h", "Real rate / h"],
+              ...mach.map((r) => [r.asset_name, r.work_centers ?? "", csvN(r.machine_h), csvN(r.applied), csvN(r.depreciation), csvN(r.difference), csvN(r.applied_rate), csvN(r.actual_rate)])]}
+            notes={["Applied is the machine cost production confirmations put into work in process at the planned machine rate. Depreciation is what Fixed Assets recorded for the machine in the same period. A negative difference means production absorbed more than the machine really cost (over-applied); a positive difference means it absorbed less (under-applied, including idle time).",
+              "Settling the month posts this difference to the machine overhead variance and closes it with the other overhead variances. To make next month’s cost closer to the truth, change the machine rate under Master Data → Activity rates to the real rate per machine hour shown here.",
+              "Only machines linked to a work center (Shop Floor → Machines & upkeep) appear here."]}>
+            <table className="rs-table">
+              <thead><tr><th>Machine</th><th>Work centers</th><th className="num">Machine hours</th><th className="num">Applied</th><th className="num">Depreciation</th><th className="num">Difference</th><th className="num">Planned rate / h</th><th className="num">Real rate / h</th></tr></thead>
+              <tbody>
+                {mach.map((r) => <tr key={r.asset_id}><td>{r.asset_name}</td><td>{r.work_centers}</td><td className="num">{qtyText(r.machine_h)}</td><td className="num">{fmtAmount(r.applied)}</td><td className="num">{fmtAmount(r.depreciation)}</td>
+                  <td className="num">{fmtAmount(r.difference)}</td><td className="num">{r.applied_rate == null ? "" : fmtAmount(r.applied_rate)}</td><td className="num">{r.actual_rate == null ? "" : fmtAmount(r.actual_rate)}</td></tr>)}
+                {mach.length > 0 && <tr className="tot"><td colSpan={2}>Total</td><td className="num">{qtyText(tot.h)}</td><td className="num">{fmtAmount(tot.a)}</td><td className="num">{fmtAmount(tot.d)}</td><td className="num">{fmtAmount(tot.d - tot.a)}</td><td colSpan={2} /></tr>}
+              </tbody>
+            </table>
+            {mach.length === 0 && <div style={{ marginTop: 10, fontSize: 12.5, color: "#555" }}>No machine is linked to a work center yet. Link a fixed asset to a work center under Shop Floor → Machines &amp; upkeep.</div>}
+          </ReportSheet>
+        );
+      })()}
 
       {kind === "audit" && trail && (
         <ReportSheet company={company} title="Audit Trail" period={`${longDate(from)} to ${longDate(to)}`} unitNote="(Changes to master data and control events)" exportName="audit-trail" preparedBy={preparedBy}

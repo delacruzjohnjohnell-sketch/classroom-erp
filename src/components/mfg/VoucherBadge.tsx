@@ -12,20 +12,29 @@ type Vch = { id: string; voucher_no: string; status: string };
  * "View JV-2026-00012": the voucher(s) a document wrote to the books, one click from the document.
  * A document that was reversed shows both vouchers. Nothing is shown until the document has posted.
  */
-export default function VoucherBadge({ sourceId, reloadKey }: { sourceId: string | null | undefined; reloadKey?: unknown }) {
+export default function VoucherBadge({ sourceId, lotId, reloadKey }: { sourceId?: string | null; lotId?: string | null; reloadKey?: unknown }) {
   const { effectiveTenantId } = useSession();
   const [list, setList] = useState<Vch[]>([]);
   const [open, setOpen] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!sourceId || !effectiveTenantId) return;
+    if ((!sourceId && !lotId) || !effectiveTenantId) return;
     let live = true;
-    supabase.from("mfg_vouchers").select("id, voucher_no, status").eq("tenant_id", effectiveTenantId).eq("source_id", sourceId).order("voucher_no")
-      .then((r) => { if (live) setList((r.data as Vch[]) ?? []); });
+    (async () => {
+      // an inspection decision writes its stock documents (scrap, return) with the lot as their reference; the vouchers belong to those documents
+      let ids: string[] = sourceId ? [sourceId] : [];
+      if (lotId) {
+        const d = await supabase.from("mfg_material_documents").select("id").eq("tenant_id", effectiveTenantId).eq("reference_type", "mfg_inspection_lots").eq("reference_id", lotId);
+        ids = ((d.data as { id: string }[]) ?? []).map((x) => x.id);
+      }
+      if (!ids.length) { if (live) setList([]); return; }
+      const r = await supabase.from("mfg_vouchers").select("id, voucher_no, status").eq("tenant_id", effectiveTenantId).in("source_id", ids).order("voucher_no");
+      if (live) setList((r.data as Vch[]) ?? []);
+    })();
     return () => { live = false; };
-  }, [sourceId, effectiveTenantId, reloadKey]);
+  }, [sourceId, lotId, effectiveTenantId, reloadKey]);
 
-  if (!sourceId || list.length === 0) return null;
+  if (list.length === 0) return null;
   return (
     <>
       {list.map((v) => (

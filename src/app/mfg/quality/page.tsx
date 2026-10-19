@@ -7,6 +7,7 @@ import AppShell from "@/components/AppShell";
 import { Empty, GoldBtn, KpiCard, Label, Modal, OutlineBtn, Panel, FormStyles } from "@/components/ui";
 import ListReport, { Chip, type ListColumn } from "@/components/ListReport";
 import { useLookups } from "@/components/mfg/useLookups";
+import VoucherBadge from "@/components/mfg/VoucherBadge";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
@@ -367,6 +368,7 @@ function QualityBody() {
             <div className="mt-4 text-[12.5px]">
               <div><b>{decisionSummary(lot) || DECISION_LABEL[lot.decision ?? ""] || "Decided"}</b>{lot.decided_at ? ` · ${lot.decided_at.slice(0, 10)}` : ""}</div>
               {lot.note && <div className="text-[#A3B1C2] mt-1">Note: {lot.note}</div>}
+              <div className="mt-1.5 flex items-center gap-1.5 flex-wrap text-[#A3B1C2]">Journal vouchers: <VoucherBadge lotId={lot.id} reloadKey={lot.status} /><span className="text-[11.5px] text-[#7F8EA0]">Scrap and returns post to the books; releasing stock as usable only moves it, so it has no voucher.</span></div>
               {ncrs.filter((n) => n.lot_id === lot.id).map((n) => <div key={n.id} className="mt-1">Report <b>{n.document_number}</b>: {n.disposition}, loss {money(n.cost)}</div>)}
             </div>
           )}

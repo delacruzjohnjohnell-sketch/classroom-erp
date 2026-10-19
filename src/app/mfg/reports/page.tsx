@@ -23,13 +23,13 @@ const GROUPS: { title: string; items: Entry[] }[] = [
   ] },
   { title: "Purchasing", items: [{ id: "grir", label: "Goods received, not invoiced (GR/IR)" }, { id: "match", label: "Three-way match exceptions" }] },
   { title: "Controls", items: [
-    { id: "integrity", label: "Books integrity check" }, { id: "audit", label: "Audit trail" }, { href: "/mfg/costing", label: "Is the standard cost still right?" },
+    { id: "integrity", label: "Books integrity check" }, { id: "audit", label: "Audit trail" }, { id: "machine", label: "Machine cost: depreciation vs applied" }, { href: "/mfg/costing", label: "Is the standard cost still right?" },
     { href: "/mfg/shopfloor?tab=upkeep", label: "Machines and upkeep" },
   ] },
 ];
 const FIN: FinancialKind[] = ["position", "income", "cashflow", "trial"];
 const INV: InventoryKind[] = ["schedule", "stockcard", "wip", "scrap"];
-const CTL: ControlKind[] = ["grir", "match", "integrity", "ageing", "audit"];
+const CTL: ControlKind[] = ["grir", "match", "integrity", "ageing", "audit", "machine"];
 
 export default function ReportsPage() {
   return (
