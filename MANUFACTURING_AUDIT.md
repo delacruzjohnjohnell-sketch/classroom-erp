@@ -72,3 +72,7 @@ MRP counts calendar days (not working days or holidays); month-end labor restate
 3. Add a shared query-error helper to the screens without one (F3).
 4. A browser smoke test, or a saved script for the cross-check that found F1 (F2).
 5. Turn on leaked-password protection (F6).
+
+## 7. What was approved, and what was done about it (2026-10-18)
+
+The user answered "all phases" to the reconciliation plan (the checklist audit that followed this one) and asked that every report follow accounting standards. That approval covers the two triggers on Standard tables that the plan named — `trg_mfg_items_guard` on `items` and `trg_mfg_bills_guard` on `bills` — and a third on `bill_payments` (`trg_mfg_payment_qc_guard`); all three act only on Manufacturing companies and are proved harmless to Standard by the fingerprints and `regression_standard.sql`. Findings F1–F5 and F8–F9 are closed by migrations 0041–0045 (see "Phase 8 as built" in `MANUFACTURING_PLAN.md`); F6 (leaked-password protection) is a dashboard setting for the project owner; F7 (optional indexes) and F2 (an end-to-end browser test) remain open.

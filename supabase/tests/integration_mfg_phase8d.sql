@@ -133,7 +133,7 @@ begin
   perform mfg_post_confirmation(oj, 10, 5, 1, 'Spilled varnish', 0, 0.4, 0.4, false, current_date, null);
 
   select w.wip, w.material into n, n2 from mfg_wip_report(mfg, current_date) w where w.order_id = oj;
-  res := res || case when n = round(mfg_order_wip(oj), 2) and n > 0 and n2 > 0 then 'PASS ' else 'FAIL ' end || 'C1 the open order is on the WIP report with its own cost: ' || n || ' (materials ' || n2 || E')\n';
+  res := res || case when n = (select round(sum(amount), 2) from mfg_order_costs where order_id = oj) and n > 0 and n2 > 0 then 'PASS ' else 'FAIL ' end || 'C1 the open order is on the WIP report with its own cost: ' || n || ' (materials ' || n2 || E')\n';
   select coalesce(sum(w.wip), 0) into n from mfg_wip_report(mfg, current_date) w;
   res := res || case when abs(n - (select round(coalesce(sum(jl.debit - jl.credit), 0), 2) from journal_lines jl join journal_entries e on e.id = jl.journal_entry_id join accounts a on a.id = jl.account_id where e.tenant_id = mfg and a.code = '1210')) < 0.10 then 'PASS ' else 'FAIL ' end
                  || 'C2 the WIP report adds up to the work-in-process account: ' || n || ' vs ' || (select round(coalesce(sum(jl.debit - jl.credit), 0), 2) from journal_lines jl join journal_entries e on e.id = jl.journal_entry_id join accounts a on a.id = jl.account_id where e.tenant_id = mfg and a.code = '1210') || E'\n';
