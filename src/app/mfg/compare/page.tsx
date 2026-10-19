@@ -13,7 +13,7 @@ import { qtyText } from "@/lib/mfgOps";
 import { barShare, pctText } from "@/lib/mfgAnalytics";
 
 type Row = {
-  tenant_id: string; company: string; student: string; costing_method: "STANDARD" | "ACTUAL"; revenue: number; cogs: number; gross_margin: number;
+  tenant_id: string; company: string; student: string | null; costing_method: "STANDARD" | "ACTUAL"; revenue: number; cogs: number; gross_margin: number;
   inventory_value: number; orders_made: number; good_qty: number; scrap_pct: number | null; variances: number; months_closed: number; books_tie: boolean; last_activity: string | null;
 };
 type SortKey = "company" | "revenue" | "gross_margin" | "inventory_value" | "good_qty" | "scrap_pct" | "variances" | "months_closed";
@@ -104,7 +104,7 @@ export default function ComparePage() {
                   <tbody>
                     {sorted.map((r) => (
                       <tr key={r.tenant_id}>
-                        <td><b>{r.company}</b><div className="text-[11px] text-[#7F8EA0]">{r.student} · {r.costing_method === "STANDARD" ? "Standard costing" : "Actual costing"}</div></td>
+                        <td><b>{r.company}</b><div className="text-[11px] text-[#7F8EA0]">{r.student ?? "Team company"} · {r.costing_method === "STANDARD" ? "Standard costing" : "Actual costing"}</div></td>
                         <td style={{ textAlign: "right" }}>{money(r.revenue)}<div style={{ height: 4, background: "#5AA9FF", width: `${barShare(r.revenue, top("revenue"), 0.02) * 100}%`, marginLeft: "auto", borderRadius: 2 }} /></td>
                         <td style={{ textAlign: "right" }}>{money(r.gross_margin)}<div style={{ height: 4, background: r.gross_margin >= 0 ? TEAL : "#FF6B7A", width: `${barShare(Math.abs(r.gross_margin), top("gross_margin"), 0.02) * 100}%`, marginLeft: "auto", borderRadius: 2 }} /></td>
                         <td style={{ textAlign: "right" }}>{money(r.inventory_value)}<div style={{ height: 4, background: "#F2B13C", width: `${barShare(r.inventory_value, top("inventory_value"), 0.02) * 100}%`, marginLeft: "auto", borderRadius: 2 }} /></td>

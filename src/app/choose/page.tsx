@@ -60,7 +60,10 @@ export default function ChoosePage() {
 
   // ---------- student ----------
   const standardCompanies = myCompanies.filter((c) => editionOf(c.id) === "STANDARD");
-  const mfgCompany = myCompanies.find((c) => editionOf(c.id) === "MANUFACTURING") ?? null;
+  // a student can hold their own (solo) Manufacturing company and also belong to a team company the teacher made
+  const mfgCompanies = myCompanies.filter((c) => editionOf(c.id) === "MANUFACTURING");
+  const soloMfg = mfgCompanies.find((c) => c.owner_id === userId) ?? null;
+  const mfgCompany = mfgCompanies.find((c) => c.id === effectiveTenantId) ?? mfgCompanies.find((c) => c.id === lastUsed.MANUFACTURING?.tenant_id) ?? soloMfg ?? mfgCompanies[0] ?? null;
   const activeStandard = standardCompanies.find((c) => c.id === effectiveTenantId);
   const lastStandard = standardCompanies.find((c) => c.id === lastUsed.STANDARD?.tenant_id);
   const standardCompany = activeStandard ?? lastStandard ?? standardCompanies[0] ?? null;
@@ -140,7 +143,8 @@ export default function ChoosePage() {
             accent={AMBER} icon={<Factory size={22} />} title={EDITION_LABEL.MANUFACTURING} subtitle="Production, MRP, Costing, Quality"
             text="Bills of materials, work centers, routings, production orders, standard and actual costing, variances and quality — on top of full financials."
             lastOpened={!isTeacher && lastEdition === "MANUFACTURING" ? lastUsed.MANUFACTURING : undefined}
-            company={isTeacher ? `${counts("MANUFACTURING")} student compan${counts("MANUFACTURING") === 1 ? "y" : "ies"}` : mfgCompany?.name}
+            company={isTeacher ? `${counts("MANUFACTURING")} compan${counts("MANUFACTURING") === 1 ? "y" : "ies"}` : mfgCompany?.name}
+            extra={!isTeacher && mfgCompanies.length > 1 ? `${mfgCompanies.length} companies (yours and your team's) — switch from the sidebar` : undefined}
             locked={!isTeacher && !enabled.MANUFACTURING && !mfgCompany}
             lockedText="Opens when your teacher turns it on."
             cta={isTeacher ? "View Manufacturing companies" : mfgCompany ? "Open" : "Set up my company"}
@@ -166,6 +170,8 @@ export default function ChoosePage() {
         )}
         {isTeacher && <button onClick={() => router.push("/teacher")} className="mt-4 text-[12.5px] text-teal font-semibold">Go to the class overview →</button>}
         {isTeacher && <button onClick={() => router.push("/mfg/compare")} className="mt-2 block text-[12.5px] text-teal font-semibold">Compare the Manufacturing companies →</button>}
+        {isTeacher && <button onClick={() => router.push("/mfg/teams")} className="mt-2 block text-[12.5px] text-teal font-semibold">Team companies: create one, add students, give roles →</button>}
+        {!isTeacher && enabled.MANUFACTURING && mfgCompanies.length > 0 && !soloMfg && <button onClick={() => router.push("/mfg-setup")} className="mt-4 text-[12.5px] text-teal font-semibold">Set up my own Manufacturing company →</button>}
       </div>
     </div>
   );

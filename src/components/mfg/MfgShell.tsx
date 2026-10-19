@@ -1,12 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LogOut, ArrowLeft, LayoutDashboard, BookOpen, Truck, Package, ShoppingCart, Briefcase, FileBarChart, Landmark, Boxes, Building2,
   ArrowLeftRight, Settings, Database, Calculator, Factory, Send, Plus, CalendarRange, ShieldCheck, Gauge, CalendarCheck, BarChart3,
 } from "lucide-react";
 import { useSession } from "@/lib/session";
+import { supabase } from "@/lib/supabase";
+import { rolesText } from "@/lib/mfgTeams";
 import GlobalSearch from "../GlobalSearch";
 import CompanySwitcher from "../CompanySwitcher";
 
@@ -47,6 +50,8 @@ export type FrameProps = {
   companySlot: React.ReactNode;
   onSignOut: () => void;
   onAllCompanies: () => void;
+  /** "Team: Accountant, Purchasing officer" in a team company; nothing in a solo company */
+  roleNote?: string | null;
 };
 
 /**
@@ -54,7 +59,7 @@ export type FrameProps = {
  * The `mfg-light` class switches every shared component to the light theme (see globals.css); the Standard ERP
  * never gets it. This part only draws; MfgShell below feeds it from the session.
  */
-export function MfgFrame({ children, pathname, fullName, role, tenantName, isTeacher, otherViewers, searchSlot, companySlot, onSignOut, onAllCompanies }: FrameProps) {
+export function MfgFrame({ children, pathname, fullName, role, tenantName, isTeacher, otherViewers, searchSlot, companySlot, onSignOut, onAllCompanies, roleNote }: FrameProps) {
   const items = isTeacher ? NAV : [...NAV, COMPANIES_NAV];
   const initials = fullName ? fullName.split(/\s+/).slice(0, 2).map((p: string) => p[0]?.toUpperCase()).join("") : "?";
 
@@ -122,6 +127,7 @@ export function MfgFrame({ children, pathname, fullName, role, tenantName, isTea
               <div className="hidden sm:block leading-tight">
                 <div className="text-[13.5px] font-semibold text-ink truncate max-w-[150px]">{fullName}</div>
                 <div className="text-[12px] text-[#6B7A92] capitalize">{role}</div>
+                {roleNote && <div className="text-[11px] font-semibold text-[#2F6BFF] truncate max-w-[190px]" title={roleNote}>{roleNote}</div>}
               </div>
             </div>
           </div>
@@ -136,10 +142,21 @@ export default function MfgShell({ children, otherViewers }: { children: React.R
   const { profile, tenants, effectiveTenantId, setViewTenantId, signOut } = useSession();
   const router = useRouter();
   const pathname = usePathname();
+  const [roleNote, setRoleNote] = useState<string | null>(null);
+  const isStudent = profile?.role === "student";
+  useEffect(() => {
+    if (!isStudent || !effectiveTenantId) return;
+    let live = true;
+    supabase.rpc("mfg_my_roles").then((r) => {
+      const row = (r.data as { is_team: boolean; roles: string[] }[] | null)?.[0];
+      if (live) setRoleNote(row?.is_team ? `Team: ${rolesText(row.roles)}` : null);
+    });
+    return () => { live = false; };
+  }, [isStudent, effectiveTenantId]);
   if (!profile) return null;
   return (
     <MfgFrame pathname={pathname} fullName={profile.full_name ?? ""} role={profile.role} isTeacher={profile.role === "teacher"}
-      tenantName={tenants.find((t) => t.id === effectiveTenantId)?.name ?? "—"} otherViewers={otherViewers}
+      tenantName={tenants.find((t) => t.id === effectiveTenantId)?.name ?? "—"} otherViewers={otherViewers} roleNote={roleNote}
       searchSlot={<GlobalSearch />} companySlot={<CompanySwitcher />} onSignOut={() => signOut()}
       onAllCompanies={() => { setViewTenantId(null); router.push("/teacher"); }}>
       {children}

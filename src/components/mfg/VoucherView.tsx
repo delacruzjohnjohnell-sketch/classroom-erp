@@ -30,6 +30,7 @@ export default function VoucherView({ voucherId, onClose, onChanged }: { voucher
   const isTeacher = profile?.role === "teacher";
   const company = tenants.find((t) => t.id === effectiveTenantId)?.name ?? "Company";
   const [v, setV] = useState<View | null>(null);
+  const [canApprove, setCanApprove] = useState(false);
   const [busy, setBusy] = useState(false);
   const [reversing, setReversing] = useState(false);
   const [rDate, setRDate] = useState(today());
@@ -40,7 +41,13 @@ export default function VoucherView({ voucherId, onClose, onChanged }: { voucher
   const load = useCallback(async () => {
     const r = await supabase.rpc("mfg_voucher_view", { p_voucher: voucherId });
     if (showQueryErrors(r)) return;
-    setV(r.data as View);
+    const view = r.data as View;
+    setV(view);
+    // the teacher, or a team's finance manager who did not prepare it (the database decides)
+    if (view.status === "PENDING_APPROVAL") {
+      const a = await supabase.rpc("mfg_can_approve_voucher", { p_id: view.id });
+      setCanApprove(a.data === true);
+    } else setCanApprove(false);
   }, [voucherId]);
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { load(); }, [load]);
@@ -81,7 +88,7 @@ export default function VoucherView({ voucherId, onClose, onChanged }: { voucher
               { role: v.kind === "SYSTEM" ? "Approved by" : "Approved / posted by", name: v.signoff.approved.name, at: v.signoff.approved.at },
             ]}
             actions={!isTeacher && v.can_reverse ? <button type="button" onClick={() => setReversing(true)} className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-[#FF6B7A] border border-hairline rounded px-2.5 py-1.5"><Undo2 size={13} /> Reverse voucher</button>
-              : isTeacher && v.status === "PENDING_APPROVAL" ? (<>
+              : canApprove ? (<>
                   <button type="button" onClick={approve} disabled={busy} className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-[#22D3C5] border border-hairline rounded px-2.5 py-1.5"><Check size={13} /> Approve and post</button>
                   <button type="button" onClick={() => setSendBack(true)} disabled={busy} className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-[#F2B13C] border border-hairline rounded px-2.5 py-1.5"><RotateCcw size={13} /> Send back</button>
                 </>) : null}>

@@ -58,7 +58,7 @@ export default function VoucherRegister({ initialPeriod }: { initialPeriod?: str
 
   return (
     <Panel title="Journal vouchers">
-      {waiting > 0 && isTeacher && <div className="text-[12.5px] mb-3" style={{ color: "#F2B13C" }}>{waiting} voucher{waiting === 1 ? " is" : "s are"} waiting for your approval — filter Status to “Waiting for approval”.</div>}
+      {waiting > 0 && <div className="text-[12.5px] mb-3" style={{ color: "#F2B13C" }}>{waiting} voucher{waiting === 1 ? " is" : "s are"} waiting for approval{isTeacher ? "" : " by the teacher or the finance manager"} — filter Status to “Waiting for approval”.</div>}
       <div className="flex flex-wrap gap-3 items-end mb-3">
         <div><label className="block text-[11px] text-[#7F8EA0] mb-1">From</label><input className="input" type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></div>
         <div><label className="block text-[11px] text-[#7F8EA0] mb-1">To</label><input className="input" type="date" value={to} onChange={(e) => setTo(e.target.value)} /></div>
