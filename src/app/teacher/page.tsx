@@ -167,7 +167,10 @@ export default function TeacherPage() {
                   {label} · {n}
                 </button>
               ))}
-              <button onClick={() => router.push("/choose")} className="ml-auto text-[12px] font-semibold text-teal">Open or close the Manufacturing ERP →</button>
+              <span className="ml-auto flex items-center gap-4">
+                <button onClick={() => router.push("/mfg/teams")} className="text-[12px] font-semibold text-teal">Team companies →</button>
+                <button onClick={() => router.push("/choose")} className="text-[12px] font-semibold text-teal">Open or close the Manufacturing ERP →</button>
+              </span>
             </div>
 
             <Panel title="Companies">

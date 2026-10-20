@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LogOut, ArrowLeft, LayoutDashboard, BookOpen, Truck, Package, ShoppingCart, Briefcase, FileBarChart, Landmark, Boxes, Building2,
-  ArrowLeftRight, Settings, Database, Calculator, Factory, Send, Plus, CalendarRange, ShieldCheck, Gauge, CalendarCheck, BarChart3,
+  ArrowLeftRight, Users, Settings, Database, Calculator, Factory, Send, Plus, CalendarRange, ShieldCheck, Gauge, CalendarCheck, BarChart3,
 } from "lucide-react";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
@@ -37,6 +37,7 @@ const NAV = [
   { href: "/mfg/settings", label: "Settings", icon: Settings },
 ];
 const COMPANIES_NAV = { href: "/companies", label: "My Companies", icon: Building2 };
+const TEACHER_NAV = { href: "/mfg/teams", label: "Team companies", icon: Users };
 
 export type FrameProps = {
   children: React.ReactNode;
@@ -60,7 +61,7 @@ export type FrameProps = {
  * never gets it. This part only draws; MfgShell below feeds it from the session.
  */
 export function MfgFrame({ children, pathname, fullName, role, tenantName, isTeacher, otherViewers, searchSlot, companySlot, onSignOut, onAllCompanies, roleNote }: FrameProps) {
-  const items = isTeacher ? NAV : [...NAV, COMPANIES_NAV];
+  const items = isTeacher ? [...NAV, TEACHER_NAV] : [...NAV, COMPANIES_NAV];
   const initials = fullName ? fullName.split(/\s+/).slice(0, 2).map((p: string) => p[0]?.toUpperCase()).join("") : "?";
 
   return (
