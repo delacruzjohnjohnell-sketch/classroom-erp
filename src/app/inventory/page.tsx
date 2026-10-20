@@ -13,8 +13,8 @@ import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
 import { money, round2 } from "@/lib/types";
 
-const TEAL = "#22D3C5", GOLD = "#F2B13C", RED = "#FF6B7A", LINE = "#243140", INK = "#E6EDF3";
-const tooltipStyle = { background: "#111922", color: "#E6EDF3", border: `1px solid ${LINE}`, borderRadius: 8, fontSize: 12 };
+const TEAL = "#22D3C5", GOLD = "#F2B13C", RED = "#FF6B7A", LINE = "#E4EAF3", INK = "#334155";
+const tooltipStyle = { background: "#FFFFFF", color: "#17213B", border: `1px solid ${LINE}`, borderRadius: 8, fontSize: 12 };
 
 export default function InventoryPage() {
   return <AppShell><InventoryBody /></AppShell>;

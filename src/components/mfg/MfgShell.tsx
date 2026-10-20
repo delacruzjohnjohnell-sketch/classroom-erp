@@ -53,6 +53,12 @@ export type FrameProps = {
   onAllCompanies: () => void;
   /** "Team: Accountant, Purchasing officer" in a team company; nothing in a solo company */
   roleNote?: string | null;
+  /** the menu to draw; the Manufacturing menu when not given (the Standard ERP passes its own) */
+  items?: { href: string; label: string; icon: React.ComponentType<{ size?: number }> }[];
+  /** the line under "JJ and Co." in the sidebar */
+  product?: string;
+  /** the icon in the blue square next to the name; a factory when not given */
+  logo?: React.ReactNode;
 };
 
 /**
@@ -60,22 +66,22 @@ export type FrameProps = {
  * The `mfg-light` class switches every shared component to the light theme (see globals.css); the Standard ERP
  * never gets it. This part only draws; MfgShell below feeds it from the session.
  */
-export function MfgFrame({ children, pathname, fullName, role, tenantName, isTeacher, otherViewers, searchSlot, companySlot, onSignOut, onAllCompanies, roleNote }: FrameProps) {
-  const items = isTeacher ? [...NAV, TEACHER_NAV] : [...NAV, COMPANIES_NAV];
+export function MfgFrame({ children, pathname, fullName, role, tenantName, isTeacher, otherViewers, searchSlot, companySlot, onSignOut, onAllCompanies, roleNote, items: menu, product = "Manufacturing ERP", logo }: FrameProps) {
+  const items = menu ?? (isTeacher ? [...NAV, TEACHER_NAV] : [...NAV, COMPANIES_NAV]);
   const initials = fullName ? fullName.split(/\s+/).slice(0, 2).map((p: string) => p[0]?.toUpperCase()).join("") : "?";
 
   return (
     <div className="mfg-light min-h-screen flex">
       <aside className="w-[236px] shrink-0 bg-[#0B1431] flex flex-col sticky top-0 h-screen">
         <div className="px-5 pt-6 pb-5 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#2F6BFF] flex items-center justify-center shrink-0 shadow-[0_6px_16px_rgba(47,107,255,0.45)]"><Factory size={22} color="#fff" /></div>
+          <div className="w-10 h-10 rounded-xl bg-[#2F6BFF] flex items-center justify-center shrink-0 shadow-[0_6px_16px_rgba(47,107,255,0.45)]">{logo ?? <Factory size={22} color="#fff" />}</div>
           <div className="leading-tight min-w-0">
             <div className="text-[18px] font-bold text-white truncate">JJ and Co.</div>
-            <div className="text-[11.5px] text-[#93A3C6]">Manufacturing ERP</div>
+            <div className="text-[11.5px] text-[#93A3C6]">{product}</div>
           </div>
         </div>
 
-        <nav className="flex-1 px-3 py-1 flex flex-col gap-1 overflow-y-auto" aria-label="Manufacturing menu">
+        <nav className="flex-1 px-3 py-1 flex flex-col gap-1 overflow-y-auto" aria-label={`${product} menu`}>
           {items.map((item) => {
             const Icon = item.icon;
             const active = item.href === "/mfg" ? pathname === "/mfg" : pathname === item.href || pathname.startsWith(item.href + "/");

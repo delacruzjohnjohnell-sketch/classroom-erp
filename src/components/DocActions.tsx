@@ -116,7 +116,7 @@ export function DueDateEditor({ table, id, baseDate, due, onSaved }: {
   const [busy, setBusy] = useState(false);
   const changed = value !== start || due === null;
   return (
-    <div className="mb-3 p-3 rounded-md" style={{ background: "#0D1319", border: "1px solid #243140" }}>
+    <div className="mb-3 p-3 rounded-md bg-paper border border-hairline">
       <DueDateField baseDate={baseDate} terms={terms} due={value} label="Payment terms / due date" onChange={(t, d) => { setTerms(t); setValue(d); }} />
       <button type="button" disabled={busy || !value || !changed} className="primary-btn mt-2"
         onClick={async () => {

@@ -15,9 +15,9 @@ import { money, round2 } from "@/lib/types";
 import { computeMetrics, buildMonthlySeries, buildExpenseBreakdown, type EntryWithLines } from "@/lib/metrics";
 import type { Account, Item, PurchaseOrder, SalesOrder, PayrollRun } from "@/lib/types";
 
-const TEAL = "#22D3C5", GOLD = "#F2B13C", RED = "#FF6B7A", LINE = "#243140", INK = "#E6EDF3";
+const TEAL = "#22D3C5", GOLD = "#F2B13C", RED = "#FF6B7A", LINE = "#E4EAF3", INK = "#334155";
 const PIE_COLORS = ["#22D3C5", "#F2B13C", "#FF6B7A", "#5AA9FF", "#7F8EA0", "#4ADE9C"];
-const tooltipStyle = { background: "#111922", color: "#E6EDF3", border: `1px solid ${LINE}`, borderRadius: 8, fontSize: 12 };
+const tooltipStyle = { background: "#FFFFFF", color: "#17213B", border: `1px solid ${LINE}`, borderRadius: 8, fontSize: 12 };
 
 export default function DashboardPage() {
   return (

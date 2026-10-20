@@ -106,7 +106,7 @@ export default function ChoosePage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <div className="flex items-center justify-between px-6 py-4 border-b border-hairline bg-[rgba(8,12,17,0.82)] backdrop-blur-md">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-hairline bg-panel">
         <div className="flex items-center gap-2.5">
           <div className="font-mono text-[13px] font-bold text-teal border border-[rgba(34,211,197,0.55)] bg-tealsoft rounded-md w-8 h-8 flex items-center justify-center shadow-glow">&gt;_</div>
           <div className="font-mono text-[14px] font-bold">JJ and Co.</div>

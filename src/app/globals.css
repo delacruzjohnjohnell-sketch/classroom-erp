@@ -2,19 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { color-scheme: dark; }
+:root { color-scheme: light; }
 
-html { background: #05080C; }
+html { background: #F3F6FB; }
 
 body {
-  background-color: #070B10;
-  /* faint dot grid + a soft cyan glow at the top — the "console" backdrop */
-  background-image:
-    radial-gradient(900px 360px at 60% -120px, rgba(34, 211, 197, 0.08), transparent 70%),
-    radial-gradient(rgba(148, 170, 196, 0.07) 1px, transparent 1px);
-  background-size: auto, 22px 22px;
-  background-attachment: fixed;
-  color: #E6EDF3;
+  background-color: #F3F6FB;
+  color: #17213B;
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -51,10 +45,11 @@ button:focus-visible, a:focus-visible { outline: 2px solid #22D3C5; outline-offs
 }
 
 /* =====================================================================================================
-   Manufacturing ERP — light theme.
-   Everything below is scoped to .mfg-light, a wrapper only the Manufacturing shell renders, so the
-   Standard ERP's dark console look is untouched. It recolours the shared components (panels, tables,
-   buttons, chips, forms, dialogs) without editing them.
+   The light theme — the look of the whole app (Standard ERP, Manufacturing ERP, sign-in, chooser, teacher pages).
+   It is scoped to .mfg-light, which the root layout puts on <body>. It recolours the shared components (panels,
+   tables, buttons, chips, forms, dialogs) that were written for the original dark console look, without editing
+   them. To go back to the console look: remove the class from <body> in app/layout.tsx and restore the dark
+   html/body rules above from git history (commit before "light theme for the whole app").
    ===================================================================================================== */
 .mfg-light {
   --m-bg: #F3F6FB; --m-panel: #FFFFFF; --m-line: #E4EAF3; --m-line-soft: #EEF2F8;

@@ -11,9 +11,9 @@ import { money, round2, type Account } from "@/lib/types";
 import { computeAccountBalances, type EntryWithLines } from "@/lib/metrics";
 import { agingBucket } from "@/lib/payments";
 
-const TEAL = "#22D3C5", GOLD = "#F2B13C", RED = "#FF6B7A", LINE = "#243140", INK = "#E6EDF3";
+const TEAL = "#22D3C5", GOLD = "#F2B13C", RED = "#FF6B7A", LINE = "#E4EAF3", INK = "#334155";
 const PIE_COLORS = ["#22D3C5", "#F2B13C", "#FF6B7A", "#5AA9FF", "#7F8EA0", "#4ADE9C"];
-const tooltipStyle = { background: "#111922", color: "#E6EDF3", border: `1px solid ${LINE}`, borderRadius: 8, fontSize: 12 };
+const tooltipStyle = { background: "#FFFFFF", color: "#17213B", border: `1px solid ${LINE}`, borderRadius: 8, fontSize: 12 };
 
 type ReportKey = "pnl" | "cashflow" | "balance" | "trial" | "arAging" | "apAging" | "inventory" | "procurement" | "sales" | "hr";
 const REPORTS: { key: ReportKey; label: string; icon: React.ReactNode }[] = [
@@ -212,7 +212,7 @@ function ReportsBody() {
         {REPORTS.map((r) => (
           <button key={r.key} onClick={() => setReport(r.key)}
             className="flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-semibold border"
-            style={report === r.key ? { background: TEAL, color: "#04121A", borderColor: TEAL } : { background: "#111922", color: TEAL, borderColor: TEAL }}>
+            style={report === r.key ? { background: TEAL, color: "#04121A", borderColor: TEAL } : { background: "#FFFFFF", color: TEAL, borderColor: TEAL }}>
             {r.icon} {r.label}
           </button>
         ))}

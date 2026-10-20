@@ -700,7 +700,7 @@ function PayrollPreviewModal({ employees, activeLoans, runs, tenantId, onClose, 
           </tbody>
         </table>
       </div>
-      <div className="flex justify-between text-[13.5px] font-bold mt-4 pt-3" style={{ borderTop: "2px solid #E6EDF3" }}>
+      <div className="flex justify-between text-[13.5px] font-bold mt-4 pt-3" style={{ borderTop: "2px solid #17213B" }}>
         <span>Total net pay to employees</span><span>{money(totals.netPay)}</span>
       </div>
       <div className="text-[12px] text-[#A3B1C2] mt-1">
