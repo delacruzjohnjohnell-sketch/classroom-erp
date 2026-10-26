@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, LogOut, Plus, Trash2, Users } from "lucide-react";
-import { Empty, GoldBtn, Label, Modal, OutlineBtn, Panel, TinyBtn } from "@/components/ui";
+import { Empty, FormStyles, GoldBtn, Label, Modal, OutlineBtn, Panel, TinyBtn } from "@/components/ui";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
@@ -201,6 +201,7 @@ export default function TeamsPage() {
           <div className="flex justify-end mt-4"><OutlineBtn type="button" onClick={() => setManage(null)}>Close</OutlineBtn></div>
         </Modal>
       )}
+      <FormStyles />
     </div>
   );
 }
