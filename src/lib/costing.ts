@@ -12,8 +12,10 @@ export const ESTIMATE_STATUS_TONE: Record<string, "good" | "warn" | "muted" | "b
 };
 
 /** Peso amount with centavos. */
-export const money = (n: number | string | null | undefined) =>
-  `₱${Number(n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+export const money = (n: number | string | null | undefined) => {
+  const v = Number(n ?? 0);
+  return `₱${(Math.abs(v) < 0.005 ? 0 : v).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;   // never "₱-0.00"
+};
 
 /** A unit cost keeps up to six decimals (actual costs such as 505.306122) but never shows trailing zeros past centavos. */
 export const unitMoney = (n: number | string | null | undefined) =>

@@ -157,7 +157,7 @@ export function RatesTab({ lookups, reload, readOnly }: Props) {
 export function CostingSheetTab({ reload, readOnly }: Props) {
   return (
     <SimpleMaster table="mfg_costing_sheet" title="Overhead costing sheet" orderBy="name" readOnly={readOnly} onChanged={reload} addLabel="Add surcharge"
-      hint="Overhead added on top of material or labor cost when product costs are worked out (used from Phase 3)."
+      hint="Overhead added on top of material or labor cost when product costs are worked out (used in Costing and Production)."
       defaults={{ kind: "VARIABLE", base: "MATERIAL", oh_pct: "0", oh_rate_per_hour: "0", hour_basis: "MACHINE", active: true }}
       schema={costingSheetSchema}
       fields={[
