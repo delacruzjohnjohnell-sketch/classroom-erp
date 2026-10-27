@@ -63,7 +63,9 @@ export default function MfgPracticeCheckModal({ tenant, onClose }: { tenant: { i
   useEffect(() => {
     let live = true;
     (async () => {
-      const r = await supabase.rpc("mfg_practice_snapshot", { p_tenant: tenant.id });
+      // the Activity 2 reader (migration 0059) returns everything the first one does and more; fall back to the first if it is not there yet
+      let r = await supabase.rpc("mfg_practice_snapshot_a2", { p_tenant: tenant.id });
+      if (r.error) r = await supabase.rpc("mfg_practice_snapshot", { p_tenant: tenant.id });
       if (!live) return;
       if (r.error) setError(r.error.message || "Could not read this company's data.");
       else setSnap(r.data as MfgSnapshot);

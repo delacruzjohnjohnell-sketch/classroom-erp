@@ -59,3 +59,50 @@ test("each kind of slip is caught with a hint", () => {
   const f = key(); f.items.find((i) => i.sku === "RAT-STR")!.qty = 33;
   assert.equal(find(f, "RAT-STR").pass, false);
 });
+
+// ---- Activity 2: the snapshot is a real run (December 2026 and January 2027) read through the same queries as mfg_practice_snapshot_a2 (migration 0059).
+const MFG_SET_2: MfgPracticeSet = JSON.parse(readFileSync(new URL("./fixtures/mfgPracticeSet2.definition.json", import.meta.url), "utf8"));
+const key2 = (): MfgSnapshot => JSON.parse(readFileSync(new URL("./fixtures/mfgPracticeSet2.snapshot.json", import.meta.url), "utf8"));
+
+test("the Activity 2 answer-key run passes every check of Set 2", () => {
+  const results = runMfgPracticeChecks(key2(), MFG_SET_2);
+  const bad = results.filter((r) => !r.pass).map((r) => `${r.group} / ${r.label}: expected ${r.expected}, found ${r.actual}`);
+  assert.deepEqual(bad, []);
+  assert.ok(results.length > 100);
+});
+
+test("Set 2 profit is the ledger's and its balances balance", () => {
+  assert.equal(netIncome(key2().gl), 46432);
+  assert.ok(MFG_SET_2.summary.includes("46,432.00"));
+  assert.ok(Math.abs(MFG_SET_2.balances.reduce((a, b) => a + b.amount, 0)) < 0.005);
+});
+
+test("Set 2 catches quality, correction and month-end slips", () => {
+  const find = (snap: MfgSnapshot, label: string) => runMfgPracticeChecks(snap, MFG_SET_2).find((r) => r.label === label)!;
+
+  const a = key2(); a.inspection_lots![0].accept = 61; a.inspection_lots![0].return = 0;
+  assert.equal(find(a, "Inspection lot 1 of RAT-STR").pass, false);
+
+  const b = key2(); b.ncrs![0].action_written = false; b.ncrs![0].status = "OPEN";
+  assert.equal(find(b, "Non-conformance report 1").pass, false);
+
+  const c = key2(); c.periods = [{ period: "2026-12", status: "CLOSED" }, { period: "2027-01", status: "SETTLED" }];
+  assert.equal(find(c, "Month 2027-01").pass, false);
+  assert.equal(find(c, "Month 2026-12").pass, true);
+
+  const d = key2(); d.reversals = { confirmations: 0, vouchers: 1 };
+  assert.equal(find(d, "Reversed production confirmations").pass, false);
+
+  const e = key2(); e.bills = e.bills!.slice(1);
+  assert.equal(find(e, "Vendor bills (invoices and landed cost)").pass, false);
+
+  const f = key2(); f.gl["5100"] = 53000; f.gl["5200"] = 0;
+  assert.equal(find(f, "5100 Operating Expenses").pass, false);
+});
+
+test("two orders for the same item are each matched on their own quantity", () => {
+  const s = key2(); s.orders = s.orders.filter((o) => !(o.item === "CHR-RT" && o.planned === 26));
+  const r = runMfgPracticeChecks(s, MFG_SET_2).filter((x) => x.label === "Order for CHR-RT");
+  assert.equal(r.filter((x) => x.pass).length, 1);
+  assert.equal(r.filter((x) => !x.pass).length, 1);
+});
