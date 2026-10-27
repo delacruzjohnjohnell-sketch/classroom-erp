@@ -5,6 +5,7 @@ import { Loader2 } from "lucide-react";
 import AppShell from "@/components/AppShell";
 import MfgDashboard, { type DashData } from "@/components/mfg/MfgDashboard";
 import DemoLoader from "@/components/mfg/DemoLoader";
+import ActivityKeyLoader from "@/components/mfg/ActivityKeyLoader";
 import { useLookups } from "@/components/mfg/useLookups";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
@@ -121,5 +122,5 @@ function Body() {
 
   if (lkLoading || !data) return <div className="py-16 flex justify-center"><Loader2 className="animate-spin" size={20} color="#2F6BFF" /></div>;
   const empty = lk.items.length === 0 && profile?.role !== "teacher";        // a brand-new company is offered the demo shop
-  return empty ? <><DemoLoader /><MfgDashboard d={data} /></> : <MfgDashboard d={data} />;
+  return empty ? <><ActivityKeyLoader /><DemoLoader /><MfgDashboard d={data} /></> : <MfgDashboard d={data} />;
 }

@@ -5,6 +5,7 @@ import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { Modal } from "@/components/ui";
 import { supabase } from "@/lib/supabase";
 import type { CheckResult } from "@/lib/practiceCheck";
+import { toast } from "@/lib/toast";
 import { MFG_PRACTICE_SETS, netIncome, runMfgPracticeChecks, summarizeMfg, type MfgSnapshot } from "@/lib/mfgPracticeCheck";
 
 const TEAL = "#22D3C5", RED = "#FF6B7A";
@@ -34,6 +35,32 @@ export default function MfgPracticeCheckModal({ tenant, onClose }: { tenant: { i
   const [error, setError] = useState("");
   const [showPassed, setShowPassed] = useState(false);
   const [setId, setSetId] = useState(MFG_PRACTICE_SETS[0].id);
+  const [rel, setRel] = useState<{ class: boolean; owner: boolean; has_owner: boolean } | null>(null);
+  const [relBusy, setRelBusy] = useState(false);
+  const ACTIVITY = "activity-1-manufacturing";
+
+  const loadRelease = async () => {
+    const r = await supabase.rpc("mfg_activity_release_state", { p_activity: ACTIVITY, p_tenant: tenant.id });
+    if (!r.error) setRel(r.data as { class: boolean; owner: boolean; has_owner: boolean });
+  };
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { loadRelease(); }, [tenant.id]);   // eslint-disable-line react-hooks/exhaustive-deps
+
+  const release = async (who: "owner" | "class", on: boolean) => {
+    if (relBusy) return;
+    setRelBusy(true);
+    let user: string | null = null;
+    if (who === "owner") {
+      const t = await supabase.from("tenants").select("owner_id").eq("id", tenant.id).single();
+      user = (t.data as { owner_id: string | null } | null)?.owner_id ?? null;
+      if (!user) { setRelBusy(false); toast.error("This company has no single owner (it may be a team company)."); return; }
+    }
+    const r = await supabase.rpc("mfg_activity_release", { p_activity: ACTIVITY, p_user: user, p_release: on });
+    setRelBusy(false);
+    if (r.error) { toast.error(r.error.message); return; }
+    toast.success(on ? (who === "class" ? "Answer key released to the whole class." : "Answer key released to this student.") : "Answer key taken back.");
+    loadRelease();
+  };
 
   useEffect(() => {
     let live = true;
@@ -89,6 +116,21 @@ export default function MfgPracticeCheckModal({ tenant, onClose }: { tenant: { i
               {rows.map((r) => <Row key={r.group + r.label} r={r} />)}
             </div>
           ))}
+          <div className="mt-5 pt-4 border-t border-hairline">
+            <div className="text-[11px] font-bold uppercase tracking-wide text-[#7F8EA0] mb-2">Answer key for students</div>
+            <div className="text-[12.5px] text-[#A3B1C2] mb-2">
+              Students see nothing until you release it. Then they can load the Activity 1 answer key into a new, empty company and compare it with their own.
+            </div>
+            <div className="flex gap-2 flex-wrap items-center">
+              {rel?.has_owner && (
+                <button disabled={relBusy} onClick={() => release("owner", !rel.owner)} className="rounded-md px-3 py-2 text-xs font-semibold border border-hairline disabled:opacity-50"
+                  style={{ color: TEAL }}>{rel.owner ? "Take the key back from this student" : "Release the key to this student"}</button>
+              )}
+              <button disabled={relBusy || !rel} onClick={() => release("class", !rel?.class)} className="rounded-md px-3 py-2 text-xs font-semibold border border-hairline disabled:opacity-50"
+                style={{ color: TEAL }}>{rel?.class ? "Take the key back from the whole class" : "Release the key to the whole class"}</button>
+              {rel && <span className="text-[12px] text-[#A3B1C2]">{rel.class ? "Released to the whole class." : rel.owner ? "Released to this student." : "Not released."}</span>}
+            </div>
+          </div>
         </>
       )}
     </Modal>
