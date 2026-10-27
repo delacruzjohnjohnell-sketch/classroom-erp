@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Building2, TrendingUp, TrendingDown, Wallet, Briefcase, ChevronRight, LogOut, Loader2, ClipboardCheck, Trash2 } from "lucide-react";
+import { Building2, TrendingUp, TrendingDown, Wallet, Briefcase, ChevronRight, LogOut, Loader2, ClipboardCheck, Trash2, RotateCcw } from "lucide-react";
 import { KpiCard, Panel, Empty, ConfirmDialog } from "@/components/ui";
 import PracticeCheckModal from "@/components/PracticeChecker";
 import MfgPracticeCheckModal from "@/components/MfgPracticeChecker";
@@ -49,6 +49,36 @@ function DeleteCompanyModal({ tenant, onClose, onDeleted }: { tenant: { id: stri
   );
 }
 
+// Resetting a student's Manufacturing company is also permanent: the student keeps the same name and settings but starts again with nothing in it.
+function ResetCompanyModal({ tenant, onClose, onDone }: { tenant: { id: string; name: string }; onClose: () => void; onDone: () => void }) {
+  const [busy, setBusy] = useState(false);
+
+  const doReset = async () => {
+    if (busy) return;
+    setBusy(true);
+    const { data: files } = await supabase.from("attachments").select("file_path").eq("tenant_id", tenant.id);
+    const paths = (files ?? []).map((f: any) => f.file_path).filter(Boolean);
+    if (paths.length > 0) await supabase.storage.from("attachments").remove(paths);
+    const { error } = await supabase.rpc("mfg_reset_company", { p_tenant: tenant.id });
+    setBusy(false);
+    if (error) { toast.error(error.message || "Could not reset the company."); return; }
+    toast.success(`"${tenant.name}" was reset: the student now has a fresh, empty company with the same name and settings.`);
+    onDone();
+  };
+
+  return (
+    <ConfirmDialog
+      title="Reset this Manufacturing company?"
+      danger
+      busy={busy}
+      confirmLabel="Yes, reset it"
+      message={<>Everything in <strong>{tenant.name}</strong> (items, bills of materials, purchase orders, production, sales, vouchers and the ledger) will be permanently erased. The student keeps the same company name, fiscal year and costing method, and starts again with an empty company, ready for the next activity. This can&apos;t be undone.</>}
+      onConfirm={doReset}
+      onCancel={onClose}
+    />
+  );
+}
+
 export default function TeacherPage() {
   const { loading, userId, profile, tenants, viewTenantId, setViewTenantId, refresh, signOut } = useSession();
   const router = useRouter();
@@ -59,6 +89,7 @@ export default function TeacherPage() {
   const [editionFilter, setEditionFilter] = useState<"ALL" | "STANDARD" | "MANUFACTURING">("ALL");
   const [editions, setEditions] = useState<Record<string, string>>({});
   const [deleting, setDeleting] = useState<{ id: string; name: string } | null>(null);
+  const [resetting, setResetting] = useState<{ id: string; name: string } | null>(null);
 
   useEffect(() => {
     if (loading) return;
@@ -192,6 +223,10 @@ export default function TeacherPage() {
                         className="flex items-center gap-1 border border-hairline rounded-md px-2 py-1.5 text-[11.5px] font-semibold text-teal bg-panel shrink-0">
                         <ClipboardCheck size={13} /> Check
                       </button>}
+                      {editionOf(tenant.id) === "MANUFACTURING" && <button onClick={() => setResetting({ id: tenant.id, name: tenant.name })} title="Reset to an empty Manufacturing company"
+                        className="flex items-center gap-1 border border-hairline rounded-md px-2 py-1.5 text-[11.5px] font-semibold bg-panel shrink-0" style={{ color: GOLD }}>
+                        <RotateCcw size={13} /> Reset
+                      </button>}
                       <button onClick={() => setDeleting({ id: tenant.id, name: tenant.name })} title="Delete company"
                         className="border border-hairline rounded-md px-2 py-1.5 bg-panel shrink-0" style={{ color: RED }}>
                         <Trash2 size={13} />
@@ -208,6 +243,10 @@ export default function TeacherPage() {
       {checking && (editionOf(checking.id) === "MANUFACTURING"
         ? <MfgPracticeCheckModal tenant={checking} onClose={() => setChecking(null)} />
         : <PracticeCheckModal tenant={checking} onClose={() => setChecking(null)} />)}
+      {resetting && (
+        <ResetCompanyModal tenant={resetting} onClose={() => setResetting(null)}
+          onDone={async () => { setResetting(null); await refresh(); }} />
+      )}
       {deleting && (
         <DeleteCompanyModal tenant={deleting} onClose={() => setDeleting(null)}
           onDeleted={async () => {
