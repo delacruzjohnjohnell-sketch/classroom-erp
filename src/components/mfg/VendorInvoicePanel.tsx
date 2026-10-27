@@ -32,6 +32,7 @@ export default function VendorInvoicePanel({ reloadKey, onChanged }: { reloadKey
   const isTeacher = profile?.role === "teacher";
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [paid, setPaid] = useState<Record<string, number>>({});
+  const [canRelease, setCanRelease] = useState<Record<string, boolean>>({});     // in a team company the finance manager may release a held invoice
   const [pos, setPos] = useState<PoOption[]>([]);
   const [tolerance, setTolerance] = useState(2);
   const [busy, setBusy] = useState(false);
@@ -60,14 +61,22 @@ export default function VendorInvoicePanel({ reloadKey, onChanged }: { reloadKey
     ]);
     const failed = [i, p, o, s].find((r) => r.error);
     if (failed?.error) toast.error(failed.error.message);          // a failed query must never look like "nothing here"
-    setInvoices((i.data as unknown as Invoice[]) ?? []);
+    const list = (i.data as unknown as Invoice[]) ?? [];
+    setInvoices(list);
+    if (profile?.role !== "teacher") {
+      const held = list.filter((v) => v.status === "HELD");
+      const answers = await Promise.all(held.map((v) => supabase.rpc("mfg_can_release_invoice", { p_inv: v.id })));
+      const map: Record<string, boolean> = {};
+      held.forEach((v, n) => { map[v.id] = answers[n].data === true; });
+      setCanRelease(map);
+    }
     const sums: Record<string, number> = {};
     for (const r of (p.data as { bill_id: string; amount: number }[]) ?? []) sums[r.bill_id] = (sums[r.bill_id] ?? 0) + Number(r.amount);
     setPaid(sums);
     const all = (o.data as unknown as PoOption[]) ?? [];
     setPos(all.filter((x) => x.purchase_order_lines?.some((l) => (Array.isArray(l.mfg_po_line_items) ? l.mfg_po_line_items.length : l.mfg_po_line_items) )));
     setTolerance(Number((s.data as { match_tolerance_pct?: number } | null)?.match_tolerance_pct ?? 2));
-  }, [effectiveTenantId]);
+  }, [effectiveTenantId, profile?.role]);
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { load(); }, [load, reloadKey]);
 
@@ -108,7 +117,7 @@ export default function VendorInvoicePanel({ reloadKey, onChanged }: { reloadKey
     if (!ok(res)) return;
     const check = await supabase.from("mfg_vendor_invoices").select("status, hold_reason").eq("id", res.data as string).maybeSingle();
     const row = check.data as { status: string; hold_reason: string | null } | null;
-    if (row?.status === "HELD") toast.error(`The invoice is on hold: ${row.hold_reason ?? "it does not match"}. Your teacher can release it, or you can reject it.`);
+    if (row?.status === "HELD") toast.error(`The invoice is on hold: ${row.hold_reason ?? "it does not match"}. Your teacher (or the Finance manager of your team) can release it, or you can reject it.`);
     else toast.success("Invoice matched and posted: what you owe the vendor is now in payables.");
     setOpen(false); setPoId(""); setMatch([]); setRef("");
     await load(); onChanged();
@@ -148,7 +157,7 @@ export default function VendorInvoicePanel({ reloadKey, onChanged }: { reloadKey
       render: (v) => (
         <span className="inline-flex gap-1" onClick={(e) => e.stopPropagation()}>
           {v.status !== "HELD" && <VoucherBadge sourceId={v.id} />}
-          {v.status === "HELD" && isTeacher && <TinyBtn onClick={() => release(v)} disabled={busy}>Release</TinyBtn>}
+          {v.status === "HELD" && (isTeacher || canRelease[v.id]) && <TinyBtn onClick={() => release(v)} disabled={busy}>Release</TinyBtn>}
           {v.status === "HELD" && !isTeacher && <TinyBtn onClick={() => setActing({ kind: "reject", inv: v })} disabled={busy}>Reject</TinyBtn>}
           {v.status === "POSTED" && !isTeacher && balance(v) > 0.004 && <TinyBtn onClick={() => setPaying(v)} disabled={busy}>Pay</TinyBtn>}
           {v.status === "POSTED" && !isTeacher && (paid[v.bill_id ?? ""] ?? 0) === 0 && <TinyBtn onClick={() => setActing({ kind: "void", inv: v })} disabled={busy}>Void</TinyBtn>}
@@ -156,13 +165,13 @@ export default function VendorInvoicePanel({ reloadKey, onChanged }: { reloadKey
       ),
     },
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  ], [paid, isTeacher, busy]);
+  ], [paid, isTeacher, busy, canRelease]);
 
   return (
     <>
       <Panel title="Vendor invoices">
         <div className="text-[12.5px] text-[#A3B1C2] mb-3 max-w-[760px]">
-          The vendor&rsquo;s bill is matched three ways: what you <b>ordered</b>, what <b>arrived</b>, and what the invoice <b>charges</b>. If it agrees within {tolerance}%, it clears GR/IR and you owe the vendor. If not, it is put on hold for your teacher. Pay it from here once posted.
+          The vendor&rsquo;s bill is matched three ways: what you <b>ordered</b>, what <b>arrived</b>, and what the invoice <b>charges</b>. If it agrees within {tolerance}%, it clears GR/IR and you owe the vendor. If not, it is put on hold for your teacher or your Finance manager. Pay it from here once posted.
         </div>
         <ListReport listKey="mfg-vendor-invoices" rows={invoices} columns={columns} rowKey={(v) => v.id} exportName="vendor-invoices"
           emptyText="No vendor invoices yet. Receive goods, then enter the invoice the vendor sends."

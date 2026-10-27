@@ -1,0 +1,3901 @@
+[
+ {
+  "n": 1,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Units of measure → Add unit",
+  "what": "Code <b>BDL</b>, name <i>Bundle</i>."
+ },
+ {
+  "n": 2,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Items → Add item",
+  "what": "<b>CAP-SH</b> Capiz shell sheets, unit KG, Raw material, Buy, lead time 5 days; planned price 420."
+ },
+ {
+  "n": 3,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Conversions → Add conversion",
+  "what": "For <b>CAP-SH</b>: 1 <b>BDL</b> = <b>5</b> <b>KG</b>."
+ },
+ {
+  "n": 4,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Items → pencil on CAP-SH",
+  "what": "Choose <b>Buy it in BDL</b> and save."
+ },
+ {
+  "n": 5,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Items → Add item",
+  "what": "<b>WIR-FR</b> Steel wire frame, unit PC, Raw material, Buy, lead time 4 days; planned price 35."
+ },
+ {
+  "n": 6,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Items → Add item",
+  "what": "<b>BRS-RD</b> Brass rod, unit M, Raw material, Buy, lead time 4 days; planned price 85."
+ },
+ {
+  "n": 7,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Items → Add item",
+  "what": "<b>BRS-FT</b> Brass fitting set, unit PC, Raw material, Buy, lead time 4 days; planned price 60."
+ },
+ {
+  "n": 8,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Items → Add item",
+  "what": "<b>LED-KT</b> LED kit, unit PC, Raw material, Buy, lead time 6 days; planned price 150."
+ },
+ {
+  "n": 9,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Items → Add item",
+  "what": "<b>CRD-SW</b> Cord and switch set, unit PC, Raw material, Buy, lead time 6 days; planned price 55."
+ },
+ {
+  "n": 10,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Items → Add item",
+  "what": "<b>GLU-AD</b> Adhesive, unit L, Raw material, Buy, lead time 3 days; planned price 190."
+ },
+ {
+  "n": 11,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Items → Add item",
+  "what": "<b>CLR-CT</b> Clear coat, unit L, Raw material, Buy, lead time 3 days; planned price 260, tick <b>Track batches / lots</b>."
+ },
+ {
+  "n": 12,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Items → Add item",
+  "what": "<b>CTN-LP</b> Lamp carton, unit PC, Packaging, Buy, lead time 3 days; planned price 38."
+ },
+ {
+  "n": 13,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Items → Add item",
+  "what": "<b>FOM-PD</b> Foam padding, unit PC, Packaging, Buy, lead time 3 days; planned price 12."
+ },
+ {
+  "n": 14,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Items → Add item",
+  "what": "<b>SHD-S</b> Small capiz shade, unit PC, Semi-finished, Make, lead time 2 days; usual store RM-STORE."
+ },
+ {
+  "n": 15,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Items → Add item",
+  "what": "<b>SHD-L</b> Large capiz shade, unit PC, Semi-finished, Make, lead time 2 days; usual store RM-STORE."
+ },
+ {
+  "n": 16,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Items → Add item",
+  "what": "<b>BAS-BR</b> Brass base, unit PC, Semi-finished, Make, lead time 2 days; usual store RM-STORE."
+ },
+ {
+  "n": 17,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Items → Add item",
+  "what": "<b>PEN-S</b> Small pendant lamp, unit PC, Finished good, Make, lead time 3 days."
+ },
+ {
+  "n": 18,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Items → Add item",
+  "what": "<b>PEN-L</b> Large pendant lamp, unit PC, Finished good, Make, lead time 3 days."
+ },
+ {
+  "n": 19,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Items → Add item",
+  "what": "<b>TBL-LP</b> Table lamp, unit PC, Finished good, Make, lead time 3 days."
+ },
+ {
+  "n": 20,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Items → Add item",
+  "what": "<b>FLR-LP</b> Floor lamp, unit PC, Finished good, Make, lead time 4 days."
+ },
+ {
+  "n": 21,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Items → Add item",
+  "what": "<b>CHD-4</b> Four-arm chandelier, unit PC, Finished good, Make, lead time 5 days."
+ },
+ {
+  "n": 22,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Work centers → Add work center",
+  "what": "Name <b>Cutting</b> (leave the other boxes)."
+ },
+ {
+  "n": 23,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Work centers → Add work center",
+  "what": "Name <b>Assembly</b> (leave the other boxes)."
+ },
+ {
+  "n": 24,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Work centers → Add work center",
+  "what": "Name <b>Finishing</b> (leave the other boxes)."
+ },
+ {
+  "n": 25,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Work centers → Add work center",
+  "what": "Name <b>Packing</b> (leave the other boxes)."
+ },
+ {
+  "n": 26,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Locations → Add location",
+  "what": "Code <b>STORE-B</b>, name <i>Second raw material store</i>, kind RM."
+ },
+ {
+  "n": 27,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-01",
+  "where": "Master Data → Activity rates → Add rate",
+  "what": "<b>Cutting</b>, Direct labor, from <b>2027-02-01</b>, <b>75</b> per hour."
+ },
+ {
+  "n": 28,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-01",
+  "where": "Master Data → Activity rates → Add rate",
+  "what": "<b>Cutting</b>, Machine time, from <b>2027-02-01</b>, <b>45</b> per hour."
+ },
+ {
+  "n": 29,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-01",
+  "where": "Master Data → Activity rates → Add rate",
+  "what": "<b>Assembly</b>, Direct labor, from <b>2027-02-01</b>, <b>75</b> per hour."
+ },
+ {
+  "n": 30,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-01",
+  "where": "Master Data → Activity rates → Add rate",
+  "what": "<b>Assembly</b>, Machine time, from <b>2027-02-01</b>, <b>20</b> per hour."
+ },
+ {
+  "n": 31,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-01",
+  "where": "Master Data → Activity rates → Add rate",
+  "what": "<b>Finishing</b>, Direct labor, from <b>2027-02-01</b>, <b>75</b> per hour."
+ },
+ {
+  "n": 32,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-01",
+  "where": "Master Data → Activity rates → Add rate",
+  "what": "<b>Finishing</b>, Machine time, from <b>2027-02-01</b>, <b>35</b> per hour."
+ },
+ {
+  "n": 33,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-01",
+  "where": "Master Data → Activity rates → Add rate",
+  "what": "<b>Packing</b>, Direct labor, from <b>2027-02-01</b>, <b>75</b> per hour."
+ },
+ {
+  "n": 34,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-01",
+  "where": "Master Data → Activity rates → Add rate",
+  "what": "<b>Packing</b>, Machine time, from <b>2027-02-01</b>, <b>10</b> per hour."
+ },
+ {
+  "n": 35,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-01",
+  "where": "Master Data → Costing sheet → pencil on Fixed overhead",
+  "what": "<b>Plus ₱ per hour</b> = <b>25</b>."
+ },
+ {
+  "n": 36,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Bills of materials → New BOM",
+  "what": "<b>SHD-S</b>, valid from <b>2027-02-01</b>: CAP-SH 0.4 · WIR-FR 1 · GLU-AD 0.05 · CLR-CT 0.04. Save draft, then Activate."
+ },
+ {
+  "n": 37,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Bills of materials → New BOM",
+  "what": "<b>SHD-L</b>, valid from <b>2027-02-01</b>: CAP-SH 0.9 · WIR-FR 2 · GLU-AD 0.1 · CLR-CT 0.08. Save draft, then Activate."
+ },
+ {
+  "n": 38,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Bills of materials → New BOM",
+  "what": "<b>BAS-BR</b>, valid from <b>2027-02-01</b>: BRS-RD 0.6 · BRS-FT 1. Save draft, then Activate."
+ },
+ {
+  "n": 39,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Bills of materials → New BOM",
+  "what": "<b>PEN-S</b>, valid from <b>2027-02-01</b>: SHD-S 1 · LED-KT 1 · CRD-SW 1 · CTN-LP 1 · FOM-PD 1. Save draft, then Activate."
+ },
+ {
+  "n": 40,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Bills of materials → New BOM",
+  "what": "<b>PEN-L</b>, valid from <b>2027-02-01</b>: SHD-L 1 · LED-KT 1 · CRD-SW 1 · CTN-LP 1 · FOM-PD 2. Save draft, then Activate."
+ },
+ {
+  "n": 41,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Bills of materials → New BOM",
+  "what": "<b>TBL-LP</b>, valid from <b>2027-02-01</b>: SHD-S 1 · BAS-BR 1 · LED-KT 1 · CRD-SW 1 · CTN-LP 1 · FOM-PD 1. Save draft, then Activate."
+ },
+ {
+  "n": 42,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Bills of materials → New BOM",
+  "what": "<b>FLR-LP</b>, valid from <b>2027-02-01</b>: SHD-L 1 · BAS-BR 1 · BRS-RD 1.2 · LED-KT 1 · CRD-SW 1 · CTN-LP 1 · FOM-PD 2. Save draft, then Activate."
+ },
+ {
+  "n": 43,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Bills of materials → New BOM",
+  "what": "<b>CHD-4</b>, valid from <b>2027-02-01</b>: SHD-S 4 · BRS-RD 2 · BRS-FT 2 · LED-KT 4 · CRD-SW 1 · CTN-LP 2 · FOM-PD 3. Save draft, then Activate."
+ },
+ {
+  "n": 44,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Routings → New routing",
+  "what": "<b>SHD-S</b>: op 10 Cut the capiz at Cutting (30/18/18/12 min); op 20 Assemble the shade at Assembly (15/24/24/6 min). Save draft, then Activate."
+ },
+ {
+  "n": 45,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Routings → New routing",
+  "what": "<b>SHD-L</b>: op 10 Cut the capiz at Cutting (30/30/30/21 min); op 20 Assemble the shade at Assembly (15/42/42/9 min). Save draft, then Activate."
+ },
+ {
+  "n": 46,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Routings → New routing",
+  "what": "<b>BAS-BR</b>: op 10 Cut the brass at Cutting (30/12/12/9 min); op 20 Polish and lacquer at Finishing (15/18/18/12 min). Save draft, then Activate."
+ },
+ {
+  "n": 47,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Routings → New routing",
+  "what": "<b>PEN-S</b>: op 10 Wire and fit at Assembly (15/12/12/3 min); op 20 Pack at Packing (12/6/6/0 min). Save draft, then Activate."
+ },
+ {
+  "n": 48,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Routings → New routing",
+  "what": "<b>PEN-L</b>: op 10 Wire and fit at Assembly (15/18/18/3 min); op 20 Pack at Packing (12/9/9/0 min). Save draft, then Activate."
+ },
+ {
+  "n": 49,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Routings → New routing",
+  "what": "<b>TBL-LP</b>: op 10 Wire and fit at Assembly (15/21/21/3 min); op 20 Finish the base at Finishing (15/9/9/6 min); op 30 Pack at Packing (12/6/6/0 min). Save draft, then Activate."
+ },
+ {
+  "n": 50,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Routings → New routing",
+  "what": "<b>FLR-LP</b>: op 10 Wire and fit at Assembly (15/30/30/6 min); op 20 Finish the stand at Finishing (15/15/15/9 min); op 30 Pack at Packing (12/9/9/0 min). Save draft, then Activate."
+ },
+ {
+  "n": 51,
+  "role": "PRODUCTION",
+  "date": "2027-02-01",
+  "where": "Master Data → Routings → New routing",
+  "what": "<b>CHD-4</b>: op 10 Wire and fit at Assembly (30/60/60/12 min); op 20 Finish the arms at Finishing (15/30/30/18 min); op 30 Pack at Packing (12/15/15/0 min). Save draft, then Activate."
+ },
+ {
+  "n": 52,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-01",
+  "where": "Costing → New estimate",
+  "what": "<b>SHD-S</b>, lot size 20, costing date <b>2027-02-01</b>: Work out the cost, Mark this cost, Release as standard cost."
+ },
+ {
+  "n": 53,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-01",
+  "where": "Costing → New estimate",
+  "what": "<b>SHD-L</b>, lot size 20, costing date <b>2027-02-01</b>: Work out the cost, Mark this cost, Release as standard cost."
+ },
+ {
+  "n": 54,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-01",
+  "where": "Costing → New estimate",
+  "what": "<b>BAS-BR</b>, lot size 20, costing date <b>2027-02-01</b>: Work out the cost, Mark this cost, Release as standard cost."
+ },
+ {
+  "n": 55,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-01",
+  "where": "Costing → New estimate",
+  "what": "<b>PEN-S</b>, lot size 20, costing date <b>2027-02-01</b>: Work out the cost, Mark this cost, Release as standard cost."
+ },
+ {
+  "n": 56,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-01",
+  "where": "Costing → New estimate",
+  "what": "<b>PEN-L</b>, lot size 20, costing date <b>2027-02-01</b>: Work out the cost, Mark this cost, Release as standard cost."
+ },
+ {
+  "n": 57,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-01",
+  "where": "Costing → New estimate",
+  "what": "<b>TBL-LP</b>, lot size 20, costing date <b>2027-02-01</b>: Work out the cost, Mark this cost, Release as standard cost."
+ },
+ {
+  "n": 58,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-01",
+  "where": "Costing → New estimate",
+  "what": "<b>FLR-LP</b>, lot size 10, costing date <b>2027-02-01</b>: Work out the cost, Mark this cost, Release as standard cost."
+ },
+ {
+  "n": 59,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-01",
+  "where": "Costing → New estimate",
+  "what": "<b>CHD-4</b>, lot size 10, costing date <b>2027-02-01</b>: Work out the cost, Mark this cost, Release as standard cost."
+ },
+ {
+  "n": 60,
+  "role": "SALES",
+  "date": "2027-02-01",
+  "where": "Sales → Customers → New customer",
+  "what": "<b>Manila Lamp House</b>."
+ },
+ {
+  "n": 61,
+  "role": "SALES",
+  "date": "2027-02-01",
+  "where": "Sales → Customers → New customer",
+  "what": "<b>Cebu Interiors</b>."
+ },
+ {
+  "n": 62,
+  "role": "SALES",
+  "date": "2027-02-01",
+  "where": "Sales → Customers → New customer",
+  "what": "<b>Davao Design Hub</b>."
+ },
+ {
+  "n": 63,
+  "role": "SALES",
+  "date": "2027-02-01",
+  "where": "Sales → Customers → New customer",
+  "what": "<b>Baguio Gifts</b>."
+ },
+ {
+  "n": 64,
+  "role": "SALES",
+  "date": "2027-02-01",
+  "where": "Sales → Customers → New customer",
+  "what": "<b>Iloilo Decor</b>."
+ },
+ {
+  "n": 65,
+  "role": "SALES",
+  "date": "2027-02-01",
+  "where": "Sales → Customers → New customer",
+  "what": "<b>Cagayan Lighting</b>."
+ },
+ {
+  "n": 66,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-01",
+  "where": "Finance → New journal voucher",
+  "what": "Date <b>2027-02-01</b>, reference <b>Capital</b>, particulars <i>Owner puts in the starting cash</i>: <b>1000</b> debit 1,500,000.00; <b>3000</b> credit 1,500,000.00."
+ },
+ {
+  "n": 67,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-01",
+  "where": "Finance → New journal voucher",
+  "what": "Date <b>2027-02-01</b>, reference <b>Cutter</b>, particulars <i>Bought a capiz cutting machine for cash</i>: <b>1500</b> debit 360,000.00; <b>1000</b> credit 360,000.00."
+ },
+ {
+  "n": 68,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-01",
+  "where": "Fixed Assets → New fixed asset",
+  "what": "<b>Capiz cutting machine</b>, purchase date 2027-02-01, cost 360,000.00, salvage 36,000.00, life 48 months."
+ },
+ {
+  "n": 69,
+  "role": "SALES",
+  "date": "2027-02-02",
+  "where": "Sales → Sales Orders → New sales order",
+  "what": "<b>SO-0001</b> Manila Lamp House, date 2027-02-02: PEN-S 40 @ 1,450 · PEN-L 20 @ 2,350 · TBL-LP 30 @ 1,850; tax rate 12; total <b>₱179,760.00</b>. Save, then Confirm."
+ },
+ {
+  "n": 70,
+  "role": "SALES",
+  "date": "2027-02-03",
+  "where": "Sales → Sales Orders → New sales order",
+  "what": "<b>SO-0002</b> Cebu Interiors, date 2027-02-03: PEN-L 30 @ 2,400 · FLR-LP 12 @ 3,950; tax rate 12; total <b>₱133,728.00</b>. Save, then Confirm."
+ },
+ {
+  "n": 71,
+  "role": "SALES",
+  "date": "2027-02-05",
+  "where": "Sales → Sales Orders → New sales order",
+  "what": "<b>SO-0003</b> Davao Design Hub, date 2027-02-05: CHD-4 6 @ 9,800 · PEN-S 25 @ 1,450; tax rate 12; total <b>₱106,456.00</b>. Save, then Confirm."
+ },
+ {
+  "n": 72,
+  "role": "SALES",
+  "date": "2027-02-08",
+  "where": "Sales → Sales Orders → New sales order",
+  "what": "<b>SO-0004</b> Baguio Gifts, date 2027-02-08: TBL-LP 20 @ 1,900 · PEN-S 30 @ 1,480; tax rate 12; total <b>₱92,288.00</b>. Save, then Confirm."
+ },
+ {
+  "n": 73,
+  "role": "SALES",
+  "date": "2027-02-10",
+  "where": "Sales → Sales Orders → New sales order",
+  "what": "<b>SO-0005</b> Iloilo Decor, date 2027-02-10: FLR-LP 8 @ 4,100 · CHD-4 4 @ 10,200 · PEN-L 10 @ 2,400; tax rate 12; total <b>₱109,312.00</b>. Save, then Confirm."
+ },
+ {
+  "n": 74,
+  "role": "PRODUCTION",
+  "date": "2027-02-10",
+  "where": "Planning → Run planning",
+  "what": "Plan from <b>2027-02-01</b>, then <b>Run planning</b>."
+ },
+ {
+  "n": 75,
+  "role": "PURCHASING",
+  "date": "2027-02-11",
+  "where": "Planning → Purchase requisitions → Delete",
+  "what": "Delete the open requisition for <b>CAP-SH</b> (you ordered it by hand in bundles)."
+ },
+ {
+  "n": 76,
+  "role": "PURCHASING",
+  "date": "2027-02-11",
+  "where": "Purchasing → New purchase order",
+  "what": "Vendor <b>Bohol Capiz Traders</b>, order date 2027-02-11, expected 2027-02-18: CAP-SH 31 BDL @ 2100 → <b>PO-0001</b>."
+ },
+ {
+  "n": 77,
+  "role": "PURCHASING",
+  "date": "2027-02-11",
+  "where": "Planning → Purchase requisitions → Create purchase order…",
+  "what": "Vendor <b>Cebu Metalworks</b> (type it in the new-vendor box the first time). Tick: WIR-FR, BRS-RD, BRS-FT. Prices: WIR-FR 35 · BRS-RD 85 · BRS-FT 60 → creates <b>PO-0002</b>."
+ },
+ {
+  "n": 78,
+  "role": "PURCHASING",
+  "date": "2027-02-11",
+  "where": "Planning → Purchase requisitions → Create purchase order…",
+  "what": "Vendor <b>Manila Electronics</b> (type it in the new-vendor box the first time). Tick: LED-KT, CRD-SW. Prices: LED-KT 150 · CRD-SW 55 → creates <b>PO-0003</b>."
+ },
+ {
+  "n": 79,
+  "role": "PURCHASING",
+  "date": "2027-02-11",
+  "where": "Planning → Purchase requisitions → Create purchase order…",
+  "what": "Vendor <b>Laguna Chemicals</b> (type it in the new-vendor box the first time). Tick: GLU-AD, CLR-CT. Prices: GLU-AD 190 · CLR-CT 260 → creates <b>PO-0004</b>."
+ },
+ {
+  "n": 80,
+  "role": "PURCHASING",
+  "date": "2027-02-11",
+  "where": "Planning → Purchase requisitions → Create purchase order…",
+  "what": "Vendor <b>Pasig Packaging</b> (type it in the new-vendor box the first time). Tick: CTN-LP, FOM-PD. Prices: CTN-LP 38 · FOM-PD 12 → creates <b>PO-0005</b>."
+ },
+ {
+  "n": 81,
+  "role": "QUALITY",
+  "date": "2027-02-11",
+  "where": "Quality → Plans and settings",
+  "what": "Item <b>CAP-SH</b>: tick <b>Inspect when it is bought</b>, Save these settings; characteristics: Moisture (%) — to 12; Save the plan."
+ },
+ {
+  "n": 82,
+  "role": "QUALITY",
+  "date": "2027-02-11",
+  "where": "Quality → Plans and settings",
+  "what": "Item <b>LED-KT</b>: tick <b>Inspect when it is bought</b>, Save these settings; characteristics: Voltage (V) 11.5 to 12.5; Lumens (lm) 800 to —; Save the plan."
+ },
+ {
+  "n": 83,
+  "role": "WAREHOUSE",
+  "date": "2027-02-12",
+  "where": "Purchasing → Receive",
+  "what": "<b>PO-0001</b> (Bohol Capiz Traders): receipt date <b>2027-02-12</b>: CAP-SH 90 (goes to QUARANTINE by itself: CAP-SH)."
+ },
+ {
+  "n": 84,
+  "role": "WAREHOUSE",
+  "date": "2027-02-12",
+  "where": "Purchasing → Receive",
+  "what": "<b>PO-0002</b> (Cebu Metalworks): receipt date <b>2027-02-12</b>: WIR-FR 345 · BRS-RD 86 · BRS-FT 90."
+ },
+ {
+  "n": 85,
+  "role": "WAREHOUSE",
+  "date": "2027-02-12",
+  "where": "Purchasing → Receive",
+  "what": "<b>PO-0004</b> (Laguna Chemicals): receipt date <b>2027-02-12</b>: GLU-AD 17.25 · CLR-CT 13.8 (lot/expiry: CLR-CT CC-0227-A exp 2028-02-28)."
+ },
+ {
+  "n": 86,
+  "role": "WAREHOUSE",
+  "date": "2027-02-13",
+  "where": "Purchasing → Receive",
+  "what": "<b>PO-0005</b> (Pasig Packaging): receipt date <b>2027-02-13</b>: CTN-LP 245 · FOM-PD 335."
+ },
+ {
+  "n": 87,
+  "role": "WAREHOUSE",
+  "date": "2027-02-14",
+  "where": "Purchasing → Receive",
+  "what": "<b>PO-0003</b> (Manila Electronics): receipt date <b>2027-02-14</b>: LED-KT 150 · CRD-SW 235 (goes to QUARANTINE by itself: LED-KT)."
+ },
+ {
+  "n": 88,
+  "role": "QUALITY",
+  "date": "2027-02-13",
+  "where": "Quality → Inspection lots → the waiting lot",
+  "what": "<b>CAP-SH</b> lot 1: measured Moisture 10.5 → Save measurements. Decision: accept <b>90</b>, date <b>2027-02-13</b>."
+ },
+ {
+  "n": 89,
+  "role": "QUALITY",
+  "date": "2027-02-14",
+  "where": "Quality → Inspection lots → the waiting lot",
+  "what": "<b>LED-KT</b> lot 1: measured Voltage 12.1, Lumens 850 → Save measurements. Decision: accept <b>150</b>, date <b>2027-02-14</b>."
+ },
+ {
+  "n": 90,
+  "role": "WAREHOUSE",
+  "date": "2027-02-18",
+  "where": "Purchasing → Receive",
+  "what": "<b>PO-0001</b> (Bohol Capiz Traders): receipt date <b>2027-02-18</b>: CAP-SH 65 (goes to QUARANTINE by itself: CAP-SH)."
+ },
+ {
+  "n": 91,
+  "role": "QUALITY",
+  "date": "2027-02-18",
+  "where": "Quality → Inspection lots → the waiting lot",
+  "what": "<b>CAP-SH</b> lot 2: measured Moisture 13.4 → Save measurements. Decision: accept <b>60</b>, return 5, root cause MATERIAL, date <b>2027-02-18</b>, note <i>Sheets damp at one end; 5 kg returned</i>."
+ },
+ {
+  "n": 92,
+  "role": "QUALITY",
+  "date": "2027-02-18",
+  "where": "Quality → Non-conformances → the open report → Close the report",
+  "what": "<b>CAP-SH</b>: corrective action <i>Vendor to dry the sheets before loading; moisture to be measured on arrival</i>."
+ },
+ {
+  "n": 93,
+  "role": "WAREHOUSE",
+  "date": "2027-02-19",
+  "where": "Purchasing → Receive",
+  "what": "<b>PO-0003</b> (Manila Electronics): receipt date <b>2027-02-19</b>: LED-KT 115 (goes to QUARANTINE by itself: LED-KT)."
+ },
+ {
+  "n": 94,
+  "role": "QUALITY",
+  "date": "2027-02-19",
+  "where": "Quality → Inspection lots → the waiting lot",
+  "what": "<b>LED-KT</b> lot 2: measured Voltage 12.9, Lumens 790 → Save measurements. Decision: accept <b>105</b>, return 10, root cause SUPPLIER, date <b>2027-02-19</b>, note <i>Voltage over the limit on 10 kits; returned</i>."
+ },
+ {
+  "n": 95,
+  "role": "QUALITY",
+  "date": "2027-02-19",
+  "where": "Quality → Non-conformances → the open report → Close the report",
+  "what": "<b>LED-KT</b>: corrective action <i>Vendor to test every kit before packing; sample test on arrival</i>."
+ },
+ {
+  "n": 96,
+  "role": "PRODUCTION",
+  "date": "2027-02-12",
+  "where": "Planning → Planned orders → Make selected",
+  "what": "Tick the box at the top of the table, then <b>Make selected</b>: every open planned order becomes a production order."
+ },
+ {
+  "n": 97,
+  "role": "PRODUCTION",
+  "date": "2027-02-13",
+  "where": "Production → click the order → Release",
+  "what": "Release the production order for <b>SHD-S</b> (number 1 of that item)."
+ },
+ {
+  "n": 98,
+  "role": "WAREHOUSE",
+  "date": "2027-02-13",
+  "where": "Production → the order → Materials → Issue material to the order",
+  "what": "<b>SHD-S</b> order 1: set the Date to <b>2027-02-13</b> FIRST, leave every quantity as proposed, then click the button."
+ },
+ {
+  "n": 99,
+  "role": "PRODUCTION",
+  "date": "2027-02-13",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>SHD-S</b> order 1: operation <b>10</b>, good 185, scrapped 0, labor 55.5 h, machine 37.0 h, setup 0.5 h, date <b>2027-02-13</b>."
+ },
+ {
+  "n": 100,
+  "role": "PRODUCTION",
+  "date": "2027-02-14",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>SHD-S</b> order 1: operation <b>20</b>, good 180, scrapped 5 (<i>Cracked capiz sheets</i>), labor 74.0 h, machine 18.5 h, setup 0.25 h, date <b>2027-02-14</b>, <b>tick the final confirmation</b>."
+ },
+ {
+  "n": 101,
+  "role": "PRODUCTION",
+  "date": "2027-02-14",
+  "where": "Production → the order → Finished goods into stock",
+  "what": "<b>SHD-S</b> order 1: quantity <b>180</b>, date <b>2027-02-14</b>."
+ },
+ {
+  "n": 102,
+  "role": "PRODUCTION",
+  "date": "2027-02-14",
+  "where": "Production → click the order → Release",
+  "what": "Release the production order for <b>BAS-BR</b> (number 1 of that item)."
+ },
+ {
+  "n": 103,
+  "role": "WAREHOUSE",
+  "date": "2027-02-14",
+  "where": "Production → the order → Materials → Issue material to the order",
+  "what": "<b>BAS-BR</b> order 1: set the Date to <b>2027-02-14</b> FIRST, leave every quantity as proposed, then click the button."
+ },
+ {
+  "n": 104,
+  "role": "PRODUCTION",
+  "date": "2027-02-14",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>BAS-BR</b> order 1: operation <b>10</b>, good 70, scrapped 0, labor 14.0 h, machine 10.5 h, setup 0.5 h, date <b>2027-02-14</b>."
+ },
+ {
+  "n": 105,
+  "role": "PRODUCTION",
+  "date": "2027-02-15",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>BAS-BR</b> order 1: operation <b>20</b>, good 70, scrapped 0, labor 21.0 h, machine 14.0 h, setup 0.25 h, date <b>2027-02-15</b>, <b>tick the final confirmation</b>."
+ },
+ {
+  "n": 106,
+  "role": "PRODUCTION",
+  "date": "2027-02-15",
+  "where": "Production → the order → Finished goods into stock",
+  "what": "<b>BAS-BR</b> order 1: quantity <b>70</b>, date <b>2027-02-15</b>."
+ },
+ {
+  "n": 107,
+  "role": "PRODUCTION",
+  "date": "2027-02-15",
+  "where": "Production → click the order → Release",
+  "what": "Release the production order for <b>PEN-S</b> (number 1 of that item)."
+ },
+ {
+  "n": 108,
+  "role": "WAREHOUSE",
+  "date": "2027-02-15",
+  "where": "Production → the order → Materials → Issue material to the order",
+  "what": "<b>PEN-S</b> order 1: set the Date to <b>2027-02-15</b> FIRST, leave every quantity as proposed, then click the button."
+ },
+ {
+  "n": 109,
+  "role": "PRODUCTION",
+  "date": "2027-02-16",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>PEN-S</b> order 1: operation <b>10</b>, good 65, scrapped 0, labor 13.0 h, machine 3.25 h, setup 0.25 h, date <b>2027-02-16</b>."
+ },
+ {
+  "n": 110,
+  "role": "SALES",
+  "date": "2027-02-16",
+  "where": "Sales → Sales Orders → New sales order",
+  "what": "<b>SO-0006</b> Cagayan Lighting, date 2027-02-16: TBL-LP 15 @ 1,880 · PEN-S 20 @ 1,450; tax rate 12; total <b>₱64,064.00</b>. Save, then Confirm."
+ },
+ {
+  "n": 111,
+  "role": "PRODUCTION",
+  "date": "2027-02-16",
+  "where": "Planning → Run planning",
+  "what": "Plan from <b>2027-02-16</b>, then <b>Run planning</b>."
+ },
+ {
+  "n": 112,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-13",
+  "where": "Purchasing → Enter vendor invoice",
+  "what": "<b>PO-0002</b>, invoice number <b>CM-1021</b>, invoice date <b>2027-02-13</b>, due <b>2027-03-15</b>, VAT 12 → <b>VI-0001</b>."
+ },
+ {
+  "n": 113,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-14",
+  "where": "Purchasing → Enter vendor invoice",
+  "what": "<b>PO-0004</b>, invoice number <b>LC-5510</b>, invoice date <b>2027-02-14</b>, due <b>2027-03-16</b>, VAT 12 → <b>VI-0002</b>."
+ },
+ {
+  "n": 114,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-15",
+  "where": "Purchasing → Enter vendor invoice",
+  "what": "<b>PO-0005</b>, invoice number <b>PP-0870</b>, invoice date <b>2027-02-15</b>, due <b>2027-03-17</b>, VAT 12 → <b>VI-0003</b>."
+ },
+ {
+  "n": 115,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-15",
+  "where": "Purchasing → Add landed cost",
+  "what": "Vendor <b>Bohol Capiz Traders</b>, invoice no. <b>BCT-F-880</b>, <i>Sea freight, Bohol to Cebu</i>, date 2027-02-15, due 2027-03-15, amount before VAT <b>3,600.00</b>, VAT 12, spread by value; tick only the <b>CAP-SH</b> line of the receipt dated <b>2027-02-12</b>."
+ },
+ {
+  "n": 116,
+  "role": "PRODUCTION",
+  "date": "2027-02-16",
+  "where": "Planning → Planned orders → Make selected",
+  "what": "Tick the box at the top of the table, then <b>Make selected</b>: every open planned order becomes a production order."
+ },
+ {
+  "n": 117,
+  "role": "PURCHASING",
+  "date": "2027-02-16",
+  "where": "Planning → Purchase requisitions → Delete",
+  "what": "Delete the open requisition for <b>CAP-SH</b> (you ordered it by hand in bundles)."
+ },
+ {
+  "n": 118,
+  "role": "PURCHASING",
+  "date": "2027-02-16",
+  "where": "Purchasing → New purchase order",
+  "what": "Vendor <b>Bohol Capiz Traders</b>, order date 2027-02-16, expected 2027-02-20: CAP-SH 3 BDL @ 2100 → <b>PO-0006</b>."
+ },
+ {
+  "n": 119,
+  "role": "PURCHASING",
+  "date": "2027-02-16",
+  "where": "Planning → Purchase requisitions → Create purchase order…",
+  "what": "Vendor <b>Cebu Metalworks</b> (type it in the new-vendor box the first time). Tick: BRS-FT, BRS-RD, WIR-FR. Prices: BRS-FT 60 · BRS-RD 85 · WIR-FR 35 → creates <b>PO-0007</b>."
+ },
+ {
+  "n": 120,
+  "role": "PURCHASING",
+  "date": "2027-02-16",
+  "where": "Planning → Purchase requisitions → Create purchase order…",
+  "what": "Vendor <b>Manila Electronics</b> (type it in the new-vendor box the first time). Tick: LED-KT, CRD-SW. Prices: LED-KT 150 · CRD-SW 55 → creates <b>PO-0008</b>."
+ },
+ {
+  "n": 121,
+  "role": "PURCHASING",
+  "date": "2027-02-16",
+  "where": "Planning → Purchase requisitions → Create purchase order…",
+  "what": "Vendor <b>Laguna Chemicals</b> (type it in the new-vendor box the first time). Tick: CLR-CT, GLU-AD. Prices: CLR-CT 260 · GLU-AD 190 → creates <b>PO-0009</b>."
+ },
+ {
+  "n": 122,
+  "role": "PURCHASING",
+  "date": "2027-02-16",
+  "where": "Planning → Purchase requisitions → Create purchase order…",
+  "what": "Vendor <b>Pasig Packaging</b> (type it in the new-vendor box the first time). Tick: CTN-LP, FOM-PD. Prices: CTN-LP 38 · FOM-PD 12 → creates <b>PO-0010</b>."
+ },
+ {
+  "n": 123,
+  "role": "PRODUCTION",
+  "date": "2027-02-17",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>PEN-S</b> order 1: operation <b>20</b>, good 65, scrapped 0, labor 6.5 h, machine 0.0 h, setup 0.2 h, date <b>2027-02-17</b>, <b>tick the final confirmation</b>."
+ },
+ {
+  "n": 124,
+  "role": "PRODUCTION",
+  "date": "2027-02-17",
+  "where": "Production → the order → Finished goods into stock",
+  "what": "<b>PEN-S</b> order 1: quantity <b>65</b>, date <b>2027-02-17</b>."
+ },
+ {
+  "n": 125,
+  "role": "PRODUCTION",
+  "date": "2027-02-17",
+  "where": "Production → click the order → Release",
+  "what": "Release the production order for <b>TBL-LP</b> (number 1 of that item)."
+ },
+ {
+  "n": 126,
+  "role": "WAREHOUSE",
+  "date": "2027-02-17",
+  "where": "Production → the order → Materials → Issue material to the order",
+  "what": "<b>TBL-LP</b> order 1: set the Date to <b>2027-02-17</b> FIRST, leave every quantity as proposed, then click the button."
+ },
+ {
+  "n": 127,
+  "role": "PRODUCTION",
+  "date": "2027-02-17",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>TBL-LP</b> order 1: operation <b>10</b>, good 30, scrapped 0, labor 10.5 h, machine 1.5 h, setup 0.25 h, date <b>2027-02-17</b>."
+ },
+ {
+  "n": 128,
+  "role": "PRODUCTION",
+  "date": "2027-02-17",
+  "where": "Production → click the order → Release",
+  "what": "Release the production order for <b>CHD-4</b> (number 1 of that item)."
+ },
+ {
+  "n": 129,
+  "role": "WAREHOUSE",
+  "date": "2027-02-17",
+  "where": "Production → the order → Materials → Issue material to the order",
+  "what": "<b>CHD-4</b> order 1: set the Date to <b>2027-02-17</b> FIRST, leave every quantity as proposed, then click the button."
+ },
+ {
+  "n": 130,
+  "role": "PRODUCTION",
+  "date": "2027-02-18",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>TBL-LP</b> order 1: operation <b>20</b>, good 30, scrapped 0, labor 4.5 h, machine 3.0 h, setup 0.25 h, date <b>2027-02-18</b>."
+ },
+ {
+  "n": 131,
+  "role": "PRODUCTION",
+  "date": "2027-02-18",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>TBL-LP</b> order 1: operation <b>30</b>, good 30, scrapped 0, labor 3.0 h, machine 0.0 h, setup 0.2 h, date <b>2027-02-18</b>, <b>tick the final confirmation</b>."
+ },
+ {
+  "n": 132,
+  "role": "PRODUCTION",
+  "date": "2027-02-18",
+  "where": "Production → the order → Finished goods into stock",
+  "what": "<b>TBL-LP</b> order 1: quantity <b>30</b>, date <b>2027-02-18</b>."
+ },
+ {
+  "n": 133,
+  "role": "PRODUCTION",
+  "date": "2027-02-18",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>CHD-4</b> order 1: operation <b>10</b>, good 6, scrapped 0, labor 6.0 h, machine 1.2 h, setup 0.5 h, date <b>2027-02-18</b>."
+ },
+ {
+  "n": 134,
+  "role": "PRODUCTION",
+  "date": "2027-02-18",
+  "where": "Shop Floor → Downtime → Log it",
+  "what": "<b>Cutting</b>, day <b>2027-02-18</b>, 4 hours, reason Breakdown, note <i>Saw blade snapped</i>."
+ },
+ {
+  "n": 135,
+  "role": "PRODUCTION",
+  "date": "2027-02-18",
+  "where": "Production → click the order → Release",
+  "what": "Release the production order for <b>SHD-L</b> (number 1 of that item)."
+ },
+ {
+  "n": 136,
+  "role": "WAREHOUSE",
+  "date": "2027-02-18",
+  "where": "Production → the order → Materials → Issue material to the order",
+  "what": "<b>SHD-L</b> order 1: set the Date to <b>2027-02-18</b> FIRST, leave every quantity as proposed, then click the button."
+ },
+ {
+  "n": 137,
+  "role": "PRODUCTION",
+  "date": "2027-02-18",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>SHD-L</b> order 1: operation <b>10</b>, good 80, scrapped 0, labor 40.0 h, machine 28.0 h, setup 0.5 h, date <b>2027-02-18</b>."
+ },
+ {
+  "n": 138,
+  "role": "PRODUCTION",
+  "date": "2027-02-19",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>CHD-4</b> order 1: operation <b>20</b>, good 6, scrapped 0, labor 3.0 h, machine 1.8 h, setup 0.25 h, date <b>2027-02-19</b>."
+ },
+ {
+  "n": 139,
+  "role": "PRODUCTION",
+  "date": "2027-02-19",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>CHD-4</b> order 1: operation <b>30</b>, good 6, scrapped 0, labor 1.5 h, machine 0.0 h, setup 0.2 h, date <b>2027-02-19</b>, <b>tick the final confirmation</b>."
+ },
+ {
+  "n": 140,
+  "role": "PRODUCTION",
+  "date": "2027-02-19",
+  "where": "Production → the order → Finished goods into stock",
+  "what": "<b>CHD-4</b> order 1: quantity <b>6</b>, date <b>2027-02-19</b>."
+ },
+ {
+  "n": 141,
+  "role": "PRODUCTION",
+  "date": "2027-02-19",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>SHD-L</b> order 1: operation <b>20</b>, good 80, scrapped 0, labor 56.0 h, machine 12.0 h, setup 0.25 h, date <b>2027-02-19</b>, <b>tick the final confirmation</b>."
+ },
+ {
+  "n": 142,
+  "role": "PRODUCTION",
+  "date": "2027-02-19",
+  "where": "Production → the order → Finished goods into stock",
+  "what": "<b>SHD-L</b> order 1: quantity <b>80</b>, date <b>2027-02-19</b>."
+ },
+ {
+  "n": 143,
+  "role": "WAREHOUSE",
+  "date": "2027-02-19",
+  "where": "Purchasing → Receive",
+  "what": "<b>PO-0007</b> (Cebu Metalworks): receipt date <b>2027-02-19</b>: BRS-FT 15 · BRS-RD 9 · WIR-FR 40."
+ },
+ {
+  "n": 144,
+  "role": "WAREHOUSE",
+  "date": "2027-02-19",
+  "where": "Purchasing → Receive",
+  "what": "<b>PO-0009</b> (Laguna Chemicals): receipt date <b>2027-02-19</b>: GLU-AD 2 · CLR-CT 1.6 (lot/expiry: CLR-CT CC-0227-B exp 2028-02-28)."
+ },
+ {
+  "n": 145,
+  "role": "WAREHOUSE",
+  "date": "2027-02-19",
+  "where": "Purchasing → Receive",
+  "what": "<b>PO-0010</b> (Pasig Packaging): receipt date <b>2027-02-19</b>: CTN-LP 35 · FOM-PD 35."
+ },
+ {
+  "n": 146,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-19",
+  "where": "Purchasing → Enter vendor invoice",
+  "what": "<b>PO-0001</b>, invoice number <b>BCT-2210</b>, invoice date <b>2027-02-19</b>, due <b>2027-03-21</b>, VAT 12 → <b>VI-0004</b>. Type price 450 for CAP-SH: it goes ON HOLD."
+ },
+ {
+  "n": 147,
+  "role": "PRODUCTION",
+  "date": "2027-02-19",
+  "where": "Production → click the order → Release",
+  "what": "Release the production order for <b>PEN-L</b> (number 1 of that item)."
+ },
+ {
+  "n": 148,
+  "role": "WAREHOUSE",
+  "date": "2027-02-19",
+  "where": "Production → the order → Materials → Issue material to the order",
+  "what": "<b>PEN-L</b> order 1: set the Date to <b>2027-02-19</b> FIRST, leave every quantity as proposed, then click the button."
+ },
+ {
+  "n": 149,
+  "role": "WAREHOUSE",
+  "date": "2027-02-20",
+  "where": "Purchasing → Receive",
+  "what": "<b>PO-0006</b> (Bohol Capiz Traders): receipt date <b>2027-02-20</b>: CAP-SH 15 (goes to QUARANTINE by itself: CAP-SH)."
+ },
+ {
+  "n": 150,
+  "role": "QUALITY",
+  "date": "2027-02-20",
+  "where": "Quality → Inspection lots → the waiting lot",
+  "what": "<b>CAP-SH</b> lot 3: measured Moisture 10.8 → Save measurements. Decision: accept <b>15</b>, date <b>2027-02-20</b>."
+ },
+ {
+  "n": 151,
+  "role": "WAREHOUSE",
+  "date": "2027-02-20",
+  "where": "Purchasing → Receive",
+  "what": "<b>PO-0008</b> (Manila Electronics): receipt date <b>2027-02-20</b>: LED-KT 35 · CRD-SW 35 (goes to QUARANTINE by itself: LED-KT)."
+ },
+ {
+  "n": 152,
+  "role": "QUALITY",
+  "date": "2027-02-20",
+  "where": "Quality → Inspection lots → the waiting lot",
+  "what": "<b>LED-KT</b> lot 3: measured Voltage 12.2, Lumens 840 → Save measurements. Decision: accept <b>35</b>, date <b>2027-02-20</b>."
+ },
+ {
+  "n": 153,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-02-20",
+  "where": "Purchasing → Vendor invoices → the invoice ON HOLD → Approve",
+  "what": "Approve <b>VI-0004</b>: the price difference is accepted (you must not be the person who entered it)."
+ },
+ {
+  "n": 154,
+  "role": "PRODUCTION",
+  "date": "2027-02-20",
+  "where": "Production → click the order → Release",
+  "what": "Release the production order for <b>BAS-BR</b> (number 2 of that item)."
+ },
+ {
+  "n": 155,
+  "role": "WAREHOUSE",
+  "date": "2027-02-20",
+  "where": "Production → the order → Materials → Issue material to the order",
+  "what": "<b>BAS-BR</b> order 2: set the Date to <b>2027-02-20</b> FIRST, leave every quantity as proposed, then click the button."
+ },
+ {
+  "n": 156,
+  "role": "PRODUCTION",
+  "date": "2027-02-20",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>BAS-BR</b> order 2: operation <b>10</b>, good 15, scrapped 0, labor 3.0 h, machine 2.25 h, setup 0.5 h, date <b>2027-02-20</b>."
+ },
+ {
+  "n": 157,
+  "role": "PRODUCTION",
+  "date": "2027-02-20",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>PEN-L</b> order 1: operation <b>10</b>, good 50, scrapped 0, labor 15.0 h, machine 2.5 h, setup 0.25 h, date <b>2027-02-20</b>."
+ },
+ {
+  "n": 158,
+  "role": "PRODUCTION",
+  "date": "2027-02-20",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>PEN-L</b> order 1: operation <b>20</b>, good 50, scrapped 0, labor 7.5 h, machine 0.0 h, setup 0.2 h, date <b>2027-02-20</b>, <b>tick the final confirmation</b>."
+ },
+ {
+  "n": 159,
+  "role": "PRODUCTION",
+  "date": "2027-02-20",
+  "where": "Production → the order → Finished goods into stock",
+  "what": "<b>PEN-L</b> order 1: quantity <b>50</b>, date <b>2027-02-20</b>."
+ },
+ {
+  "n": 160,
+  "role": "PRODUCTION",
+  "date": "2027-02-20",
+  "where": "Production → click the order → Release",
+  "what": "Release the production order for <b>FLR-LP</b> (number 1 of that item)."
+ },
+ {
+  "n": 161,
+  "role": "WAREHOUSE",
+  "date": "2027-02-20",
+  "where": "Production → the order → Materials → Issue material to the order",
+  "what": "<b>FLR-LP</b> order 1: set the Date to <b>2027-02-20</b> FIRST, leave every quantity as proposed, then click the button."
+ },
+ {
+  "n": 162,
+  "role": "PRODUCTION",
+  "date": "2027-02-21",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>BAS-BR</b> order 2: operation <b>20</b>, good 15, scrapped 0, labor 4.5 h, machine 3.0 h, setup 0.25 h, date <b>2027-02-21</b>, <b>tick the final confirmation</b>."
+ },
+ {
+  "n": 163,
+  "role": "PRODUCTION",
+  "date": "2027-02-21",
+  "where": "Production → the order → Finished goods into stock",
+  "what": "<b>BAS-BR</b> order 2: quantity <b>15</b>, date <b>2027-02-21</b>."
+ },
+ {
+  "n": 164,
+  "role": "PRODUCTION",
+  "date": "2027-02-21",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>FLR-LP</b> order 1: operation <b>10</b>, good 12, scrapped 0, labor 6.0 h, machine 1.2 h, setup 0.25 h, date <b>2027-02-21</b>."
+ },
+ {
+  "n": 165,
+  "role": "PRODUCTION",
+  "date": "2027-02-21",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>FLR-LP</b> order 1: operation <b>20</b>, good 12, scrapped 0, labor 3.0 h, machine 1.8 h, setup 0.25 h, date <b>2027-02-21</b>."
+ },
+ {
+  "n": 166,
+  "role": "PRODUCTION",
+  "date": "2027-02-21",
+  "where": "Production → click the order → Release",
+  "what": "Release the production order for <b>CHD-4</b> (number 2 of that item)."
+ },
+ {
+  "n": 167,
+  "role": "WAREHOUSE",
+  "date": "2027-02-21",
+  "where": "Production → the order → Materials → Issue material to the order",
+  "what": "<b>CHD-4</b> order 2: set the Date to <b>2027-02-21</b> FIRST, leave every quantity as proposed, then click the button."
+ },
+ {
+  "n": 168,
+  "role": "PRODUCTION",
+  "date": "2027-02-21",
+  "where": "Production → click the order → Release",
+  "what": "Release the production order for <b>SHD-S</b> (number 2 of that item)."
+ },
+ {
+  "n": 169,
+  "role": "WAREHOUSE",
+  "date": "2027-02-21",
+  "where": "Production → the order → Materials → Issue material to the order",
+  "what": "<b>SHD-S</b> order 2: set the Date to <b>2027-02-21</b> FIRST, leave every quantity as proposed, then click the button."
+ },
+ {
+  "n": 170,
+  "role": "PRODUCTION",
+  "date": "2027-02-21",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>SHD-S</b> order 2: operation <b>10</b>, good 40, scrapped 0, labor 12.0 h, machine 8.0 h, setup 0.5 h, date <b>2027-02-21</b>."
+ },
+ {
+  "n": 171,
+  "role": "PRODUCTION",
+  "date": "2027-02-22",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>FLR-LP</b> order 1: operation <b>30</b>, good 12, scrapped 0, labor 1.8 h, machine 0.0 h, setup 0.2 h, date <b>2027-02-22</b>, <b>tick the final confirmation</b>."
+ },
+ {
+  "n": 172,
+  "role": "PRODUCTION",
+  "date": "2027-02-22",
+  "where": "Production → the order → Finished goods into stock",
+  "what": "<b>FLR-LP</b> order 1: quantity <b>12</b>, date <b>2027-02-22</b>."
+ },
+ {
+  "n": 173,
+  "role": "PRODUCTION",
+  "date": "2027-02-22",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>CHD-4</b> order 2: operation <b>10</b>, good 4, scrapped 0, labor 4.0 h, machine 0.8 h, setup 0.5 h, date <b>2027-02-22</b>."
+ },
+ {
+  "n": 174,
+  "role": "PRODUCTION",
+  "date": "2027-02-22",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>CHD-4</b> order 2: operation <b>20</b>, good 4, scrapped 0, labor 2.0 h, machine 1.2 h, setup 0.25 h, date <b>2027-02-22</b>."
+ },
+ {
+  "n": 175,
+  "role": "PRODUCTION",
+  "date": "2027-02-22",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>SHD-S</b> order 2: operation <b>20</b>, good 40, scrapped 0, labor 16.0 h, machine 4.0 h, setup 0.25 h, date <b>2027-02-22</b>, <b>tick the final confirmation</b>."
+ },
+ {
+  "n": 176,
+  "role": "PRODUCTION",
+  "date": "2027-02-22",
+  "where": "Production → the order → Finished goods into stock",
+  "what": "<b>SHD-S</b> order 2: quantity <b>40</b>, date <b>2027-02-22</b>."
+ },
+ {
+  "n": 177,
+  "role": "PRODUCTION",
+  "date": "2027-02-22",
+  "where": "Production → click the order → Release",
+  "what": "Release the production order for <b>PEN-S</b> (number 2 of that item)."
+ },
+ {
+  "n": 178,
+  "role": "WAREHOUSE",
+  "date": "2027-02-22",
+  "where": "Production → the order → Materials → Issue material to the order",
+  "what": "<b>PEN-S</b> order 2: set the Date to <b>2027-02-22</b> FIRST, leave every quantity as proposed, then click the button."
+ },
+ {
+  "n": 179,
+  "role": "PRODUCTION",
+  "date": "2027-02-22",
+  "where": "Production → click the order → Release",
+  "what": "Release the production order for <b>PEN-L</b> (number 2 of that item)."
+ },
+ {
+  "n": 180,
+  "role": "WAREHOUSE",
+  "date": "2027-02-22",
+  "where": "Production → the order → Materials → Issue material to the order",
+  "what": "<b>PEN-L</b> order 2: set the Date to <b>2027-02-22</b> FIRST, leave every quantity as proposed, then click the button."
+ },
+ {
+  "n": 181,
+  "role": "PRODUCTION",
+  "date": "2027-02-23",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>CHD-4</b> order 2: operation <b>30</b>, good 4, scrapped 0, labor 1.0 h, machine 0.0 h, setup 0.2 h, date <b>2027-02-23</b>, <b>tick the final confirmation</b>."
+ },
+ {
+  "n": 182,
+  "role": "PRODUCTION",
+  "date": "2027-02-23",
+  "where": "Production → the order → Finished goods into stock",
+  "what": "<b>CHD-4</b> order 2: quantity <b>4</b>, date <b>2027-02-23</b>."
+ },
+ {
+  "n": 183,
+  "role": "PRODUCTION",
+  "date": "2027-02-23",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>PEN-S</b> order 2: operation <b>10</b>, good 30, scrapped 0, labor 6.0 h, machine 1.5 h, setup 0.25 h, date <b>2027-02-23</b>."
+ },
+ {
+  "n": 184,
+  "role": "PRODUCTION",
+  "date": "2027-02-23",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>PEN-S</b> order 2: operation <b>20</b>, good 30, scrapped 0, labor 3.0 h, machine 0.0 h, setup 0.2 h, date <b>2027-02-23</b>, <b>tick the final confirmation</b>."
+ },
+ {
+  "n": 185,
+  "role": "PRODUCTION",
+  "date": "2027-02-23",
+  "where": "Production → the order → Finished goods into stock",
+  "what": "<b>PEN-S</b> order 2: quantity <b>30</b>, date <b>2027-02-23</b>."
+ },
+ {
+  "n": 186,
+  "role": "PRODUCTION",
+  "date": "2027-02-23",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>PEN-L</b> order 2: operation <b>10</b>, good 10, scrapped 0, labor 3.0 h, machine 0.5 h, setup 0.25 h, date <b>2027-02-23</b>."
+ },
+ {
+  "n": 187,
+  "role": "PRODUCTION",
+  "date": "2027-02-23",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>PEN-L</b> order 2: operation <b>20</b>, good 10, scrapped 0, labor 1.5 h, machine 0.0 h, setup 0.2 h, date <b>2027-02-23</b>, <b>tick the final confirmation</b>."
+ },
+ {
+  "n": 188,
+  "role": "PRODUCTION",
+  "date": "2027-02-23",
+  "where": "Production → the order → Finished goods into stock",
+  "what": "<b>PEN-L</b> order 2: quantity <b>10</b>, date <b>2027-02-23</b>."
+ },
+ {
+  "n": 189,
+  "role": "PRODUCTION",
+  "date": "2027-02-23",
+  "where": "Production → click the order → Release",
+  "what": "Release the production order for <b>TBL-LP</b> (number 2 of that item)."
+ },
+ {
+  "n": 190,
+  "role": "WAREHOUSE",
+  "date": "2027-02-23",
+  "where": "Production → the order → Materials → Issue material to the order",
+  "what": "<b>TBL-LP</b> order 2: set the Date to <b>2027-02-23</b> FIRST, leave every quantity as proposed, then click the button."
+ },
+ {
+  "n": 191,
+  "role": "PRODUCTION",
+  "date": "2027-02-23",
+  "where": "Production → click the order → Release",
+  "what": "Release the production order for <b>FLR-LP</b> (number 2 of that item)."
+ },
+ {
+  "n": 192,
+  "role": "WAREHOUSE",
+  "date": "2027-02-23",
+  "where": "Production → the order → Materials → Issue material to the order",
+  "what": "<b>FLR-LP</b> order 2: set the Date to <b>2027-02-23</b> FIRST, leave every quantity as proposed, then click the button."
+ },
+ {
+  "n": 193,
+  "role": "PRODUCTION",
+  "date": "2027-02-24",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>TBL-LP</b> order 2: operation <b>10</b>, good 20, scrapped 0, labor 7.0 h, machine 1.0 h, setup 0.25 h, date <b>2027-02-24</b>."
+ },
+ {
+  "n": 194,
+  "role": "PRODUCTION",
+  "date": "2027-02-24",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>TBL-LP</b> order 2: operation <b>20</b>, good 20, scrapped 0, labor 3.0 h, machine 2.0 h, setup 0.25 h, date <b>2027-02-24</b>."
+ },
+ {
+  "n": 195,
+  "role": "PRODUCTION",
+  "date": "2027-02-24",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>TBL-LP</b> order 2: operation <b>30</b>, good 20, scrapped 0, labor 2.0 h, machine 0.0 h, setup 0.2 h, date <b>2027-02-24</b>, <b>tick the final confirmation</b>."
+ },
+ {
+  "n": 196,
+  "role": "PRODUCTION",
+  "date": "2027-02-24",
+  "where": "Production → the order → Finished goods into stock",
+  "what": "<b>TBL-LP</b> order 2: quantity <b>20</b>, date <b>2027-02-24</b>."
+ },
+ {
+  "n": 197,
+  "role": "PRODUCTION",
+  "date": "2027-02-24",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>FLR-LP</b> order 2: operation <b>10</b>, good 8, scrapped 0, labor 4.0 h, machine 0.8 h, setup 0.25 h, date <b>2027-02-24</b>."
+ },
+ {
+  "n": 198,
+  "role": "PRODUCTION",
+  "date": "2027-02-24",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>FLR-LP</b> order 2: operation <b>20</b>, good 8, scrapped 0, labor 2.0 h, machine 1.2 h, setup 0.25 h, date <b>2027-02-24</b>."
+ },
+ {
+  "n": 199,
+  "role": "PRODUCTION",
+  "date": "2027-02-24",
+  "where": "Production → click the order → Release",
+  "what": "Release the production order for <b>PEN-S</b> (number 3 of that item)."
+ },
+ {
+  "n": 200,
+  "role": "WAREHOUSE",
+  "date": "2027-02-24",
+  "where": "Production → the order → Materials → Issue material to the order",
+  "what": "<b>PEN-S</b> order 3: set the Date to <b>2027-02-24</b> FIRST, leave every quantity as proposed, then click the button."
+ },
+ {
+  "n": 201,
+  "role": "PRODUCTION",
+  "date": "2027-02-24",
+  "where": "Shop Floor → Downtime → Log it",
+  "what": "<b>Assembly</b>, day <b>2027-02-24</b>, 2 hours, reason No Material, note <i>Waiting for LED kits</i>."
+ },
+ {
+  "n": 202,
+  "role": "WAREHOUSE",
+  "date": "2027-02-24",
+  "where": "Purchasing → Receive",
+  "what": "<b>PO-0003</b> (Manila Electronics): receipt date <b>2027-02-24</b>: LED-KT 10 (goes to QUARANTINE by itself: LED-KT)."
+ },
+ {
+  "n": 203,
+  "role": "QUALITY",
+  "date": "2027-02-24",
+  "where": "Quality → Inspection lots → the waiting lot",
+  "what": "<b>LED-KT</b> lot 4: measured Voltage 12.0, Lumens 860 → Save measurements. Decision: accept <b>10</b>, date <b>2027-02-24</b>."
+ },
+ {
+  "n": 204,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-24",
+  "where": "Purchasing → Enter vendor invoice",
+  "what": "<b>PO-0003</b>, invoice number <b>ME-7741</b>, invoice date <b>2027-02-24</b>, due <b>2027-03-24</b>, VAT 12 → <b>VI-0005</b>."
+ },
+ {
+  "n": 205,
+  "role": "PRODUCTION",
+  "date": "2027-02-25",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>FLR-LP</b> order 2: operation <b>30</b>, good 8, scrapped 0, labor 1.2 h, machine 0.0 h, setup 0.2 h, date <b>2027-02-25</b>, <b>tick the final confirmation</b>."
+ },
+ {
+  "n": 206,
+  "role": "PRODUCTION",
+  "date": "2027-02-25",
+  "where": "Production → the order → Finished goods into stock",
+  "what": "<b>FLR-LP</b> order 2: quantity <b>8</b>, date <b>2027-02-25</b>."
+ },
+ {
+  "n": 207,
+  "role": "PRODUCTION",
+  "date": "2027-02-25",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>PEN-S</b> order 3: operation <b>10</b>, good 20, scrapped 0, labor 4.0 h, machine 1.0 h, setup 0.25 h, date <b>2027-02-25</b>."
+ },
+ {
+  "n": 208,
+  "role": "PRODUCTION",
+  "date": "2027-02-25",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>PEN-S</b> order 3: operation <b>20</b>, good 20, scrapped 0, labor 2.0 h, machine 0.0 h, setup 0.2 h, date <b>2027-02-25</b>, <b>tick the final confirmation</b>."
+ },
+ {
+  "n": 209,
+  "role": "PRODUCTION",
+  "date": "2027-02-25",
+  "where": "Production → the order → Finished goods into stock",
+  "what": "<b>PEN-S</b> order 3: quantity <b>20</b>, date <b>2027-02-25</b>."
+ },
+ {
+  "n": 210,
+  "role": "PRODUCTION",
+  "date": "2027-02-25",
+  "where": "Production → click the order → Release",
+  "what": "Release the production order for <b>TBL-LP</b> (number 3 of that item)."
+ },
+ {
+  "n": 211,
+  "role": "WAREHOUSE",
+  "date": "2027-02-25",
+  "where": "Production → the order → Materials → Issue material to the order",
+  "what": "<b>TBL-LP</b> order 3: set the Date to <b>2027-02-25</b> FIRST, leave every quantity as proposed, then click the button."
+ },
+ {
+  "n": 212,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-25",
+  "where": "Purchasing → Enter vendor invoice",
+  "what": "<b>PO-0006</b>, invoice number <b>BCT-2217</b>, invoice date <b>2027-02-25</b>, due <b>2027-03-25</b>, VAT 12 → <b>VI-0006</b>."
+ },
+ {
+  "n": 213,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-25",
+  "where": "Purchasing → Enter vendor invoice",
+  "what": "<b>PO-0007</b>, invoice number <b>CM-1033</b>, invoice date <b>2027-02-25</b>, due <b>2027-03-25</b>, VAT 12 → <b>VI-0007</b>."
+ },
+ {
+  "n": 214,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-25",
+  "where": "Purchasing → Enter vendor invoice",
+  "what": "<b>PO-0008</b>, invoice number <b>ME-7752</b>, invoice date <b>2027-02-25</b>, due <b>2027-03-26</b>, VAT 12 → <b>VI-0008</b>."
+ },
+ {
+  "n": 215,
+  "role": "PRODUCTION",
+  "date": "2027-02-26",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>TBL-LP</b> order 3: operation <b>10</b>, good 15, scrapped 0, labor 5.25 h, machine 0.75 h, setup 0.25 h, date <b>2027-02-26</b>."
+ },
+ {
+  "n": 216,
+  "role": "PRODUCTION",
+  "date": "2027-02-26",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>TBL-LP</b> order 3: operation <b>20</b>, good 15, scrapped 0, labor 2.25 h, machine 1.5 h, setup 0.25 h, date <b>2027-02-26</b>."
+ },
+ {
+  "n": 217,
+  "role": "PRODUCTION",
+  "date": "2027-02-26",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>TBL-LP</b> order 3: operation <b>30</b>, good 15, scrapped 0, labor 1.5 h, machine 0.0 h, setup 0.2 h, date <b>2027-02-26</b>, <b>tick the final confirmation</b>."
+ },
+ {
+  "n": 218,
+  "role": "PRODUCTION",
+  "date": "2027-02-26",
+  "where": "Production → the order → Finished goods into stock",
+  "what": "<b>TBL-LP</b> order 3: quantity <b>15</b>, date <b>2027-02-26</b>."
+ },
+ {
+  "n": 219,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-26",
+  "where": "Purchasing → Enter vendor invoice",
+  "what": "<b>PO-0009</b>, invoice number <b>LC-5524</b>, invoice date <b>2027-02-26</b>, due <b>2027-03-26</b>, VAT 12 → <b>VI-0009</b>."
+ },
+ {
+  "n": 220,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-26",
+  "where": "Purchasing → Enter vendor invoice",
+  "what": "<b>PO-0010</b>, invoice number <b>PP-0881</b>, invoice date <b>2027-02-26</b>, due <b>2027-03-27</b>, VAT 12 → <b>VI-0010</b>."
+ },
+ {
+  "n": 221,
+  "role": "WAREHOUSE",
+  "date": "2027-02-26",
+  "where": "Shipping → click the order → Post delivery",
+  "what": "<b>SO-0001</b> Manila Lamp House: deliver PEN-S 40 · PEN-L 20 · TBL-LP 30, delivery date <b>2027-02-26</b>."
+ },
+ {
+  "n": 222,
+  "role": "SALES",
+  "date": "2027-02-26",
+  "where": "Shipping → click the order → Create invoice for what was delivered",
+  "what": "<b>SO-0001</b>: invoice date <b>2027-02-26</b>, due <b>2027-03-28</b> → creates <b>INV-0001</b>."
+ },
+ {
+  "n": 223,
+  "role": "SALES",
+  "date": "2027-02-26",
+  "where": "Sales → Invoices → Send invoice",
+  "what": "Send <b>INV-0001</b> (Manila Lamp House)."
+ },
+ {
+  "n": 224,
+  "role": "WAREHOUSE",
+  "date": "2027-02-26",
+  "where": "Shipping → click the order → Post delivery",
+  "what": "<b>SO-0002</b> Cebu Interiors: deliver PEN-L 30 · FLR-LP 12, delivery date <b>2027-02-26</b>."
+ },
+ {
+  "n": 225,
+  "role": "SALES",
+  "date": "2027-02-26",
+  "where": "Shipping → click the order → Create invoice for what was delivered",
+  "what": "<b>SO-0002</b>: invoice date <b>2027-02-26</b>, due <b>2027-03-28</b> → creates <b>INV-0002</b>."
+ },
+ {
+  "n": 226,
+  "role": "SALES",
+  "date": "2027-02-26",
+  "where": "Sales → Invoices → Send invoice",
+  "what": "Send <b>INV-0002</b> (Cebu Interiors)."
+ },
+ {
+  "n": 227,
+  "role": "WAREHOUSE",
+  "date": "2027-02-26",
+  "where": "Shipping → click the order → Post delivery",
+  "what": "<b>SO-0003</b> Davao Design Hub: deliver CHD-4 6 · PEN-S 25, delivery date <b>2027-02-26</b>."
+ },
+ {
+  "n": 228,
+  "role": "SALES",
+  "date": "2027-02-26",
+  "where": "Shipping → click the order → Create invoice for what was delivered",
+  "what": "<b>SO-0003</b>: invoice date <b>2027-02-26</b>, due <b>2027-03-28</b> → creates <b>INV-0003</b>."
+ },
+ {
+  "n": 229,
+  "role": "SALES",
+  "date": "2027-02-26",
+  "where": "Sales → Invoices → Send invoice",
+  "what": "Send <b>INV-0003</b> (Davao Design Hub)."
+ },
+ {
+  "n": 230,
+  "role": "WAREHOUSE",
+  "date": "2027-02-27",
+  "where": "Shipping → click the order → Post delivery",
+  "what": "<b>SO-0004</b> Baguio Gifts: deliver TBL-LP 20 · PEN-S 30, delivery date <b>2027-02-27</b>."
+ },
+ {
+  "n": 231,
+  "role": "SALES",
+  "date": "2027-02-27",
+  "where": "Shipping → click the order → Create invoice for what was delivered",
+  "what": "<b>SO-0004</b>: invoice date <b>2027-02-27</b>, due <b>2027-03-29</b> → creates <b>INV-0004</b>."
+ },
+ {
+  "n": 232,
+  "role": "SALES",
+  "date": "2027-02-27",
+  "where": "Sales → Invoices → Send invoice",
+  "what": "Send <b>INV-0004</b> (Baguio Gifts)."
+ },
+ {
+  "n": 233,
+  "role": "WAREHOUSE",
+  "date": "2027-02-27",
+  "where": "Shipping → click the order → Post delivery",
+  "what": "<b>SO-0005</b> Iloilo Decor: deliver FLR-LP 8 · CHD-4 4 · PEN-L 10, delivery date <b>2027-02-27</b>."
+ },
+ {
+  "n": 234,
+  "role": "SALES",
+  "date": "2027-02-27",
+  "where": "Shipping → click the order → Create invoice for what was delivered",
+  "what": "<b>SO-0005</b>: invoice date <b>2027-02-27</b>, due <b>2027-03-29</b> → creates <b>INV-0005</b>."
+ },
+ {
+  "n": 235,
+  "role": "SALES",
+  "date": "2027-02-27",
+  "where": "Sales → Invoices → Send invoice",
+  "what": "Send <b>INV-0005</b> (Iloilo Decor)."
+ },
+ {
+  "n": 236,
+  "role": "WAREHOUSE",
+  "date": "2027-02-27",
+  "where": "Shipping → click the order → Post delivery",
+  "what": "<b>SO-0006</b> Cagayan Lighting: deliver TBL-LP 15 · PEN-S 20, delivery date <b>2027-02-27</b>."
+ },
+ {
+  "n": 237,
+  "role": "SALES",
+  "date": "2027-02-27",
+  "where": "Shipping → click the order → Create invoice for what was delivered",
+  "what": "<b>SO-0006</b>: invoice date <b>2027-02-27</b>, due <b>2027-03-29</b> → creates <b>INV-0006</b>."
+ },
+ {
+  "n": 238,
+  "role": "SALES",
+  "date": "2027-02-27",
+  "where": "Sales → Invoices → Send invoice",
+  "what": "Send <b>INV-0006</b> (Cagayan Lighting)."
+ },
+ {
+  "n": 239,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-27",
+  "where": "Sales → Invoices → Details → Record payment",
+  "what": "<b>INV-0001</b> (Manila Lamp House): the whole balance, date <b>2027-02-27</b>, Bank transfer."
+ },
+ {
+  "n": 240,
+  "role": "PURCHASING",
+  "date": "2027-02-27",
+  "where": "Purchasing → Vendor invoices → Pay",
+  "what": "<b>VI-0001</b>: the whole balance, date <b>2027-02-27</b>, Bank transfer."
+ },
+ {
+  "n": 241,
+  "role": "PURCHASING",
+  "date": "2027-02-27",
+  "where": "Purchasing → Vendor invoices → Pay",
+  "what": "<b>VI-0002</b>: the whole balance, date <b>2027-02-27</b>, Bank transfer."
+ },
+ {
+  "n": 242,
+  "role": "PURCHASING",
+  "date": "2027-02-27",
+  "where": "Purchasing → Vendor invoices → Pay",
+  "what": "<b>VI-0003</b>: the whole balance, date <b>2027-02-27</b>, Bank transfer."
+ },
+ {
+  "n": 243,
+  "role": "WAREHOUSE",
+  "date": "2027-02-27",
+  "where": "Inventory → Stock → Move stock",
+  "what": "Move <b>3</b> of <b>CAP-SH</b> from RM-STORE to STORE-B, date <b>2027-02-27</b>."
+ },
+ {
+  "n": 244,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-27",
+  "where": "Finance → New journal voucher",
+  "what": "Date <b>2027-02-27</b>, reference <b>Rent Feb</b>, particulars <i>Workshop rent for February</i>: <b>5100</b> debit 18,000.00; <b>1000</b> credit 18,000.00."
+ },
+ {
+  "n": 245,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-27",
+  "where": "Finance → New journal voucher",
+  "what": "Date <b>2027-02-27</b>, reference <b>Payroll Feb</b>, particulars <i>Salaries and wages for February</i>: <b>5300</b> debit 85,000.00; <b>1000</b> credit 85,000.00."
+ },
+ {
+  "n": 246,
+  "role": "WAREHOUSE",
+  "date": "2027-02-28",
+  "where": "Inventory → Stock → Adjust stock",
+  "what": "<b>CAP-SH</b> in STORE-B: change <b>-1</b>, reason <i>Stock count</i>, date <b>2027-02-28</b>."
+ },
+ {
+  "n": 247,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-28",
+  "where": "Finance → New journal voucher",
+  "what": "Date <b>2027-02-28</b>, reference <b>Power Feb</b>, particulars <i>Electricity for February paid by bank</i>: <b>5100</b> debit 9,500.00; <b>1000</b> credit 9,500.00. Tick <b>System override / audit adjustment</b>, reason <i>Electricity bill higher than the usual limit</i>: it then waits for the Finance manager."
+ },
+ {
+  "n": 248,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-02-28",
+  "where": "Finance → open the voucher → Approve",
+  "what": "Approve the voucher with reference <b>Power Feb</b> (you must not be the one who prepared it)."
+ },
+ {
+  "n": 249,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-28",
+  "where": "Finance → New journal voucher",
+  "what": "Date <b>2027-02-28</b>, reference <b>Ads Feb</b>, particulars <i>Facebook ads for the lamp launch</i>: <b>5200</b> debit 12,000.00; <b>1000</b> credit 12,000.00. Tick <b>System override / audit adjustment</b>, reason <i>Launch campaign above the usual limit</i>: it then waits for the Finance manager."
+ },
+ {
+  "n": 250,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-02-28",
+  "where": "Finance → open the voucher → Approve",
+  "what": "Approve the voucher with reference <b>Ads Feb</b> (you must not be the one who prepared it)."
+ },
+ {
+  "n": 251,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-28",
+  "where": "Fixed Assets → Record 1 month dep.",
+  "what": "<b>Capiz cutting machine</b>, date <b>2027-02-28</b> (it proposes the month-end): 6,750.00."
+ },
+ {
+  "n": 252,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-28",
+  "where": "Finance → New journal voucher",
+  "what": "Date <b>2027-02-28</b>, reference <b>Rounding Feb</b>, particulars <i>One centavo rounding difference found by the books check</i>: <b>1220</b> debit 0.01; <b>5590</b> credit 0.01. Tick <b>System override / audit adjustment</b>, reason <i>Books check shows 0.01 on Finished goods: standard costs with 3 decimals</i>: it then waits for the Finance manager."
+ },
+ {
+  "n": 253,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-02-28",
+  "where": "Finance → open the voucher → Approve",
+  "what": "Approve the voucher with reference <b>Rounding Feb</b> (you must not be the one who prepared it)."
+ },
+ {
+  "n": 254,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-28",
+  "where": "Production → the order → Settle order",
+  "what": "<b>BAS-BR</b> order 1: settlement date <b>2027-02-28</b>."
+ },
+ {
+  "n": 255,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-28",
+  "where": "Production → the order → Settle order",
+  "what": "<b>BAS-BR</b> order 2: settlement date <b>2027-02-28</b>."
+ },
+ {
+  "n": 256,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-28",
+  "where": "Production → the order → Settle order",
+  "what": "<b>SHD-S</b> order 1: settlement date <b>2027-02-28</b>."
+ },
+ {
+  "n": 257,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-28",
+  "where": "Production → the order → Settle order",
+  "what": "<b>SHD-S</b> order 2: settlement date <b>2027-02-28</b>."
+ },
+ {
+  "n": 258,
+  "role": "ACCOUNTANT",
+  "date": "2027-02-28",
+  "where": "Production → the order → Settle order",
+  "what": "<b>SHD-L</b> order 1: settlement date <b>2027-02-28</b>."
+ },
+ {
+  "n": 259,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-02-28",
+  "where": "Production → the order → Settle order",
+  "what": "<b>PEN-S</b> order 1: settlement date <b>2027-02-28</b>."
+ },
+ {
+  "n": 260,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-02-28",
+  "where": "Production → the order → Settle order",
+  "what": "<b>PEN-S</b> order 2: settlement date <b>2027-02-28</b>."
+ },
+ {
+  "n": 261,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-02-28",
+  "where": "Production → the order → Settle order",
+  "what": "<b>PEN-S</b> order 3: settlement date <b>2027-02-28</b>."
+ },
+ {
+  "n": 262,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-02-28",
+  "where": "Production → the order → Settle order",
+  "what": "<b>PEN-L</b> order 1: settlement date <b>2027-02-28</b>."
+ },
+ {
+  "n": 263,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-02-28",
+  "where": "Production → the order → Settle order",
+  "what": "<b>PEN-L</b> order 2: settlement date <b>2027-02-28</b>."
+ },
+ {
+  "n": 264,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-02-28",
+  "where": "Production → the order → Settle order",
+  "what": "<b>TBL-LP</b> order 1: settlement date <b>2027-02-28</b>."
+ },
+ {
+  "n": 265,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-02-28",
+  "where": "Production → the order → Settle order",
+  "what": "<b>TBL-LP</b> order 2: settlement date <b>2027-02-28</b>."
+ },
+ {
+  "n": 266,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-02-28",
+  "where": "Production → the order → Settle order",
+  "what": "<b>TBL-LP</b> order 3: settlement date <b>2027-02-28</b>."
+ },
+ {
+  "n": 267,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-02-28",
+  "where": "Production → the order → Settle order",
+  "what": "<b>FLR-LP</b> order 1: settlement date <b>2027-02-28</b>."
+ },
+ {
+  "n": 268,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-02-28",
+  "where": "Production → the order → Settle order",
+  "what": "<b>FLR-LP</b> order 2: settlement date <b>2027-02-28</b>."
+ },
+ {
+  "n": 269,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-02-28",
+  "where": "Production → the order → Settle order",
+  "what": "<b>CHD-4</b> order 1: settlement date <b>2027-02-28</b>."
+ },
+ {
+  "n": 270,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-02-28",
+  "where": "Production → the order → Settle order",
+  "what": "<b>CHD-4</b> order 2: settlement date <b>2027-02-28</b>."
+ },
+ {
+  "n": 271,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-02-28",
+  "where": "Period End → Settle…",
+  "what": "<b>2027-02</b>: read the checks, Post the month-end entries."
+ },
+ {
+  "n": 272,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-02-28",
+  "where": "Period End → Close month",
+  "what": "Close <b>2027-02</b> (oldest first)."
+ },
+ {
+  "n": 273,
+  "role": "PRODUCTION",
+  "date": "2027-03-01",
+  "where": "Master Data → Bills of materials → New BOM",
+  "what": "<b>PEN-S</b>, valid from <b>2027-03-01</b>: SHD-S 1 · LED-KT 1 · CRD-SW 1 · CTN-LP 1 · FOM-PD 2. Save draft, then Activate."
+ },
+ {
+  "n": 274,
+  "role": "ACCOUNTANT",
+  "date": "2027-03-01",
+  "where": "Costing → New estimate",
+  "what": "<b>PEN-S</b>, lot size 20, costing date <b>2027-03-01</b>: Work out the cost, Mark this cost, Release as standard cost."
+ },
+ {
+  "n": 275,
+  "role": "SALES",
+  "date": "2027-03-01",
+  "where": "Sales → Sales Orders → New sales order",
+  "what": "<b>SO-0007</b> Manila Lamp House, date 2027-03-01: PEN-S 50 @ 1,480 · TBL-LP 25 @ 1,900; tax rate 12; total <b>₱136,080.00</b>. Save, then Confirm."
+ },
+ {
+  "n": 276,
+  "role": "SALES",
+  "date": "2027-03-02",
+  "where": "Sales → Sales Orders → New sales order",
+  "what": "<b>SO-0008</b> Cebu Interiors, date 2027-03-02: PEN-L 30 @ 2,400 · FLR-LP 10 @ 4,000; tax rate 12; total <b>₱125,440.00</b>. Save, then Confirm."
+ },
+ {
+  "n": 277,
+  "role": "SALES",
+  "date": "2027-03-03",
+  "where": "Sales → Customers → New customer",
+  "what": "<b>Bacolod Home Gallery</b>."
+ },
+ {
+  "n": 278,
+  "role": "SALES",
+  "date": "2027-03-03",
+  "where": "Sales → Sales Orders → New sales order",
+  "what": "<b>SO-0009</b> Davao Design Hub, date 2027-03-03: CHD-4 5 @ 9,900 · TBL-LP 20 @ 1,900; tax rate 12; total <b>₱98,000.00</b>. Save, then Confirm."
+ },
+ {
+  "n": 279,
+  "role": "SALES",
+  "date": "2027-03-04",
+  "where": "Sales → Sales Orders → New sales order",
+  "what": "<b>SO-0010</b> Cagayan Lighting, date 2027-03-04: PEN-S 40 @ 1,480 · PEN-L 20 @ 2,400; tax rate 12; total <b>₱120,064.00</b>. Save, then Confirm."
+ },
+ {
+  "n": 280,
+  "role": "PRODUCTION",
+  "date": "2027-03-04",
+  "where": "Planning → Run planning",
+  "what": "Plan from <b>2027-03-01</b>, then <b>Run planning</b>."
+ },
+ {
+  "n": 281,
+  "role": "PRODUCTION",
+  "date": "2027-03-04",
+  "where": "Planning → Planned orders → Make selected",
+  "what": "Tick the box at the top of the table, then <b>Make selected</b>: every open planned order becomes a production order."
+ },
+ {
+  "n": 282,
+  "role": "PURCHASING",
+  "date": "2027-03-04",
+  "where": "Planning → Purchase requisitions → Delete",
+  "what": "Delete the open requisition for <b>CAP-SH</b> (you ordered it by hand in bundles)."
+ },
+ {
+  "n": 283,
+  "role": "PURCHASING",
+  "date": "2027-03-04",
+  "where": "Purchasing → New purchase order",
+  "what": "Vendor <b>Bohol Capiz Traders</b>, order date 2027-03-04, expected 2027-03-12: CAP-SH 22 BDL @ 2100 → <b>PO-0011</b>."
+ },
+ {
+  "n": 284,
+  "role": "PURCHASING",
+  "date": "2027-03-04",
+  "where": "Planning → Purchase requisitions → Create purchase order…",
+  "what": "Vendor <b>Cebu Metalworks</b> (type it in the new-vendor box the first time). Tick: WIR-FR, BRS-RD, BRS-FT. Prices: WIR-FR 35 · BRS-RD 85 · BRS-FT 60 → creates <b>PO-0012</b>."
+ },
+ {
+  "n": 285,
+  "role": "PURCHASING",
+  "date": "2027-03-04",
+  "where": "Planning → Purchase requisitions → Create purchase order…",
+  "what": "Vendor <b>Manila Electronics</b> (type it in the new-vendor box the first time). Tick: LED-KT, CRD-SW. Prices: LED-KT 156 · CRD-SW 55 → creates <b>PO-0013</b>."
+ },
+ {
+  "n": 286,
+  "role": "PURCHASING",
+  "date": "2027-03-04",
+  "where": "Planning → Purchase requisitions → Create purchase order…",
+  "what": "Vendor <b>Laguna Chemicals</b> (type it in the new-vendor box the first time). Tick: GLU-AD, CLR-CT. Prices: GLU-AD 190 · CLR-CT 260 → creates <b>PO-0014</b>."
+ },
+ {
+  "n": 287,
+  "role": "PURCHASING",
+  "date": "2027-03-04",
+  "where": "Planning → Purchase requisitions → Create purchase order…",
+  "what": "Vendor <b>Pasig Packaging</b> (type it in the new-vendor box the first time). Tick: CTN-LP, FOM-PD. Prices: CTN-LP 38 · FOM-PD 12 → creates <b>PO-0015</b>."
+ },
+ {
+  "n": 288,
+  "role": "QUALITY",
+  "date": "2027-03-05",
+  "where": "Quality → Plans and settings",
+  "what": "Item <b>CLR-CT</b>: tick <b>Inspect when it is bought</b>, Save these settings; characteristics: Viscosity (s) 20 to 35; Save the plan."
+ },
+ {
+  "n": 289,
+  "role": "QUALITY",
+  "date": "2027-03-05",
+  "where": "Quality → Plans and settings",
+  "what": "Item <b>BRS-FT</b>: tick <b>Inspect when it is bought</b>, Save these settings; characteristics: Hardness (HB) 60 to 90; Save the plan."
+ },
+ {
+  "n": 290,
+  "role": "QUALITY",
+  "date": "2027-03-05",
+  "where": "Quality → Plans and settings",
+  "what": "Item <b>PEN-S</b>: tick <b>Inspect when it is made</b>, Save these settings; characteristics: Switch test (pass) 1 to —; Finish defects (count) — to 2; Save the plan."
+ },
+ {
+  "n": 291,
+  "role": "QUALITY",
+  "date": "2027-03-05",
+  "where": "Quality → Plans and settings",
+  "what": "Item <b>PEN-L</b>: tick <b>Inspect when it is made</b>, Save these settings; characteristics: Switch test (pass) 1 to —; Finish defects (count) — to 2; Save the plan."
+ },
+ {
+  "n": 292,
+  "role": "QUALITY",
+  "date": "2027-03-05",
+  "where": "Quality → Plans and settings",
+  "what": "Item <b>TBL-LP</b>: tick <b>Inspect when it is made</b>, Save these settings; characteristics: Switch test (pass) 1 to —; Finish defects (count) — to 2; Save the plan."
+ },
+ {
+  "n": 293,
+  "role": "QUALITY",
+  "date": "2027-03-05",
+  "where": "Quality → Plans and settings",
+  "what": "Item <b>FLR-LP</b>: tick <b>Inspect when it is made</b>, Save these settings; characteristics: Switch test (pass) 1 to —; Finish defects (count) — to 2; Save the plan."
+ },
+ {
+  "n": 294,
+  "role": "QUALITY",
+  "date": "2027-03-05",
+  "where": "Quality → Plans and settings",
+  "what": "Item <b>CHD-4</b>: tick <b>Inspect when it is made</b>, Save these settings; characteristics: Switch test (pass) 1 to —; Finish defects (count) — to 2; Save the plan."
+ },
+ {
+  "n": 295,
+  "role": "WAREHOUSE",
+  "date": "2027-03-08",
+  "where": "Purchasing → Receive",
+  "what": "<b>PO-0012</b> (Cebu Metalworks): receipt date <b>2027-03-08</b>: WIR-FR 275 · BRS-RD 55 · BRS-FT 65 (goes to QUARANTINE by itself: BRS-FT)."
+ },
+ {
+  "n": 296,
+  "role": "WAREHOUSE",
+  "date": "2027-03-08",
+  "where": "Purchasing → Receive",
+  "what": "<b>PO-0014</b> (Laguna Chemicals): receipt date <b>2027-03-08</b>: GLU-AD 13.75 · CLR-CT 11 (goes to QUARANTINE by itself: CLR-CT; lot/expiry: CLR-CT CC-0308-A exp 2028-03-31)."
+ },
+ {
+  "n": 297,
+  "role": "WAREHOUSE",
+  "date": "2027-03-08",
+  "where": "Purchasing → Receive",
+  "what": "<b>PO-0015</b> (Pasig Packaging): receipt date <b>2027-03-08</b>: CTN-LP 150 · FOM-PD 360."
+ },
+ {
+  "n": 298,
+  "role": "QUALITY",
+  "date": "2027-03-08",
+  "where": "Quality → Inspection lots → the waiting lot",
+  "what": "<b>BRS-FT</b> lot 1: measured Hardness 72 → Save measurements. Decision: accept <b>65</b>, date <b>2027-03-08</b>."
+ },
+ {
+  "n": 299,
+  "role": "QUALITY",
+  "date": "2027-03-08",
+  "where": "Quality → Inspection lots → the waiting lot",
+  "what": "<b>CLR-CT</b> lot 1: measured Viscosity 28 → Save measurements. Decision: accept <b>11</b>, date <b>2027-03-08</b>."
+ },
+ {
+  "n": 300,
+  "role": "WAREHOUSE",
+  "date": "2027-03-09",
+  "where": "Purchasing → Receive",
+  "what": "<b>PO-0013</b> (Manila Electronics): receipt date <b>2027-03-09</b>: LED-KT 100 · CRD-SW 200 (goes to QUARANTINE by itself: LED-KT)."
+ },
+ {
+  "n": 301,
+  "role": "QUALITY",
+  "date": "2027-03-09",
+  "where": "Quality → Inspection lots → the waiting lot",
+  "what": "<b>LED-KT</b> lot 1: measured Voltage 12.0, Lumens 850 → Save measurements. Decision: accept <b>100</b>, date <b>2027-03-09</b>."
+ },
+ {
+  "n": 302,
+  "role": "WAREHOUSE",
+  "date": "2027-03-10",
+  "where": "Purchasing → Receive",
+  "what": "<b>PO-0011</b> (Bohol Capiz Traders): receipt date <b>2027-03-10</b>: CAP-SH 60 (goes to QUARANTINE by itself: CAP-SH)."
+ },
+ {
+  "n": 303,
+  "role": "QUALITY",
+  "date": "2027-03-10",
+  "where": "Quality → Inspection lots → the waiting lot",
+  "what": "<b>CAP-SH</b> lot 1: measured Moisture 11.2 → Save measurements. Decision: accept <b>60</b>, date <b>2027-03-10</b>."
+ },
+ {
+  "n": 304,
+  "role": "WAREHOUSE",
+  "date": "2027-03-12",
+  "where": "Purchasing → Receive",
+  "what": "<b>PO-0013</b> (Manila Electronics): receipt date <b>2027-03-12</b>: LED-KT 115 (goes to QUARANTINE by itself: LED-KT)."
+ },
+ {
+  "n": 305,
+  "role": "QUALITY",
+  "date": "2027-03-12",
+  "where": "Quality → Inspection lots → the waiting lot",
+  "what": "<b>LED-KT</b> lot 2: measured Voltage 12.1, Lumens 770 → Save measurements. Decision: accept <b>105</b>, return 10, root cause SUPPLIER, date <b>2027-03-12</b>, note <i>Lumens below the limit on 10 kits; returned</i>."
+ },
+ {
+  "n": 306,
+  "role": "QUALITY",
+  "date": "2027-03-12",
+  "where": "Quality → Non-conformances → the open report → Close the report",
+  "what": "<b>LED-KT</b>: corrective action <i>Vendor to test lumens on every kit before packing</i>."
+ },
+ {
+  "n": 307,
+  "role": "WAREHOUSE",
+  "date": "2027-03-12",
+  "where": "Purchasing → Receive",
+  "what": "<b>PO-0015</b> (Pasig Packaging): receipt date <b>2027-03-12</b>: CTN-LP 55."
+ },
+ {
+  "n": 308,
+  "role": "WAREHOUSE",
+  "date": "2027-03-12",
+  "where": "Purchasing → Receive",
+  "what": "<b>PO-0011</b> (Bohol Capiz Traders): receipt date <b>2027-03-12</b>: CAP-SH 50 (goes to QUARANTINE by itself: CAP-SH)."
+ },
+ {
+  "n": 309,
+  "role": "QUALITY",
+  "date": "2027-03-12",
+  "where": "Quality → Inspection lots → the waiting lot",
+  "what": "<b>CAP-SH</b> lot 2: measured Moisture 12.9 → Save measurements. Decision: accept <b>45</b>, return 5, root cause MATERIAL, date <b>2027-03-12</b>, note <i>Damp sheets, 5 kg returned</i>."
+ },
+ {
+  "n": 310,
+  "role": "QUALITY",
+  "date": "2027-03-12",
+  "where": "Quality → Non-conformances → the open report → Close the report",
+  "what": "<b>CAP-SH</b>: corrective action <i>Vendor to dry the sheets before loading</i>."
+ },
+ {
+  "n": 311,
+  "role": "SALES",
+  "date": "2027-03-08",
+  "where": "Sales → Sales Orders → New sales order",
+  "what": "<b>SO-0011</b> Baguio Gifts, date 2027-03-08: TBL-LP 30 @ 1,900 · FLR-LP 8 @ 4,100 · PEN-S 30 @ 1,480; tax rate 12; total <b>₱150,304.00</b>. Save, then Confirm."
+ },
+ {
+  "n": 312,
+  "role": "SALES",
+  "date": "2027-03-09",
+  "where": "Sales → Sales Orders → New sales order",
+  "what": "<b>SO-0012</b> Iloilo Decor, date 2027-03-09: CHD-4 4 @ 10,200 · PEN-L 25 @ 2,400; tax rate 12; total <b>₱112,896.00</b>. Save, then Confirm."
+ },
+ {
+  "n": 313,
+  "role": "SALES",
+  "date": "2027-03-10",
+  "where": "Sales → Sales Orders → New sales order",
+  "what": "<b>SO-0013</b> Bacolod Home Gallery, date 2027-03-10: FLR-LP 12 @ 4,100 · PEN-S 20 @ 1,480; tax rate 12; total <b>₱88,256.00</b>. Save, then Confirm."
+ },
+ {
+  "n": 314,
+  "role": "PRODUCTION",
+  "date": "2027-03-13",
+  "where": "Planning → Run planning",
+  "what": "Plan from <b>2027-03-01</b>, then <b>Run planning</b>."
+ },
+ {
+  "n": 315,
+  "role": "PRODUCTION",
+  "date": "2027-03-13",
+  "where": "Planning → Planned orders → Make selected",
+  "what": "Tick the box at the top of the table, then <b>Make selected</b>: every open planned order becomes a production order."
+ },
+ {
+  "n": 316,
+  "role": "PRODUCTION",
+  "date": "2027-03-09",
+  "where": "Production → click the order → Release",
+  "what": "Release the production order for <b>BAS-BR</b> (number 3 of that item)."
+ },
+ {
+  "n": 317,
+  "role": "WAREHOUSE",
+  "date": "2027-03-09",
+  "where": "Production → the order → Materials → Issue material to the order",
+  "what": "<b>BAS-BR</b> order 3: set the Date to <b>2027-03-09</b> FIRST, leave every quantity as proposed, then click the button."
+ },
+ {
+  "n": 318,
+  "role": "PRODUCTION",
+  "date": "2027-03-09",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>BAS-BR</b> order 3: operation <b>10</b>, good 55, scrapped 0, labor 11.0 h, machine 8.25 h, setup 0.5 h, date <b>2027-03-09</b>."
+ },
+ {
+  "n": 319,
+  "role": "PRODUCTION",
+  "date": "2027-03-10",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>BAS-BR</b> order 3: operation <b>20</b>, good 55, scrapped 0, labor 16.5 h, machine 11.0 h, setup 0.25 h, date <b>2027-03-10</b>, <b>tick the final confirmation</b>."
+ },
+ {
+  "n": 320,
+  "role": "PRODUCTION",
+  "date": "2027-03-10",
+  "where": "Production → the order → Finished goods into stock",
+  "what": "<b>BAS-BR</b> order 3: quantity <b>55</b>, date <b>2027-03-10</b>."
+ },
+ {
+  "n": 321,
+  "role": "PRODUCTION",
+  "date": "2027-03-11",
+  "where": "Production → click the order → Release",
+  "what": "Release the production order for <b>SHD-S</b> (number 3 of that item)."
+ },
+ {
+  "n": 322,
+  "role": "WAREHOUSE",
+  "date": "2027-03-11",
+  "where": "Production → the order → Materials → Issue material to the order",
+  "what": "<b>SHD-S</b> order 3: set the Date to <b>2027-03-11</b> FIRST, leave every quantity as proposed, then click the button."
+ },
+ {
+  "n": 323,
+  "role": "PRODUCTION",
+  "date": "2027-03-11",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>SHD-S</b> order 3: operation <b>10</b>, good 155, scrapped 0, labor 46.5 h, machine 31.0 h, setup 0.5 h, date <b>2027-03-11</b>."
+ },
+ {
+  "n": 324,
+  "role": "PRODUCTION",
+  "date": "2027-03-11",
+  "where": "Shop Floor → Downtime → Log it",
+  "what": "<b>Cutting</b>, day <b>2027-03-11</b>, 3 hours, reason Breakdown, note <i>Blade replaced on the capiz cutter</i>."
+ },
+ {
+  "n": 325,
+  "role": "PRODUCTION",
+  "date": "2027-03-12",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>SHD-S</b> order 3: operation <b>20</b>, good 150, scrapped 5 (<i>Cracked capiz sheets</i>), labor 62.0 h, machine 15.5 h, setup 0.25 h, date <b>2027-03-12</b>, <b>tick the final confirmation</b>."
+ },
+ {
+  "n": 326,
+  "role": "PRODUCTION",
+  "date": "2027-03-12",
+  "where": "Production → the order → Finished goods into stock",
+  "what": "<b>SHD-S</b> order 3: quantity <b>150</b>, date <b>2027-03-12</b>."
+ },
+ {
+  "n": 327,
+  "role": "PRODUCTION",
+  "date": "2027-03-12",
+  "where": "Production → click the order → Release",
+  "what": "Release the production order for <b>PEN-S</b> (number 4 of that item)."
+ },
+ {
+  "n": 328,
+  "role": "WAREHOUSE",
+  "date": "2027-03-12",
+  "where": "Production → the order → Materials → Issue material to the order",
+  "what": "<b>PEN-S</b> order 4: set the Date to <b>2027-03-12</b> FIRST, leave every quantity as proposed, then click the button."
+ },
+ {
+  "n": 329,
+  "role": "PRODUCTION",
+  "date": "2027-03-12",
+  "where": "Production → click the order → Release",
+  "what": "Release the production order for <b>TBL-LP</b> (number 4 of that item)."
+ },
+ {
+  "n": 330,
+  "role": "WAREHOUSE",
+  "date": "2027-03-12",
+  "where": "Production → the order → Materials → Issue material to the order",
+  "what": "<b>TBL-LP</b> order 4: set the Date to <b>2027-03-12</b> FIRST, leave every quantity as proposed, then click the button."
+ },
+ {
+  "n": 331,
+  "role": "PURCHASING",
+  "date": "2027-03-13",
+  "where": "Planning → Purchase requisitions → Delete",
+  "what": "Delete the open requisition for <b>CAP-SH</b> (you ordered it by hand in bundles)."
+ },
+ {
+  "n": 332,
+  "role": "PURCHASING",
+  "date": "2027-03-13",
+  "where": "Purchasing → New purchase order",
+  "what": "Vendor <b>Bohol Capiz Traders</b>, order date 2027-03-13, expected 2027-03-18: CAP-SH 18 BDL @ 2100 → <b>PO-0016</b>."
+ },
+ {
+  "n": 333,
+  "role": "PURCHASING",
+  "date": "2027-03-13",
+  "where": "Planning → Purchase requisitions → Create purchase order…",
+  "what": "Vendor <b>Cebu Metalworks</b> (type it in the new-vendor box the first time). Tick: WIR-FR, BRS-RD, BRS-FT. Prices: WIR-FR 35 · BRS-RD 85 · BRS-FT 60 → creates <b>PO-0017</b>."
+ },
+ {
+  "n": 334,
+  "role": "PURCHASING",
+  "date": "2027-03-13",
+  "where": "Planning → Purchase requisitions → Create purchase order…",
+  "what": "Vendor <b>Manila Electronics</b> (type it in the new-vendor box the first time). Tick: LED-KT, CRD-SW. Prices: LED-KT 156 · CRD-SW 55 → creates <b>PO-0018</b>."
+ },
+ {
+  "n": 335,
+  "role": "PURCHASING",
+  "date": "2027-03-13",
+  "where": "Planning → Purchase requisitions → Create purchase order…",
+  "what": "Vendor <b>Laguna Chemicals</b> (type it in the new-vendor box the first time). Tick: GLU-AD, CLR-CT. Prices: GLU-AD 190 · CLR-CT 260 → creates <b>PO-0019</b>."
+ },
+ {
+  "n": 336,
+  "role": "PURCHASING",
+  "date": "2027-03-13",
+  "where": "Planning → Purchase requisitions → Create purchase order…",
+  "what": "Vendor <b>Pasig Packaging</b> (type it in the new-vendor box the first time). Tick: CTN-LP, FOM-PD. Prices: CTN-LP 38 · FOM-PD 12 → creates <b>PO-0020</b>."
+ },
+ {
+  "n": 337,
+  "role": "PRODUCTION",
+  "date": "2027-03-13",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>PEN-S</b> order 4: operation <b>10</b>, good 90, scrapped 0, labor 18.0 h, machine 4.5 h, setup 0.25 h, date <b>2027-03-13</b>."
+ },
+ {
+  "n": 338,
+  "role": "PRODUCTION",
+  "date": "2027-03-13",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>TBL-LP</b> order 4: operation <b>10</b>, good 45, scrapped 0, labor 15.75 h, machine 2.25 h, setup 0.25 h, date <b>2027-03-13</b>."
+ },
+ {
+  "n": 339,
+  "role": "PRODUCTION",
+  "date": "2027-03-14",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>PEN-S</b> order 4: operation <b>20</b>, good 90, scrapped 0, labor 9.0 h, machine 0.0 h, setup 0.2 h, date <b>2027-03-14</b>, <b>tick the final confirmation</b>."
+ },
+ {
+  "n": 340,
+  "role": "PRODUCTION",
+  "date": "2027-03-14",
+  "where": "Production → the order → Finished goods into stock",
+  "what": "<b>PEN-S</b> order 4: quantity <b>90</b>, date <b>2027-03-14</b>, store <b>QUARANTINE</b> (the lamp is inspected before it can be sold)."
+ },
+ {
+  "n": 341,
+  "role": "PRODUCTION",
+  "date": "2027-03-14",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>TBL-LP</b> order 4: operation <b>20</b>, good 45, scrapped 0, labor 6.75 h, machine 4.5 h, setup 0.25 h, date <b>2027-03-14</b>."
+ },
+ {
+  "n": 342,
+  "role": "PRODUCTION",
+  "date": "2027-03-15",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>TBL-LP</b> order 4: operation <b>30</b>, good 45, scrapped 0, labor 4.5 h, machine 0.0 h, setup 0.2 h, date <b>2027-03-15</b>, <b>tick the final confirmation</b>."
+ },
+ {
+  "n": 343,
+  "role": "PRODUCTION",
+  "date": "2027-03-15",
+  "where": "Production → the order → Finished goods into stock",
+  "what": "<b>TBL-LP</b> order 4: quantity <b>45</b>, date <b>2027-03-15</b>, store <b>QUARANTINE</b> (the lamp is inspected before it can be sold)."
+ },
+ {
+  "n": 344,
+  "role": "QUALITY",
+  "date": "2027-03-15",
+  "where": "Quality → Inspection lots → the waiting lot",
+  "what": "<b>PEN-S</b> lot 1: measured Switch test 1, Finish defects 1 → Save measurements. Decision: accept <b>90</b>, date <b>2027-03-15</b>."
+ },
+ {
+  "n": 345,
+  "role": "WAREHOUSE",
+  "date": "2027-03-16",
+  "where": "Purchasing → Receive",
+  "what": "<b>PO-0017</b> (Cebu Metalworks): receipt date <b>2027-03-16</b>: WIR-FR 186 · BRS-RD 62 · BRS-FT 58 (goes to QUARANTINE by itself: BRS-FT)."
+ },
+ {
+  "n": 346,
+  "role": "QUALITY",
+  "date": "2027-03-16",
+  "where": "Quality → Inspection lots → the waiting lot",
+  "what": "<b>BRS-FT</b> lot 2: measured Hardness 68 → Save measurements. Decision: accept <b>58</b>, date <b>2027-03-16</b>."
+ },
+ {
+  "n": 347,
+  "role": "WAREHOUSE",
+  "date": "2027-03-16",
+  "where": "Purchasing → Receive",
+  "what": "<b>PO-0019</b> (Laguna Chemicals): receipt date <b>2027-03-16</b>: GLU-AD 9.3 · CLR-CT 7.44 (goes to QUARANTINE by itself: CLR-CT; lot/expiry: CLR-CT CC-0316-A exp 2028-03-31)."
+ },
+ {
+  "n": 348,
+  "role": "QUALITY",
+  "date": "2027-03-16",
+  "where": "Quality → Inspection lots → the waiting lot",
+  "what": "<b>CLR-CT</b> lot 2: measured Viscosity 31 → Save measurements. Decision: accept <b>7.44</b>, date <b>2027-03-16</b>."
+ },
+ {
+  "n": 349,
+  "role": "WAREHOUSE",
+  "date": "2027-03-16",
+  "where": "Purchasing → Receive",
+  "what": "<b>PO-0016</b> (Bohol Capiz Traders): receipt date <b>2027-03-16</b>: CAP-SH 60 (goes to QUARANTINE by itself: CAP-SH)."
+ },
+ {
+  "n": 350,
+  "role": "QUALITY",
+  "date": "2027-03-16",
+  "where": "Quality → Inspection lots → the waiting lot",
+  "what": "<b>CAP-SH</b> lot 3: measured Moisture 10.9 → Save measurements. Decision: accept <b>60</b>, date <b>2027-03-16</b>."
+ },
+ {
+  "n": 351,
+  "role": "PRODUCTION",
+  "date": "2027-03-16",
+  "where": "Production → click the order → Release",
+  "what": "Release the production order for <b>SHD-L</b> (number 2 of that item)."
+ },
+ {
+  "n": 352,
+  "role": "WAREHOUSE",
+  "date": "2027-03-16",
+  "where": "Production → the order → Materials → Issue material to the order",
+  "what": "<b>SHD-L</b> order 2: set the Date to <b>2027-03-16</b> FIRST, leave every quantity as proposed, then click the button."
+ },
+ {
+  "n": 353,
+  "role": "PRODUCTION",
+  "date": "2027-03-16",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>SHD-L</b> order 2: operation <b>10</b>, good 60, scrapped 0, labor 30.0 h, machine 21.0 h, setup 0.5 h, date <b>2027-03-16</b>."
+ },
+ {
+  "n": 354,
+  "role": "QUALITY",
+  "date": "2027-03-16",
+  "where": "Quality → Inspection lots → the waiting lot",
+  "what": "<b>TBL-LP</b> lot 1: measured Switch test 1, Finish defects 0 → Save measurements. Decision: accept <b>45</b>, date <b>2027-03-16</b>."
+ },
+ {
+  "n": 355,
+  "role": "WAREHOUSE",
+  "date": "2027-03-17",
+  "where": "Purchasing → Receive",
+  "what": "<b>PO-0020</b> (Pasig Packaging): receipt date <b>2027-03-17</b>: CTN-LP 133 · FOM-PD 232."
+ },
+ {
+  "n": 356,
+  "role": "PRODUCTION",
+  "date": "2027-03-17",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>SHD-L</b> order 2: operation <b>20</b>, good 60, scrapped 0, labor 42.0 h, machine 9.0 h, setup 0.25 h, date <b>2027-03-17</b>, <b>tick the final confirmation</b>."
+ },
+ {
+  "n": 357,
+  "role": "PRODUCTION",
+  "date": "2027-03-17",
+  "where": "Production → the order → Finished goods into stock",
+  "what": "<b>SHD-L</b> order 2: quantity <b>60</b>, date <b>2027-03-17</b>."
+ },
+ {
+  "n": 358,
+  "role": "PRODUCTION",
+  "date": "2027-03-17",
+  "where": "Production → click the order → Release",
+  "what": "Release the production order for <b>SHD-S</b> (number 4 of that item)."
+ },
+ {
+  "n": 359,
+  "role": "WAREHOUSE",
+  "date": "2027-03-17",
+  "where": "Production → the order → Materials → Issue material to the order",
+  "what": "<b>SHD-S</b> order 4: set the Date to <b>2027-03-17</b> FIRST, leave every quantity as proposed, then click the button."
+ },
+ {
+  "n": 360,
+  "role": "PRODUCTION",
+  "date": "2027-03-17",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>SHD-S</b> order 4: operation <b>10</b>, good 96, scrapped 0, labor 28.8 h, machine 19.2 h, setup 0.5 h, date <b>2027-03-17</b>."
+ },
+ {
+  "n": 361,
+  "role": "PRODUCTION",
+  "date": "2027-03-17",
+  "where": "Production → click the order → Release",
+  "what": "Release the production order for <b>PEN-L</b> (number 3 of that item)."
+ },
+ {
+  "n": 362,
+  "role": "WAREHOUSE",
+  "date": "2027-03-17",
+  "where": "Production → the order → Materials → Issue material to the order",
+  "what": "<b>PEN-L</b> order 3: set the Date to <b>2027-03-17</b> FIRST, leave every quantity as proposed, then click the button."
+ },
+ {
+  "n": 363,
+  "role": "WAREHOUSE",
+  "date": "2027-03-18",
+  "where": "Purchasing → Receive",
+  "what": "<b>PO-0018</b> (Manila Electronics): receipt date <b>2027-03-18</b>: LED-KT 141 · CRD-SW 129 (goes to QUARANTINE by itself: LED-KT)."
+ },
+ {
+  "n": 364,
+  "role": "QUALITY",
+  "date": "2027-03-18",
+  "where": "Quality → Inspection lots → the waiting lot",
+  "what": "<b>LED-KT</b> lot 3: measured Voltage 12.2, Lumens 835 → Save measurements. Decision: accept <b>141</b>, date <b>2027-03-18</b>."
+ },
+ {
+  "n": 365,
+  "role": "WAREHOUSE",
+  "date": "2027-03-18",
+  "where": "Purchasing → Receive",
+  "what": "<b>PO-0016</b> (Bohol Capiz Traders): receipt date <b>2027-03-18</b>: CAP-SH 30 (goes to QUARANTINE by itself: CAP-SH)."
+ },
+ {
+  "n": 366,
+  "role": "QUALITY",
+  "date": "2027-03-18",
+  "where": "Quality → Inspection lots → the waiting lot",
+  "what": "<b>CAP-SH</b> lot 4: measured Moisture 11.5 → Save measurements. Decision: accept <b>30</b>, date <b>2027-03-18</b>."
+ },
+ {
+  "n": 367,
+  "role": "PRODUCTION",
+  "date": "2027-03-18",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>SHD-S</b> order 4: operation <b>20</b>, good 95, scrapped 1 (<i>Cracked capiz sheets</i>), labor 38.4 h, machine 9.6 h, setup 0.25 h, date <b>2027-03-18</b>, <b>tick the final confirmation</b>."
+ },
+ {
+  "n": 368,
+  "role": "PRODUCTION",
+  "date": "2027-03-18",
+  "where": "Production → the order → Finished goods into stock",
+  "what": "<b>SHD-S</b> order 4: quantity <b>95</b>, date <b>2027-03-18</b>."
+ },
+ {
+  "n": 369,
+  "role": "PRODUCTION",
+  "date": "2027-03-18",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>PEN-L</b> order 3: operation <b>10</b>, good 50, scrapped 0, labor 15.0 h, machine 2.5 h, setup 0.25 h, date <b>2027-03-18</b>."
+ },
+ {
+  "n": 370,
+  "role": "PRODUCTION",
+  "date": "2027-03-18",
+  "where": "Production → click the order → Release",
+  "what": "Release the production order for <b>CHD-4</b> (number 3 of that item)."
+ },
+ {
+  "n": 371,
+  "role": "WAREHOUSE",
+  "date": "2027-03-18",
+  "where": "Production → the order → Materials → Issue material to the order",
+  "what": "<b>CHD-4</b> order 3: set the Date to <b>2027-03-18</b> FIRST, leave every quantity as proposed, then click the button."
+ },
+ {
+  "n": 372,
+  "role": "PRODUCTION",
+  "date": "2027-03-18",
+  "where": "Production → click the order → Release",
+  "what": "Release the production order for <b>BAS-BR</b> (number 4 of that item)."
+ },
+ {
+  "n": 373,
+  "role": "WAREHOUSE",
+  "date": "2027-03-18",
+  "where": "Production → the order → Materials → Issue material to the order",
+  "what": "<b>BAS-BR</b> order 4: set the Date to <b>2027-03-18</b> FIRST, leave every quantity as proposed, then click the button."
+ },
+ {
+  "n": 374,
+  "role": "PRODUCTION",
+  "date": "2027-03-19",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>PEN-L</b> order 3: operation <b>20</b>, good 50, scrapped 0, labor 7.5 h, machine 0.0 h, setup 0.2 h, date <b>2027-03-19</b>, <b>tick the final confirmation</b>."
+ },
+ {
+  "n": 375,
+  "role": "PRODUCTION",
+  "date": "2027-03-19",
+  "where": "Production → the order → Finished goods into stock",
+  "what": "<b>PEN-L</b> order 3: quantity <b>50</b>, date <b>2027-03-19</b>, store <b>QUARANTINE</b> (the lamp is inspected before it can be sold)."
+ },
+ {
+  "n": 376,
+  "role": "PURCHASING",
+  "date": "2027-03-19",
+  "where": "Purchasing → New purchase order",
+  "what": "Vendor <b>Cebu Metalworks</b>, order date 2027-03-19, expected 2027-03-20: WIR-FR 10 @ 35 → <b>PO-0021</b>."
+ },
+ {
+  "n": 377,
+  "role": "PURCHASING",
+  "date": "2027-03-19",
+  "where": "Purchasing → New purchase order",
+  "what": "Vendor <b>Bohol Capiz Traders</b>, order date 2027-03-19, expected 2027-03-20: CAP-SH 1 BDL @ 2100 → <b>PO-0022</b>."
+ },
+ {
+  "n": 378,
+  "role": "PURCHASING",
+  "date": "2027-03-19",
+  "where": "Purchasing → New purchase order",
+  "what": "Vendor <b>Laguna Chemicals</b>, order date 2027-03-19, expected 2027-03-20: GLU-AD 2 @ 190 · CLR-CT 1 @ 260 → <b>PO-0023</b>."
+ },
+ {
+  "n": 379,
+  "role": "PURCHASING",
+  "date": "2027-03-19",
+  "where": "Purchasing → New purchase order",
+  "what": "Vendor <b>Manila Electronics</b>, order date 2027-03-19, expected 2027-03-21: LED-KT 10 @ 156 → <b>PO-0024</b>."
+ },
+ {
+  "n": 380,
+  "role": "PRODUCTION",
+  "date": "2027-03-19",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>CHD-4</b> order 3: operation <b>10</b>, good 5, scrapped 0, labor 5.0 h, machine 1.0 h, setup 0.5 h, date <b>2027-03-19</b>."
+ },
+ {
+  "n": 381,
+  "role": "PRODUCTION",
+  "date": "2027-03-19",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>BAS-BR</b> order 4: operation <b>10</b>, good 50, scrapped 0, labor 10.0 h, machine 7.5 h, setup 0.5 h, date <b>2027-03-19</b>."
+ },
+ {
+  "n": 382,
+  "role": "PRODUCTION",
+  "date": "2027-03-19",
+  "where": "Production → click the order → Release",
+  "what": "Release the production order for <b>PEN-S</b> (number 5 of that item)."
+ },
+ {
+  "n": 383,
+  "role": "WAREHOUSE",
+  "date": "2027-03-19",
+  "where": "Production → the order → Materials → Issue material to the order",
+  "what": "<b>PEN-S</b> order 5: set the Date to <b>2027-03-19</b> FIRST, leave every quantity as proposed, then click the button."
+ },
+ {
+  "n": 384,
+  "role": "PRODUCTION",
+  "date": "2027-03-19",
+  "where": "Production → click the order → Release",
+  "what": "Release the production order for <b>SHD-L</b> (number 3 of that item)."
+ },
+ {
+  "n": 385,
+  "role": "WAREHOUSE",
+  "date": "2027-03-19",
+  "where": "Production → the order → Materials → Issue material to the order",
+  "what": "<b>SHD-L</b> order 3: set the Date to <b>2027-03-19</b> FIRST, leave every quantity as proposed, then click the button."
+ },
+ {
+  "n": 386,
+  "role": "PRODUCTION",
+  "date": "2027-03-19",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>SHD-L</b> order 3: operation <b>10</b>, good 45, scrapped 0, labor 22.5 h, machine 15.75 h, setup 0.5 h, date <b>2027-03-19</b>."
+ },
+ {
+  "n": 387,
+  "role": "WAREHOUSE",
+  "date": "2027-03-20",
+  "where": "Purchasing → Receive",
+  "what": "<b>PO-0021</b> (Cebu Metalworks): receipt date <b>2027-03-20</b>: WIR-FR 10."
+ },
+ {
+  "n": 388,
+  "role": "WAREHOUSE",
+  "date": "2027-03-20",
+  "where": "Purchasing → Receive",
+  "what": "<b>PO-0022</b> (Bohol Capiz Traders): receipt date <b>2027-03-20</b>: CAP-SH 5 (goes to QUARANTINE by itself: CAP-SH)."
+ },
+ {
+  "n": 389,
+  "role": "QUALITY",
+  "date": "2027-03-20",
+  "where": "Quality → Inspection lots → the waiting lot",
+  "what": "<b>CAP-SH</b> lot 5: measured Moisture 11.0 → Save measurements. Decision: accept <b>5</b>, date <b>2027-03-20</b>."
+ },
+ {
+  "n": 390,
+  "role": "WAREHOUSE",
+  "date": "2027-03-20",
+  "where": "Purchasing → Receive",
+  "what": "<b>PO-0023</b> (Laguna Chemicals): receipt date <b>2027-03-20</b>: GLU-AD 2 · CLR-CT 1 (goes to QUARANTINE by itself: CLR-CT; lot/expiry: CLR-CT CC-0320-A exp 2028-03-31)."
+ },
+ {
+  "n": 391,
+  "role": "QUALITY",
+  "date": "2027-03-20",
+  "where": "Quality → Inspection lots → the waiting lot",
+  "what": "<b>CLR-CT</b> lot 3: measured Viscosity 29 → Save measurements. Decision: accept <b>1</b>, date <b>2027-03-20</b>."
+ },
+ {
+  "n": 392,
+  "role": "PRODUCTION",
+  "date": "2027-03-20",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>CHD-4</b> order 3: operation <b>20</b>, good 5, scrapped 0, labor 2.5 h, machine 1.5 h, setup 0.25 h, date <b>2027-03-20</b>."
+ },
+ {
+  "n": 393,
+  "role": "PRODUCTION",
+  "date": "2027-03-20",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>BAS-BR</b> order 4: operation <b>20</b>, good 50, scrapped 0, labor 15.0 h, machine 10.0 h, setup 0.25 h, date <b>2027-03-20</b>, <b>tick the final confirmation</b>."
+ },
+ {
+  "n": 394,
+  "role": "PRODUCTION",
+  "date": "2027-03-20",
+  "where": "Production → the order → Finished goods into stock",
+  "what": "<b>BAS-BR</b> order 4: quantity <b>50</b>, date <b>2027-03-20</b>."
+ },
+ {
+  "n": 395,
+  "role": "PRODUCTION",
+  "date": "2027-03-20",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>PEN-S</b> order 5: operation <b>10</b>, good 50, scrapped 0, labor 10.0 h, machine 2.5 h, setup 0.25 h, date <b>2027-03-20</b>."
+ },
+ {
+  "n": 396,
+  "role": "PRODUCTION",
+  "date": "2027-03-20",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>SHD-L</b> order 3: operation <b>20</b>, good 45, scrapped 0, labor 31.5 h, machine 6.75 h, setup 0.25 h, date <b>2027-03-20</b>, <b>tick the final confirmation</b>."
+ },
+ {
+  "n": 397,
+  "role": "PRODUCTION",
+  "date": "2027-03-20",
+  "where": "Production → the order → Finished goods into stock",
+  "what": "<b>SHD-L</b> order 3: quantity <b>45</b>, date <b>2027-03-20</b>."
+ },
+ {
+  "n": 398,
+  "role": "QUALITY",
+  "date": "2027-03-20",
+  "where": "Quality → Inspection lots → the waiting lot",
+  "what": "<b>PEN-L</b> lot 1: measured Switch test 1, Finish defects 1 → Save measurements. Decision: accept <b>50</b>, date <b>2027-03-20</b>."
+ },
+ {
+  "n": 399,
+  "role": "WAREHOUSE",
+  "date": "2027-03-21",
+  "where": "Purchasing → Receive",
+  "what": "<b>PO-0024</b> (Manila Electronics): receipt date <b>2027-03-21</b>: LED-KT 10 (goes to QUARANTINE by itself: LED-KT)."
+ },
+ {
+  "n": 400,
+  "role": "QUALITY",
+  "date": "2027-03-21",
+  "where": "Quality → Inspection lots → the waiting lot",
+  "what": "<b>LED-KT</b> lot 4: measured Voltage 12.1, Lumens 830 → Save measurements. Decision: accept <b>10</b>, date <b>2027-03-21</b>."
+ },
+ {
+  "n": 401,
+  "role": "PRODUCTION",
+  "date": "2027-03-21",
+  "where": "Production → New order",
+  "what": "Item <b>SHD-S</b>, quantity <b>6</b>, starts <b>2027-03-21</b>, finishes <b>2027-03-22</b> (a rush order made by hand)."
+ },
+ {
+  "n": 402,
+  "role": "PRODUCTION",
+  "date": "2027-03-21",
+  "where": "Production → click the order → Release",
+  "what": "Release the production order for <b>SHD-S</b> (number 5 of that item)."
+ },
+ {
+  "n": 403,
+  "role": "WAREHOUSE",
+  "date": "2027-03-21",
+  "where": "Production → the order → Materials → Issue material to the order",
+  "what": "<b>SHD-S</b> order 5: set the Date to <b>2027-03-21</b> FIRST, leave every quantity as proposed, then click the button."
+ },
+ {
+  "n": 404,
+  "role": "PRODUCTION",
+  "date": "2027-03-21",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>SHD-S</b> order 5: operation <b>10</b>, good 6, scrapped 0, labor 1.8 h, machine 1.2 h, setup 0.5 h, date <b>2027-03-21</b>."
+ },
+ {
+  "n": 405,
+  "role": "PRODUCTION",
+  "date": "2027-03-21",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>SHD-S</b> order 5: operation <b>20</b>, good 6, scrapped 0, labor 2.4 h, machine 0.6 h, setup 0.25 h, date <b>2027-03-21</b>, <b>tick the final confirmation</b>."
+ },
+ {
+  "n": 406,
+  "role": "PRODUCTION",
+  "date": "2027-03-21",
+  "where": "Production → the order → Finished goods into stock",
+  "what": "<b>SHD-S</b> order 5: quantity <b>6</b>, date <b>2027-03-21</b>."
+ },
+ {
+  "n": 407,
+  "role": "PRODUCTION",
+  "date": "2027-03-21",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>CHD-4</b> order 3: operation <b>30</b>, good 5, scrapped 0, labor 1.25 h, machine 0.0 h, setup 0.2 h, date <b>2027-03-21</b>, <b>tick the final confirmation</b>."
+ },
+ {
+  "n": 408,
+  "role": "PRODUCTION",
+  "date": "2027-03-21",
+  "where": "Production → the order → Finished goods into stock",
+  "what": "<b>CHD-4</b> order 3: quantity <b>5</b>, date <b>2027-03-21</b>, store <b>QUARANTINE</b> (the lamp is inspected before it can be sold)."
+ },
+ {
+  "n": 409,
+  "role": "PRODUCTION",
+  "date": "2027-03-21",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>PEN-S</b> order 5: operation <b>20</b>, good 50, scrapped 0, labor 5.0 h, machine 0.0 h, setup 0.2 h, date <b>2027-03-21</b>, <b>tick the final confirmation</b>."
+ },
+ {
+  "n": 410,
+  "role": "PRODUCTION",
+  "date": "2027-03-21",
+  "where": "Production → the order → Finished goods into stock",
+  "what": "<b>PEN-S</b> order 5: quantity <b>50</b>, date <b>2027-03-21</b>, store <b>QUARANTINE</b> (the lamp is inspected before it can be sold)."
+ },
+ {
+  "n": 411,
+  "role": "PRODUCTION",
+  "date": "2027-03-21",
+  "where": "Production → click the order → Release",
+  "what": "Release the production order for <b>TBL-LP</b> (number 5 of that item)."
+ },
+ {
+  "n": 412,
+  "role": "WAREHOUSE",
+  "date": "2027-03-21",
+  "where": "Production → the order → Materials → Issue material to the order",
+  "what": "<b>TBL-LP</b> order 5: set the Date to <b>2027-03-21</b> FIRST, leave every quantity as proposed, then click the button."
+ },
+ {
+  "n": 413,
+  "role": "PRODUCTION",
+  "date": "2027-03-21",
+  "where": "Production → click the order → Release",
+  "what": "Release the production order for <b>PEN-L</b> (number 4 of that item)."
+ },
+ {
+  "n": 414,
+  "role": "WAREHOUSE",
+  "date": "2027-03-21",
+  "where": "Production → the order → Materials → Issue material to the order",
+  "what": "<b>PEN-L</b> order 4: set the Date to <b>2027-03-21</b> FIRST, leave every quantity as proposed, then click the button."
+ },
+ {
+  "n": 415,
+  "role": "PRODUCTION",
+  "date": "2027-03-21",
+  "where": "Production → click the order → Release",
+  "what": "Release the production order for <b>FLR-LP</b> (number 3 of that item)."
+ },
+ {
+  "n": 416,
+  "role": "WAREHOUSE",
+  "date": "2027-03-21",
+  "where": "Production → the order → Materials → Issue material to the order",
+  "what": "<b>FLR-LP</b> order 3: set the Date to <b>2027-03-21</b> FIRST, leave every quantity as proposed, then click the button."
+ },
+ {
+  "n": 417,
+  "role": "PRODUCTION",
+  "date": "2027-03-22",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>TBL-LP</b> order 5: operation <b>10</b>, good 30, scrapped 0, labor 10.5 h, machine 1.5 h, setup 0.25 h, date <b>2027-03-22</b>."
+ },
+ {
+  "n": 418,
+  "role": "PRODUCTION",
+  "date": "2027-03-22",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>PEN-L</b> order 4: operation <b>10</b>, good 25, scrapped 0, labor 7.5 h, machine 1.25 h, setup 0.25 h, date <b>2027-03-22</b>."
+ },
+ {
+  "n": 419,
+  "role": "PRODUCTION",
+  "date": "2027-03-22",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>FLR-LP</b> order 3: operation <b>10</b>, good 10, scrapped 0, labor 5.0 h, machine 1.0 h, setup 0.25 h, date <b>2027-03-22</b>."
+ },
+ {
+  "n": 420,
+  "role": "PRODUCTION",
+  "date": "2027-03-22",
+  "where": "Production → click the order → Release",
+  "what": "Release the production order for <b>FLR-LP</b> (number 4 of that item)."
+ },
+ {
+  "n": 421,
+  "role": "WAREHOUSE",
+  "date": "2027-03-22",
+  "where": "Production → the order → Materials → Issue material to the order",
+  "what": "<b>FLR-LP</b> order 4: set the Date to <b>2027-03-22</b> FIRST, leave every quantity as proposed, then click the button."
+ },
+ {
+  "n": 422,
+  "role": "PRODUCTION",
+  "date": "2027-03-22",
+  "where": "Production → click the order → Release",
+  "what": "Release the production order for <b>CHD-4</b> (number 4 of that item)."
+ },
+ {
+  "n": 423,
+  "role": "WAREHOUSE",
+  "date": "2027-03-22",
+  "where": "Production → the order → Materials → Issue material to the order",
+  "what": "<b>CHD-4</b> order 4: set the Date to <b>2027-03-22</b> FIRST, leave every quantity as proposed, then click the button."
+ },
+ {
+  "n": 424,
+  "role": "QUALITY",
+  "date": "2027-03-22",
+  "where": "Quality → Inspection lots → the waiting lot",
+  "what": "<b>CHD-4</b> lot 1: measured Switch test 1, Finish defects 0 → Save measurements. Decision: accept <b>5</b>, date <b>2027-03-22</b>."
+ },
+ {
+  "n": 425,
+  "role": "QUALITY",
+  "date": "2027-03-22",
+  "where": "Quality → Inspection lots → the waiting lot",
+  "what": "<b>PEN-S</b> lot 2: measured Switch test 1, Finish defects 3 → Save measurements. Decision: accept <b>46</b>, rework 4, root cause PEOPLE, date <b>2027-03-22</b>, note <i>Finish defects over the limit on 4 lamps (glue marks); the other 46 are fine</i>."
+ },
+ {
+  "n": 426,
+  "role": "PRODUCTION",
+  "date": "2027-03-23",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>TBL-LP</b> order 5: operation <b>20</b>, good 30, scrapped 0, labor 4.5 h, machine 3.0 h, setup 0.25 h, date <b>2027-03-23</b>."
+ },
+ {
+  "n": 427,
+  "role": "PRODUCTION",
+  "date": "2027-03-23",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>PEN-L</b> order 4: operation <b>20</b>, good 25, scrapped 0, labor 3.75 h, machine 0.0 h, setup 0.2 h, date <b>2027-03-23</b>, <b>tick the final confirmation</b>."
+ },
+ {
+  "n": 428,
+  "role": "PRODUCTION",
+  "date": "2027-03-23",
+  "where": "Production → the order → Finished goods into stock",
+  "what": "<b>PEN-L</b> order 4: quantity <b>25</b>, date <b>2027-03-23</b>, store <b>QUARANTINE</b> (the lamp is inspected before it can be sold)."
+ },
+ {
+  "n": 429,
+  "role": "PRODUCTION",
+  "date": "2027-03-23",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>FLR-LP</b> order 3: operation <b>20</b>, good 10, scrapped 0, labor 2.5 h, machine 1.5 h, setup 0.25 h, date <b>2027-03-23</b>."
+ },
+ {
+  "n": 430,
+  "role": "PRODUCTION",
+  "date": "2027-03-23",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>FLR-LP</b> order 4: operation <b>10</b>, good 20, scrapped 0, labor 10.0 h, machine 2.0 h, setup 0.25 h, date <b>2027-03-23</b>."
+ },
+ {
+  "n": 431,
+  "role": "QUALITY",
+  "date": "2027-03-23",
+  "where": "Quality → Inspection lots → the waiting lot",
+  "what": "<b>PEN-S</b> lot 3: measured Switch test 1, Finish defects 0 → Save measurements. Decision: accept <b>2</b>, scrap 2, root cause PEOPLE, date <b>2027-03-23</b>, note <i>Two shades cracked while the glue marks were being cleaned off</i>."
+ },
+ {
+  "n": 432,
+  "role": "QUALITY",
+  "date": "2027-03-23",
+  "where": "Quality → Non-conformances → the open report → Close the report",
+  "what": "<b>PEN-S</b>: corrective action <i>Glue marks: assemblers shown the glue gauge</i>."
+ },
+ {
+  "n": 433,
+  "role": "QUALITY",
+  "date": "2027-03-23",
+  "where": "Quality → Non-conformances → the open report → Close the report",
+  "what": "<b>PEN-S</b>: corrective action <i>Cleaning is done with the cloth only, never a blade</i>."
+ },
+ {
+  "n": 434,
+  "role": "PRODUCTION",
+  "date": "2027-03-24",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>TBL-LP</b> order 5: operation <b>30</b>, good 30, scrapped 0, labor 3.0 h, machine 0.0 h, setup 0.2 h, date <b>2027-03-24</b>, <b>tick the final confirmation</b>."
+ },
+ {
+  "n": 435,
+  "role": "PRODUCTION",
+  "date": "2027-03-24",
+  "where": "Production → the order → Finished goods into stock",
+  "what": "<b>TBL-LP</b> order 5: quantity <b>30</b>, date <b>2027-03-24</b>, store <b>QUARANTINE</b> (the lamp is inspected before it can be sold)."
+ },
+ {
+  "n": 436,
+  "role": "PRODUCTION",
+  "date": "2027-03-24",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>FLR-LP</b> order 3: operation <b>30</b>, good 10, scrapped 0, labor 1.5 h, machine 0.0 h, setup 0.2 h, date <b>2027-03-24</b>, <b>tick the final confirmation</b>."
+ },
+ {
+  "n": 437,
+  "role": "PRODUCTION",
+  "date": "2027-03-24",
+  "where": "Production → the order → Finished goods into stock",
+  "what": "<b>FLR-LP</b> order 3: quantity <b>10</b>, date <b>2027-03-24</b>, store <b>QUARANTINE</b> (the lamp is inspected before it can be sold)."
+ },
+ {
+  "n": 438,
+  "role": "PRODUCTION",
+  "date": "2027-03-24",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>FLR-LP</b> order 4: operation <b>20</b>, good 20, scrapped 0, labor 5.0 h, machine 3.0 h, setup 0.25 h, date <b>2027-03-24</b>."
+ },
+ {
+  "n": 439,
+  "role": "PRODUCTION",
+  "date": "2027-03-24",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>CHD-4</b> order 4: operation <b>10</b>, good 4, scrapped 0, labor 4.0 h, machine 0.8 h, setup 0.5 h, date <b>2027-03-24</b>."
+ },
+ {
+  "n": 440,
+  "role": "QUALITY",
+  "date": "2027-03-24",
+  "where": "Quality → Inspection lots → the waiting lot",
+  "what": "<b>PEN-L</b> lot 2: measured Switch test 1, Finish defects 0 → Save measurements. Decision: accept <b>25</b>, date <b>2027-03-24</b>."
+ },
+ {
+  "n": 441,
+  "role": "PRODUCTION",
+  "date": "2027-03-25",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>FLR-LP</b> order 4: operation <b>30</b>, good 20, scrapped 0, labor 3.0 h, machine 0.0 h, setup 0.2 h, date <b>2027-03-25</b>, <b>tick the final confirmation</b>."
+ },
+ {
+  "n": 442,
+  "role": "PRODUCTION",
+  "date": "2027-03-25",
+  "where": "Production → the order → Finished goods into stock",
+  "what": "<b>FLR-LP</b> order 4: quantity <b>20</b>, date <b>2027-03-25</b>, store <b>QUARANTINE</b> (the lamp is inspected before it can be sold)."
+ },
+ {
+  "n": 443,
+  "role": "PRODUCTION",
+  "date": "2027-03-25",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>CHD-4</b> order 4: operation <b>20</b>, good 4, scrapped 0, labor 2.0 h, machine 1.2 h, setup 0.25 h, date <b>2027-03-25</b>."
+ },
+ {
+  "n": 444,
+  "role": "QUALITY",
+  "date": "2027-03-25",
+  "where": "Quality → Inspection lots → the waiting lot",
+  "what": "<b>TBL-LP</b> lot 2: measured Switch test 1, Finish defects 1 → Save measurements. Decision: accept <b>30</b>, date <b>2027-03-25</b>."
+ },
+ {
+  "n": 445,
+  "role": "QUALITY",
+  "date": "2027-03-25",
+  "where": "Quality → Inspection lots → the waiting lot",
+  "what": "<b>FLR-LP</b> lot 1: measured Switch test 1, Finish defects 0 → Save measurements. Decision: accept <b>10</b>, date <b>2027-03-25</b>."
+ },
+ {
+  "n": 446,
+  "role": "PRODUCTION",
+  "date": "2027-03-26",
+  "where": "Production → the order → Confirm production",
+  "what": "<b>CHD-4</b> order 4: operation <b>30</b>, good 4, scrapped 0, labor 1.0 h, machine 0.0 h, setup 0.2 h, date <b>2027-03-26</b>, <b>tick the final confirmation</b>."
+ },
+ {
+  "n": 447,
+  "role": "PRODUCTION",
+  "date": "2027-03-26",
+  "where": "Production → the order → Finished goods into stock",
+  "what": "<b>CHD-4</b> order 4: quantity <b>4</b>, date <b>2027-03-26</b>, store <b>QUARANTINE</b> (the lamp is inspected before it can be sold)."
+ },
+ {
+  "n": 448,
+  "role": "QUALITY",
+  "date": "2027-03-26",
+  "where": "Quality → Inspection lots → the waiting lot",
+  "what": "<b>FLR-LP</b> lot 2: measured Switch test 1, Finish defects 1 → Save measurements. Decision: accept <b>20</b>, date <b>2027-03-26</b>."
+ },
+ {
+  "n": 449,
+  "role": "QUALITY",
+  "date": "2027-03-27",
+  "where": "Quality → Inspection lots → the waiting lot",
+  "what": "<b>CHD-4</b> lot 2: measured Switch test 1, Finish defects 0 → Save measurements. Decision: accept <b>4</b>, date <b>2027-03-27</b>."
+ },
+ {
+  "n": 450,
+  "role": "PURCHASING",
+  "date": "2027-03-12",
+  "where": "Purchasing → Enter vendor invoice",
+  "what": "<b>PO-0011</b>, invoice number <b>BCT-2301</b>, invoice date <b>2027-03-12</b>, due <b>2027-04-11</b>, VAT 12 → <b>VI-0011</b>."
+ },
+ {
+  "n": 451,
+  "role": "PURCHASING",
+  "date": "2027-03-12",
+  "where": "Purchasing → Enter vendor invoice",
+  "what": "<b>PO-0012</b>, invoice number <b>CM-1101</b>, invoice date <b>2027-03-12</b>, due <b>2027-04-11</b>, VAT 12 → <b>VI-0012</b>."
+ },
+ {
+  "n": 452,
+  "role": "PURCHASING",
+  "date": "2027-03-13",
+  "where": "Purchasing → Enter vendor invoice",
+  "what": "<b>PO-0013</b>, invoice number <b>ME-7790</b>, invoice date <b>2027-03-13</b>, due <b>2027-04-12</b>, VAT 12 → <b>VI-0013</b>. Type price 160 for LED-KT: it goes ON HOLD."
+ },
+ {
+  "n": 453,
+  "role": "PURCHASING",
+  "date": "2027-03-13",
+  "where": "Purchasing → Enter vendor invoice",
+  "what": "<b>PO-0014</b>, invoice number <b>LC-5601</b>, invoice date <b>2027-03-13</b>, due <b>2027-04-12</b>, VAT 12 → <b>VI-0014</b>."
+ },
+ {
+  "n": 454,
+  "role": "PURCHASING",
+  "date": "2027-03-13",
+  "where": "Purchasing → Enter vendor invoice",
+  "what": "<b>PO-0015</b>, invoice number <b>PP-0902</b>, invoice date <b>2027-03-13</b>, due <b>2027-04-12</b>, VAT 12 → <b>VI-0015</b>."
+ },
+ {
+  "n": 455,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-03-15",
+  "where": "Purchasing → Vendor invoices → the invoice ON HOLD → Approve",
+  "what": "Approve <b>VI-0013</b>: the price difference is accepted (you must not be the person who entered it)."
+ },
+ {
+  "n": 456,
+  "role": "WAREHOUSE",
+  "date": "2027-03-16",
+  "where": "Shipping → click the order → Post delivery",
+  "what": "<b>SO-0007</b> Manila Lamp House: deliver PEN-S 50 · TBL-LP 25, delivery date <b>2027-03-16</b>."
+ },
+ {
+  "n": 457,
+  "role": "SALES",
+  "date": "2027-03-16",
+  "where": "Shipping → click the order → Create invoice for what was delivered",
+  "what": "<b>SO-0007</b>: invoice date <b>2027-03-16</b>, due <b>2027-04-15</b> → creates <b>INV-0007</b>."
+ },
+ {
+  "n": 458,
+  "role": "SALES",
+  "date": "2027-03-16",
+  "where": "Sales → Invoices → Send invoice",
+  "what": "Send <b>INV-0007</b> (Manila Lamp House)."
+ },
+ {
+  "n": 459,
+  "role": "WAREHOUSE",
+  "date": "2027-03-16",
+  "where": "Shipping → click the order → Post delivery",
+  "what": "<b>SO-0010</b> Cagayan Lighting: deliver PEN-S 40, delivery date <b>2027-03-16</b>."
+ },
+ {
+  "n": 460,
+  "role": "SALES",
+  "date": "2027-03-16",
+  "where": "Shipping → click the order → Create invoice for what was delivered",
+  "what": "<b>SO-0010</b>: invoice date <b>2027-03-16</b>, due <b>2027-04-15</b> → creates <b>INV-0008</b>."
+ },
+ {
+  "n": 461,
+  "role": "SALES",
+  "date": "2027-03-16",
+  "where": "Sales → Invoices → Send invoice",
+  "what": "Send <b>INV-0008</b> (Cagayan Lighting)."
+ },
+ {
+  "n": 462,
+  "role": "WAREHOUSE",
+  "date": "2027-03-16",
+  "where": "Shipping → click the order → Post delivery",
+  "what": "<b>SO-0009</b> Davao Design Hub: deliver TBL-LP 20, delivery date <b>2027-03-16</b>."
+ },
+ {
+  "n": 463,
+  "role": "SALES",
+  "date": "2027-03-16",
+  "where": "Shipping → click the order → Create invoice for what was delivered",
+  "what": "<b>SO-0009</b>: invoice date <b>2027-03-16</b>, due <b>2027-04-15</b> → creates <b>INV-0009</b>."
+ },
+ {
+  "n": 464,
+  "role": "SALES",
+  "date": "2027-03-16",
+  "where": "Sales → Invoices → Send invoice",
+  "what": "Send <b>INV-0009</b> (Davao Design Hub)."
+ },
+ {
+  "n": 465,
+  "role": "ACCOUNTANT",
+  "date": "2027-03-17",
+  "where": "Purchasing → Add landed cost",
+  "what": "Vendor <b>Visayan Trucking</b>, invoice no. <b>VT-3392</b>, <i>Freight for the capiz delivery of Mar 16</i>, date 2027-03-17, due 2027-04-16, amount before VAT <b>1,800.00</b>, VAT 12, spread by value; tick only the <b>CAP-SH</b> line of the receipt dated <b>2027-03-16</b>."
+ },
+ {
+  "n": 466,
+  "role": "PURCHASING",
+  "date": "2027-03-19",
+  "where": "Purchasing → Enter vendor invoice",
+  "what": "<b>PO-0016</b>, invoice number <b>BCT-2315</b>, invoice date <b>2027-03-19</b>, due <b>2027-04-18</b>, VAT 12 → <b>VI-0016</b>."
+ },
+ {
+  "n": 467,
+  "role": "PURCHASING",
+  "date": "2027-03-19",
+  "where": "Purchasing → Enter vendor invoice",
+  "what": "<b>PO-0017</b>, invoice number <b>CM-1120</b>, invoice date <b>2027-03-19</b>, due <b>2027-04-18</b>, VAT 12 → <b>VI-0017</b>."
+ },
+ {
+  "n": 468,
+  "role": "PURCHASING",
+  "date": "2027-03-19",
+  "where": "Purchasing → Enter vendor invoice",
+  "what": "<b>PO-0018</b>, invoice number <b>ME-7801</b>, invoice date <b>2027-03-19</b>, due <b>2027-04-18</b>, VAT 12 → <b>VI-0018</b>. Type price 165 for LED-KT: it goes ON HOLD."
+ },
+ {
+  "n": 469,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-03-19",
+  "where": "Purchasing → Vendor invoices → the invoice ON HOLD → Reject",
+  "what": "Reject <b>VI-0018</b>, reason <i>Price 165 is not the agreed 156; send a corrected invoice</i>, date 2027-03-19."
+ },
+ {
+  "n": 470,
+  "role": "PURCHASING",
+  "date": "2027-03-19",
+  "where": "Purchasing → Enter vendor invoice",
+  "what": "<b>PO-0019</b>, invoice number <b>LC-5633</b>, invoice date <b>2027-03-19</b>, due <b>2027-04-18</b>, VAT 12 → <b>VI-0019</b>."
+ },
+ {
+  "n": 471,
+  "role": "PURCHASING",
+  "date": "2027-03-19",
+  "where": "Purchasing → Enter vendor invoice",
+  "what": "<b>PO-0020</b>, invoice number <b>PP-0915</b>, invoice date <b>2027-03-19</b>, due <b>2027-04-18</b>, VAT 12 → <b>VI-0020</b>."
+ },
+ {
+  "n": 472,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-03-19",
+  "where": "Purchasing → Vendor invoices → Pay",
+  "what": "<b>VI-0004</b>: the whole balance, date <b>2027-03-19</b>, Bank transfer."
+ },
+ {
+  "n": 473,
+  "role": "PURCHASING",
+  "date": "2027-03-20",
+  "where": "Purchasing → Enter vendor invoice",
+  "what": "<b>PO-0018</b>, invoice number <b>ME-7802</b>, invoice date <b>2027-03-20</b>, due <b>2027-04-19</b>, VAT 12 → <b>VI-0021</b>."
+ },
+ {
+  "n": 474,
+  "role": "PURCHASING",
+  "date": "2027-03-21",
+  "where": "Purchasing → Enter vendor invoice",
+  "what": "<b>PO-0021</b>, invoice number <b>CM-1130</b>, invoice date <b>2027-03-21</b>, due <b>2027-04-20</b>, VAT 12 → <b>VI-0022</b>."
+ },
+ {
+  "n": 475,
+  "role": "PURCHASING",
+  "date": "2027-03-21",
+  "where": "Purchasing → Enter vendor invoice",
+  "what": "<b>PO-0022</b>, invoice number <b>BCT-2322</b>, invoice date <b>2027-03-21</b>, due <b>2027-04-20</b>, VAT 12 → <b>VI-0023</b>."
+ },
+ {
+  "n": 476,
+  "role": "PURCHASING",
+  "date": "2027-03-21",
+  "where": "Purchasing → Enter vendor invoice",
+  "what": "<b>PO-0023</b>, invoice number <b>LC-5640</b>, invoice date <b>2027-03-21</b>, due <b>2027-04-20</b>, VAT 12 → <b>VI-0024</b>."
+ },
+ {
+  "n": 477,
+  "role": "WAREHOUSE",
+  "date": "2027-03-21",
+  "where": "Shipping → click the order → Post delivery",
+  "what": "<b>SO-0010</b> Cagayan Lighting: deliver PEN-L 20, delivery date <b>2027-03-21</b>."
+ },
+ {
+  "n": 478,
+  "role": "SALES",
+  "date": "2027-03-21",
+  "where": "Shipping → click the order → Create invoice for what was delivered",
+  "what": "<b>SO-0010</b>: invoice date <b>2027-03-21</b>, due <b>2027-04-20</b> → creates <b>INV-0010</b>."
+ },
+ {
+  "n": 479,
+  "role": "SALES",
+  "date": "2027-03-21",
+  "where": "Sales → Invoices → Send invoice",
+  "what": "Send <b>INV-0010</b> (Cagayan Lighting)."
+ },
+ {
+  "n": 480,
+  "role": "PURCHASING",
+  "date": "2027-03-22",
+  "where": "Purchasing → Enter vendor invoice",
+  "what": "<b>PO-0024</b>, invoice number <b>ME-7811</b>, invoice date <b>2027-03-22</b>, due <b>2027-04-21</b>, VAT 12 → <b>VI-0025</b>."
+ },
+ {
+  "n": 481,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-03-22",
+  "where": "Purchasing → Vendor invoices → Pay",
+  "what": "<b>VI-0005</b>: the whole balance, date <b>2027-03-22</b>, Bank transfer."
+ },
+ {
+  "n": 482,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-03-22",
+  "where": "Sales → Invoices → Details → Record payment",
+  "what": "<b>INV-0002</b> (Cebu Interiors): the whole balance, date <b>2027-03-22</b>, Bank transfer."
+ },
+ {
+  "n": 483,
+  "role": "PURCHASING",
+  "date": "2027-03-23",
+  "where": "Purchasing → Vendor invoices → Pay",
+  "what": "<b>VI-0006</b>: the whole balance, date <b>2027-03-23</b>, Bank transfer."
+ },
+ {
+  "n": 484,
+  "role": "PURCHASING",
+  "date": "2027-03-23",
+  "where": "Purchasing → Vendor invoices → Pay",
+  "what": "<b>VI-0007</b>: the whole balance, date <b>2027-03-23</b>, Bank transfer."
+ },
+ {
+  "n": 485,
+  "role": "WAREHOUSE",
+  "date": "2027-03-23",
+  "where": "Shipping → click the order → Post delivery",
+  "what": "<b>SO-0009</b> Davao Design Hub: deliver CHD-4 5, delivery date <b>2027-03-23</b>."
+ },
+ {
+  "n": 486,
+  "role": "SALES",
+  "date": "2027-03-23",
+  "where": "Shipping → click the order → Create invoice for what was delivered",
+  "what": "<b>SO-0009</b>: invoice date <b>2027-03-23</b>, due <b>2027-04-22</b> → creates <b>INV-0011</b>."
+ },
+ {
+  "n": 487,
+  "role": "SALES",
+  "date": "2027-03-23",
+  "where": "Sales → Invoices → Send invoice",
+  "what": "Send <b>INV-0011</b> (Davao Design Hub)."
+ },
+ {
+  "n": 488,
+  "role": "PURCHASING",
+  "date": "2027-03-24",
+  "where": "Purchasing → Vendor invoices → Pay",
+  "what": "<b>VI-0008</b>: the whole balance, date <b>2027-03-24</b>, Bank transfer."
+ },
+ {
+  "n": 489,
+  "role": "PURCHASING",
+  "date": "2027-03-24",
+  "where": "Purchasing → Vendor invoices → Pay",
+  "what": "<b>VI-0009</b>: the whole balance, date <b>2027-03-24</b>, Bank transfer."
+ },
+ {
+  "n": 490,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-03-24",
+  "where": "Sales → Invoices → Details → Record payment",
+  "what": "<b>INV-0003</b> (Davao Design Hub): the whole balance, date <b>2027-03-24</b>, Bank transfer."
+ },
+ {
+  "n": 491,
+  "role": "PURCHASING",
+  "date": "2027-03-25",
+  "where": "Purchasing → Vendor invoices → Pay",
+  "what": "<b>VI-0010</b>: the whole balance, date <b>2027-03-25</b>, Bank transfer."
+ },
+ {
+  "n": 492,
+  "role": "WAREHOUSE",
+  "date": "2027-03-25",
+  "where": "Shipping → click the order → Post delivery",
+  "what": "<b>SO-0008</b> Cebu Interiors: deliver PEN-L 30 · FLR-LP 10, delivery date <b>2027-03-25</b>."
+ },
+ {
+  "n": 493,
+  "role": "SALES",
+  "date": "2027-03-25",
+  "where": "Shipping → click the order → Create invoice for what was delivered",
+  "what": "<b>SO-0008</b>: invoice date <b>2027-03-25</b>, due <b>2027-04-24</b> → creates <b>INV-0012</b>."
+ },
+ {
+  "n": 494,
+  "role": "SALES",
+  "date": "2027-03-25",
+  "where": "Sales → Invoices → Send invoice",
+  "what": "Send <b>INV-0012</b> (Cebu Interiors)."
+ },
+ {
+  "n": 495,
+  "role": "WAREHOUSE",
+  "date": "2027-03-26",
+  "where": "Shipping → click the order → Post delivery",
+  "what": "<b>SO-0011</b> Baguio Gifts: deliver TBL-LP 30 · FLR-LP 8 · PEN-S 30, delivery date <b>2027-03-26</b>."
+ },
+ {
+  "n": 496,
+  "role": "SALES",
+  "date": "2027-03-26",
+  "where": "Shipping → click the order → Create invoice for what was delivered",
+  "what": "<b>SO-0011</b>: invoice date <b>2027-03-26</b>, due <b>2027-04-25</b> → creates <b>INV-0013</b>."
+ },
+ {
+  "n": 497,
+  "role": "SALES",
+  "date": "2027-03-26",
+  "where": "Sales → Invoices → Send invoice",
+  "what": "Send <b>INV-0013</b> (Baguio Gifts)."
+ },
+ {
+  "n": 498,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-03-26",
+  "where": "Sales → Invoices → Details → Record payment",
+  "what": "<b>INV-0004</b> (Baguio Gifts (part payment)): 60,000.00, date <b>2027-03-26</b>, Bank transfer."
+ },
+ {
+  "n": 499,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-03-28",
+  "where": "Sales → Invoices → Details → Record payment",
+  "what": "<b>INV-0005</b> (Iloilo Decor): the whole balance, date <b>2027-03-28</b>, Bank transfer."
+ },
+ {
+  "n": 500,
+  "role": "WAREHOUSE",
+  "date": "2027-03-29",
+  "where": "Shipping → click the order → Post delivery",
+  "what": "<b>SO-0012</b> Iloilo Decor: deliver CHD-4 4 · PEN-L 25, delivery date <b>2027-03-29</b>."
+ },
+ {
+  "n": 501,
+  "role": "SALES",
+  "date": "2027-03-29",
+  "where": "Shipping → click the order → Create invoice for what was delivered",
+  "what": "<b>SO-0012</b>: invoice date <b>2027-03-29</b>, due <b>2027-04-28</b> → creates <b>INV-0014</b>."
+ },
+ {
+  "n": 502,
+  "role": "SALES",
+  "date": "2027-03-29",
+  "where": "Sales → Invoices → Send invoice",
+  "what": "Send <b>INV-0014</b> (Iloilo Decor)."
+ },
+ {
+  "n": 503,
+  "role": "WAREHOUSE",
+  "date": "2027-03-29",
+  "where": "Shipping → click the order → Post delivery",
+  "what": "<b>SO-0013</b> Bacolod Home Gallery: deliver FLR-LP 12 · PEN-S 18, delivery date <b>2027-03-29</b>."
+ },
+ {
+  "n": 504,
+  "role": "SALES",
+  "date": "2027-03-29",
+  "where": "Shipping → click the order → Create invoice for what was delivered",
+  "what": "<b>SO-0013</b>: invoice date <b>2027-03-29</b>, due <b>2027-04-28</b> → creates <b>INV-0015</b>."
+ },
+ {
+  "n": 505,
+  "role": "SALES",
+  "date": "2027-03-29",
+  "where": "Sales → Invoices → Send invoice",
+  "what": "Send <b>INV-0015</b> (Bacolod Home Gallery)."
+ },
+ {
+  "n": 506,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-03-29",
+  "where": "Sales → Invoices → Details → Record payment",
+  "what": "<b>INV-0006</b> (Cagayan Lighting): the whole balance, date <b>2027-03-29</b>, Bank transfer."
+ },
+ {
+  "n": 507,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-03-29",
+  "where": "Sales → Invoices → Details → Record payment",
+  "what": "<b>INV-0007</b> (Manila Lamp House): the whole balance, date <b>2027-03-29</b>, Bank transfer."
+ },
+ {
+  "n": 508,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-03-29",
+  "where": "Purchasing → Vendor invoices → Pay",
+  "what": "<b>VI-0011</b>: the whole balance, date <b>2027-03-29</b>, Bank transfer."
+ },
+ {
+  "n": 509,
+  "role": "PURCHASING",
+  "date": "2027-03-29",
+  "where": "Purchasing → Vendor invoices → Pay",
+  "what": "<b>VI-0012</b>: the whole balance, date <b>2027-03-29</b>, Bank transfer."
+ },
+ {
+  "n": 510,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-03-30",
+  "where": "Sales → Invoices → Details → Record payment",
+  "what": "<b>INV-0008</b> (Cagayan Lighting (part payment)): 60,000.00, date <b>2027-03-30</b>, Bank transfer."
+ },
+ {
+  "n": 511,
+  "role": "PURCHASING",
+  "date": "2027-03-30",
+  "where": "Purchasing → Vendor invoices → Pay",
+  "what": "<b>VI-0014</b>: the whole balance, date <b>2027-03-30</b>, Bank transfer."
+ },
+ {
+  "n": 512,
+  "role": "PURCHASING",
+  "date": "2027-03-30",
+  "where": "Purchasing → Vendor invoices → Pay",
+  "what": "<b>VI-0015</b>: the whole balance, date <b>2027-03-30</b>, Bank transfer."
+ },
+ {
+  "n": 513,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-03-31",
+  "where": "Sales → Invoices → Details → Record payment",
+  "what": "<b>INV-0004</b> (Baguio Gifts (balance)): the whole balance, date <b>2027-03-31</b>, Bank transfer."
+ },
+ {
+  "n": 514,
+  "role": "ACCOUNTANT",
+  "date": "2027-03-28",
+  "where": "Finance → New journal voucher",
+  "what": "Date <b>2027-03-28</b>, reference <b>Ads Mar</b>, particulars <i>Facebook ads for March</i>: <b>5200</b> debit 90,000.00; <b>1000</b> credit 90,000.00. Tick <b>System override / audit adjustment</b>, reason <i>Campaign above the usual limit</i>: it then waits for the Finance manager."
+ },
+ {
+  "n": 515,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-03-28",
+  "where": "Finance → open the voucher → Approve",
+  "what": "Approve the voucher with reference <b>Ads Mar</b> (you must not be the one who prepared it)."
+ },
+ {
+  "n": 516,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-03-29",
+  "where": "Finance → open the voucher → Reverse",
+  "what": "Reverse the posted voucher with reference <b>Ads Mar</b>, date <b>2027-03-29</b>, reason <i>Typed 90,000 instead of 9,000</i>."
+ },
+ {
+  "n": 517,
+  "role": "ACCOUNTANT",
+  "date": "2027-03-29",
+  "where": "Finance → New journal voucher",
+  "what": "Date <b>2027-03-29</b>, reference <b>Ads Mar</b>, particulars <i>Facebook ads for March (corrected)</i>: <b>5200</b> debit 9,000.00; <b>1000</b> credit 9,000.00. Tick <b>System override / audit adjustment</b>, reason <i>Campaign above the usual limit</i>: it then waits for the Finance manager."
+ },
+ {
+  "n": 518,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-03-29",
+  "where": "Finance → open the voucher → Approve",
+  "what": "Approve the voucher with reference <b>Ads Mar</b> (you must not be the one who prepared it)."
+ },
+ {
+  "n": 519,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-03-30",
+  "where": "Purchasing → Vendor invoices → Pay",
+  "what": "<b>VI-0013</b>: the whole balance, date <b>2027-03-30</b>, Bank transfer."
+ },
+ {
+  "n": 520,
+  "role": "WAREHOUSE",
+  "date": "2027-03-30",
+  "where": "Inventory → Stock → Move stock",
+  "what": "Move <b>2</b> of <b>CAP-SH</b> from STORE-B to RM-STORE, date <b>2027-03-30</b>."
+ },
+ {
+  "n": 521,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-03-31",
+  "where": "Purchasing → Vendor invoices → Pay",
+  "what": "<b>VI-0016</b>: the whole balance, date <b>2027-03-31</b>, Bank transfer."
+ },
+ {
+  "n": 522,
+  "role": "PURCHASING",
+  "date": "2027-03-31",
+  "where": "Purchasing → Vendor invoices → Pay",
+  "what": "<b>VI-0017</b>: the whole balance, date <b>2027-03-31</b>, Bank transfer."
+ },
+ {
+  "n": 523,
+  "role": "PURCHASING",
+  "date": "2027-03-31",
+  "where": "Purchasing → Vendor invoices → Pay",
+  "what": "<b>VI-0019</b>: the whole balance, date <b>2027-03-31</b>, Bank transfer."
+ },
+ {
+  "n": 524,
+  "role": "PURCHASING",
+  "date": "2027-03-31",
+  "where": "Purchasing → Vendor invoices → Pay",
+  "what": "<b>VI-0020</b>: the whole balance, date <b>2027-03-31</b>, Bank transfer."
+ },
+ {
+  "n": 525,
+  "role": "PURCHASING",
+  "date": "2027-03-31",
+  "where": "Purchasing → Vendor invoices → Pay",
+  "what": "<b>VI-0022</b>: the whole balance, date <b>2027-03-31</b>, Bank transfer."
+ },
+ {
+  "n": 526,
+  "role": "PURCHASING",
+  "date": "2027-03-31",
+  "where": "Purchasing → Vendor invoices → Pay",
+  "what": "<b>VI-0023</b>: the whole balance, date <b>2027-03-31</b>, Bank transfer."
+ },
+ {
+  "n": 527,
+  "role": "PURCHASING",
+  "date": "2027-03-31",
+  "where": "Purchasing → Vendor invoices → Pay",
+  "what": "<b>VI-0024</b>: the whole balance, date <b>2027-03-31</b>, Bank transfer."
+ },
+ {
+  "n": 528,
+  "role": "PURCHASING",
+  "date": "2027-03-31",
+  "where": "Purchasing → Vendor invoices → Pay",
+  "what": "<b>VI-0025</b>: the whole balance, date <b>2027-03-31</b>, Bank transfer."
+ },
+ {
+  "n": 529,
+  "role": "ACCOUNTANT",
+  "date": "2027-03-31",
+  "where": "Finance → New journal voucher",
+  "what": "Date <b>2027-03-31</b>, reference <b>Rent Mar</b>, particulars <i>Workshop rent for March</i>: <b>5100</b> debit 18,000.00; <b>1000</b> credit 18,000.00."
+ },
+ {
+  "n": 530,
+  "role": "ACCOUNTANT",
+  "date": "2027-03-31",
+  "where": "Finance → New journal voucher",
+  "what": "Date <b>2027-03-31</b>, reference <b>Payroll Mar</b>, particulars <i>Salaries and wages for March</i>: <b>5300</b> debit 85,000.00; <b>1000</b> credit 85,000.00."
+ },
+ {
+  "n": 531,
+  "role": "ACCOUNTANT",
+  "date": "2027-03-31",
+  "where": "Finance → New journal voucher",
+  "what": "Date <b>2027-03-31</b>, reference <b>Power Mar</b>, particulars <i>Electricity for March paid by bank</i>: <b>5100</b> debit 10,200.00; <b>1000</b> credit 10,200.00. Tick <b>System override / audit adjustment</b>, reason <i>Electricity bill higher than the usual limit</i>: it then waits for the Finance manager."
+ },
+ {
+  "n": 532,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-03-31",
+  "where": "Finance → open the voucher → Approve",
+  "what": "Approve the voucher with reference <b>Power Mar</b> (you must not be the one who prepared it)."
+ },
+ {
+  "n": 533,
+  "role": "ACCOUNTANT",
+  "date": "2027-03-31",
+  "where": "Finance → New journal voucher",
+  "what": "Date <b>2027-03-31</b>, reference <b>Insurance</b>, particulars <i>Fire insurance for the workshop, first quarter</i>: <b>5100</b> debit 4,500.00; <b>1000</b> credit 4,500.00."
+ },
+ {
+  "n": 534,
+  "role": "ACCOUNTANT",
+  "date": "2027-03-31",
+  "where": "Finance → New journal voucher",
+  "what": "Date <b>2027-03-31</b>, reference <b>Scrap sale</b>, particulars <i>Capiz offcuts sold as scrap</i>: <b>1000</b> debit 3,200.00; <b>4100</b> credit 3,200.00."
+ },
+ {
+  "n": 535,
+  "role": "ACCOUNTANT",
+  "date": "2027-03-31",
+  "where": "Fixed Assets → Record 1 month dep.",
+  "what": "<b>Capiz cutting machine</b>, date <b>2027-03-31</b> (it proposes the month-end): 6,750.00."
+ },
+ {
+  "n": 536,
+  "role": "WAREHOUSE",
+  "date": "2027-03-31",
+  "where": "Inventory → Stock → Adjust stock",
+  "what": "<b>WIR-FR</b> in RM-STORE: change <b>-1</b>, reason <i>Stock count</i>, date <b>2027-03-31</b>."
+ },
+ {
+  "n": 537,
+  "role": "WAREHOUSE",
+  "date": "2027-03-31",
+  "where": "Inventory → Stock → Adjust stock",
+  "what": "<b>CAP-SH</b> in RM-STORE: change <b>-0.7</b>, reason <i>Stock count</i>, date <b>2027-03-31</b>."
+ },
+ {
+  "n": 538,
+  "role": "WAREHOUSE",
+  "date": "2027-03-31",
+  "where": "Inventory → Stock → Adjust stock",
+  "what": "<b>GLU-AD</b> in RM-STORE: change <b>-0.2</b>, reason <i>Stock count</i>, date <b>2027-03-31</b>."
+ },
+ {
+  "n": 539,
+  "role": "ACCOUNTANT",
+  "date": "2027-03-31",
+  "where": "Production → the order → Settle order",
+  "what": "<b>BAS-BR</b> order 3: settlement date <b>2027-03-31</b>."
+ },
+ {
+  "n": 540,
+  "role": "ACCOUNTANT",
+  "date": "2027-03-31",
+  "where": "Production → the order → Settle order",
+  "what": "<b>BAS-BR</b> order 4: settlement date <b>2027-03-31</b>."
+ },
+ {
+  "n": 541,
+  "role": "ACCOUNTANT",
+  "date": "2027-03-31",
+  "where": "Production → the order → Settle order",
+  "what": "<b>SHD-S</b> order 3: settlement date <b>2027-03-31</b>."
+ },
+ {
+  "n": 542,
+  "role": "ACCOUNTANT",
+  "date": "2027-03-31",
+  "where": "Production → the order → Settle order",
+  "what": "<b>SHD-S</b> order 4: settlement date <b>2027-03-31</b>."
+ },
+ {
+  "n": 543,
+  "role": "ACCOUNTANT",
+  "date": "2027-03-31",
+  "where": "Production → the order → Settle order",
+  "what": "<b>SHD-S</b> order 5: settlement date <b>2027-03-31</b>."
+ },
+ {
+  "n": 544,
+  "role": "ACCOUNTANT",
+  "date": "2027-03-31",
+  "where": "Production → the order → Settle order",
+  "what": "<b>SHD-L</b> order 2: settlement date <b>2027-03-31</b>."
+ },
+ {
+  "n": 545,
+  "role": "ACCOUNTANT",
+  "date": "2027-03-31",
+  "where": "Production → the order → Settle order",
+  "what": "<b>SHD-L</b> order 3: settlement date <b>2027-03-31</b>."
+ },
+ {
+  "n": 546,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-03-31",
+  "where": "Production → the order → Settle order",
+  "what": "<b>PEN-S</b> order 4: settlement date <b>2027-03-31</b>."
+ },
+ {
+  "n": 547,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-03-31",
+  "where": "Production → the order → Settle order",
+  "what": "<b>PEN-S</b> order 5: settlement date <b>2027-03-31</b>."
+ },
+ {
+  "n": 548,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-03-31",
+  "where": "Production → the order → Settle order",
+  "what": "<b>PEN-L</b> order 3: settlement date <b>2027-03-31</b>."
+ },
+ {
+  "n": 549,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-03-31",
+  "where": "Production → the order → Settle order",
+  "what": "<b>PEN-L</b> order 4: settlement date <b>2027-03-31</b>."
+ },
+ {
+  "n": 550,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-03-31",
+  "where": "Production → the order → Settle order",
+  "what": "<b>TBL-LP</b> order 4: settlement date <b>2027-03-31</b>."
+ },
+ {
+  "n": 551,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-03-31",
+  "where": "Production → the order → Settle order",
+  "what": "<b>TBL-LP</b> order 5: settlement date <b>2027-03-31</b>."
+ },
+ {
+  "n": 552,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-03-31",
+  "where": "Production → the order → Settle order",
+  "what": "<b>FLR-LP</b> order 3: settlement date <b>2027-03-31</b>."
+ },
+ {
+  "n": 553,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-03-31",
+  "where": "Production → the order → Settle order",
+  "what": "<b>FLR-LP</b> order 4: settlement date <b>2027-03-31</b>."
+ },
+ {
+  "n": 554,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-03-31",
+  "where": "Production → the order → Settle order",
+  "what": "<b>CHD-4</b> order 3: settlement date <b>2027-03-31</b>."
+ },
+ {
+  "n": 555,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-03-31",
+  "where": "Production → the order → Settle order",
+  "what": "<b>CHD-4</b> order 4: settlement date <b>2027-03-31</b>."
+ },
+ {
+  "n": 556,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-03-31",
+  "where": "Period End → Settle…",
+  "what": "<b>2027-03</b>: read the checks, Post the month-end entries."
+ },
+ {
+  "n": 557,
+  "role": "FINANCE_MANAGER",
+  "date": "2027-03-31",
+  "where": "Period End → Close month",
+  "what": "Close <b>2027-03</b> (oldest first)."
+ }
+]

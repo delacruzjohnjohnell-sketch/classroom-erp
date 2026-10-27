@@ -126,10 +126,11 @@ export function runMfgPracticeChecks(s: MfgSnapshot, set: MfgPracticeSet): Check
       "Check the SKU, name, type, unit of measure and planned price against the item table in the set.");
   }
   for (const b of set.boms) {
-    const f = s.boms.find((x) => x.item === b.item);
-    const have = (f?.lines ?? []).map((l) => `${l.sku} ${num(Number(l.qty))}`).join("; ");
+    // an item may have more than one version (a revised bill is a new version); the set lists each version, and any version of the company may match it
+    const versions = s.boms.filter((x) => x.item === b.item).map((x) => (x.lines ?? []).map((l) => `${l.sku} ${num(Number(l.qty))}`).join("; "));
     const want = b.lines.map((l) => `${l.sku} ${num(l.qty)}`).join("; ");
-    add("Items and costing", `Bill of materials ${b.item}`, want, f ? have : "no active bill of materials", !!f && have === want,
+    const have = versions.find((v) => v === want) ?? versions[0] ?? "";
+    add("Items and costing", `Bill of materials ${b.item}`, want, versions.length ? have : "no active bill of materials", versions.includes(want),
       "Master Data → Bills of materials: the bill must be saved and made active, with exactly these components and quantities.");
   }
   for (const r of set.routings) {

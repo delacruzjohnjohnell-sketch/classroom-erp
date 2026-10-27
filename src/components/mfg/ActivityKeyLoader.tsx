@@ -9,6 +9,7 @@ import { toast } from "@/lib/toast";
 const ACTIVITIES = [
   { id: "activity-1-manufacturing", name: "Activity 1", what: "Bamboo Basket Works, November 2026" },
   { id: "activity-2-manufacturing", name: "Activity 2", what: "Rattan Furniture Works, December 2026 and January 2027" },
+  { id: "activity-3-manufacturing", name: "Activity 3", what: "Capiz Lantern Works, February and March 2027 (team)" },
 ] as const;
 
 /**

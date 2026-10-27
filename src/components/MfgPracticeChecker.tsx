@@ -6,6 +6,7 @@ import { Modal } from "@/components/ui";
 import { supabase } from "@/lib/supabase";
 import type { CheckResult } from "@/lib/practiceCheck";
 import { toast } from "@/lib/toast";
+import { roleLabel } from "@/lib/mfgTeams";
 import { netIncome, runMfgPracticeChecks, summarizeMfg, type MfgPracticeSet, type MfgSnapshot } from "@/lib/mfgPracticeCheck";
 
 const TEAL = "#22D3C5", RED = "#FF6B7A";
@@ -39,8 +40,10 @@ export default function MfgPracticeCheckModal({ tenant, onClose }: { tenant: { i
   const [practiceSet, setPracticeSet] = useState<MfgPracticeSet | null>(null);
   const [rel, setRel] = useState<{ class: boolean; owner: boolean; has_owner: boolean } | null>(null);
   const [relBusy, setRelBusy] = useState(false);
+  // team companies: who posted what, by member and role (teacher only; empty when the company is not a team's)
+  const [card, setCard] = useState<{ user_id: string; full_name: string; roles: string[]; counts: Record<string, number> }[]>([]);
   // the answer key released belongs to the practice set being checked
-  const ACTIVITY = setId === "rattan-dec-2026-jan-2027" ? "activity-2-manufacturing" : "activity-1-manufacturing";
+  const ACTIVITY = setId === "capiz-feb-mar-2027" ? "activity-3-manufacturing" : setId === "rattan-dec-2026-jan-2027" ? "activity-2-manufacturing" : "activity-1-manufacturing";
 
   const loadRelease = async () => {
     const r = await supabase.rpc("mfg_activity_release_state", { p_activity: ACTIVITY, p_tenant: tenant.id });
@@ -70,6 +73,15 @@ export default function MfgPracticeCheckModal({ tenant, onClose }: { tenant: { i
       if (!live) return;
       if (r.error) setError(r.error.message || "Could not read this company's data.");
       else setSnap(r.data as MfgSnapshot);
+    })();
+    return () => { live = false; };
+  }, [tenant.id]);
+
+  useEffect(() => {
+    let live = true;
+    (async () => {
+      const r = await supabase.rpc("mfg_role_scorecard", { p_tenant: tenant.id });
+      if (live) setCard(r.error ? [] : ((r.data as typeof card) ?? []));
     })();
     return () => { live = false; };
   }, [tenant.id]);
@@ -141,6 +153,17 @@ export default function MfgPracticeCheckModal({ tenant, onClose }: { tenant: { i
               {rows.map((r) => <Row key={r.group + r.label} r={r} />)}
             </div>
           ))}
+          {card.length > 0 && (
+            <div className="mt-5 pt-4 border-t border-hairline">
+              <div className="text-[11px] font-bold uppercase tracking-wide text-[#7F8EA0] mb-2">Who posted what (team company)</div>
+              {card.map((m) => (
+                <div key={m.user_id} className="mb-2 text-[12.5px]">
+                  <b>{m.full_name}</b> <span className="text-[#A3B1C2]">· {m.roles.length ? m.roles.map(roleLabel).join(", ") : "no role"}</span>
+                  <div className="text-[#A3B1C2]">{Object.keys(m.counts).length ? Object.entries(m.counts).map(([k, n]) => `${k} ${n}`).join(" · ") : "nothing posted yet"}</div>
+                </div>
+              ))}
+            </div>
+          )}
           <div className="mt-5 pt-4 border-t border-hairline">
             <div className="text-[11px] font-bold uppercase tracking-wide text-[#7F8EA0] mb-2">Answer key for students</div>
             <div className="text-[12.5px] text-[#A3B1C2] mb-2">

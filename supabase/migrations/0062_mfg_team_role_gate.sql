@@ -17,11 +17,13 @@
 --   One line added to the Standard functions that team screens call, each only when the company is a team company:
 --     post_invoice (Send invoice) -> sales · record_invoice_payment, record_depreciation, post_recurring_entry -> finance · record_bill_payment -> ap
 --   mfg_area_label gets friendlier wording for the areas these checks use.
+--   mfg_can_release_invoice(inv)  true when the caller may release that held invoice (the screen shows Release only then).
+--   mfg_approve_held_invoice: in a team company the Finance manager (area 'approve') may release a vendor invoice that is ON HOLD, as long as someone else entered it. Until now only the teacher could.
 --
 -- Roles that can do each area (unchanged, mfg__role_areas): PURCHASING purchasing, ap · WAREHOUSE stock, issue, shipping · PRODUCTION production, planning, master, issue ·
 --   QUALITY quality · SALES sales, shipping · ACCOUNTANT finance, ap, costing, settle · FINANCE_MANAGER finance, ap, costing, settle, close, approve · AUDITOR none.
 --
--- ROLLBACK: drop the triggers named mfg_gate_* (drop trigger if exists … on …), drop function mfg__gate_trg(), mfg__gate_child_trg(), mfg__team_need(uuid, text);
+-- ROLLBACK: put back the teacher-only check in mfg_approve_held_invoice (migration 0050); drop the triggers named mfg_gate_* (drop trigger if exists … on …), drop function mfg__gate_trg(), mfg__gate_child_trg(), mfg__team_need(uuid, text);
 --           re-run the definitions of the five Standard functions from their last migration (0002/0020 and later) to remove the added line; re-run 0049's mfg_area_label.
 -- ============================================================
 
@@ -138,3 +140,41 @@ begin
     execute n;
   end loop;
 end $do$;
+
+-- a held vendor invoice may be released by the teacher, or in a TEAM company by its Finance manager (never by the person who entered it)
+create or replace function mfg_approve_held_invoice(p_inv uuid)
+returns void as $$
+declare
+  i mfg_vendor_invoices;
+begin
+  select * into i from mfg_vendor_invoices where id = p_inv;
+  if i.id is null then raise exception 'That vendor invoice was not found.'; end if;
+  if is_teacher() is not true then
+    if not (i.tenant_id = my_tenant_id() and exists (select 1 from mfg_teams where tenant_id = i.tenant_id) and mfg__can(i.tenant_id, auth.uid(), 'approve')) then
+      raise exception 'Only the teacher can release an invoice that is on hold (in a team company, its finance manager can too).';
+    end if;
+    if i.created_by is not distinct from auth.uid() then raise exception 'You entered this invoice, so someone else must release it.'; end if;
+  end if;
+  perform assert_mfg_tenant(i.tenant_id);
+  if i.status <> 'HELD' then raise exception 'That invoice is not on hold (it is %).', lower(i.status); end if;
+  perform mfg__vi_post(p_inv, auth.uid());
+  insert into mfg_audit_log (tenant_id, event, detail, created_by)
+  values (i.tenant_id, 'held_invoice_released', jsonb_build_object('invoice', i.document_number, 'reason', i.hold_reason), auth.uid());
+end;
+$$ language plpgsql security definer set search_path = public;
+
+-- the vendor-invoice screen asks this to decide whether to show the Release button (same rule as the function above)
+create or replace function mfg_can_release_invoice(p_inv uuid)
+returns boolean as $$
+declare
+  i mfg_vendor_invoices;
+begin
+  select * into i from mfg_vendor_invoices where id = p_inv;
+  if i.id is null or i.status <> 'HELD' then return false; end if;
+  if is_teacher() then return true; end if;
+  return i.tenant_id = my_tenant_id() and exists (select 1 from mfg_teams where tenant_id = i.tenant_id)
+         and mfg__can(i.tenant_id, auth.uid(), 'approve') and i.created_by is distinct from auth.uid();
+end;
+$$ language plpgsql stable security definer set search_path = public;
+revoke execute on function mfg_can_release_invoice(uuid) from public, anon;
+grant execute on function mfg_can_release_invoice(uuid) to authenticated;
