@@ -62,7 +62,7 @@ function DashboardBody() {
     const today = isoDay(now);
     const inventoryValue = items.reduce((s, i) => s + i.qty_on_hand * i.unit_cost, 0);
     const metrics = computeMetrics(accounts, entries, inventoryValue, headcount);
-    const series = buildMonthlySeries(accounts, entries, "4000");
+    const series = buildMonthlySeries(accounts, entries, "4000").map((r) => ({ ...r, label: r.label.replace(/ (\d\d)$/, " \u2019$1") }));   // "Oct 26" reads like a day, so show "Oct \u201926"
     const last = series[series.length - 1], before = series[series.length - 2];
     const expenses = shareOf(buildExpenseBreakdown(accounts, entries).map((e) => ({ name: e.name, qty: e.value })), 4).map((e) => ({ name: e.name, value: round2(e.qty), pct: e.pct }));
 
