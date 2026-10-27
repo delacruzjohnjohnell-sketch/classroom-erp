@@ -57,7 +57,7 @@ function PurchasingBody() {
     if (!effectiveTenantId) return;
     const [p, v, d] = await Promise.all([
       supabase.from("purchase_orders").select("*, vendors(name), purchase_order_lines(id, description, qty, unit_cost, mfg_po_line_items(item_id, pur_qty, pur_uom, pur_price))")
-        .eq("tenant_id", effectiveTenantId).order("created_at", { ascending: false }),
+        .eq("tenant_id", effectiveTenantId).order("order_date", { ascending: false }).order("document_number", { ascending: false }),   // purchase_orders has no created_at
       supabase.from("vendors").select("id, name").eq("tenant_id", effectiveTenantId).order("name"),
       supabase.from("mfg_material_doc_lines").select("po_line_id, qty_change").eq("tenant_id", effectiveTenantId).not("po_line_id", "is", null),
     ]);
