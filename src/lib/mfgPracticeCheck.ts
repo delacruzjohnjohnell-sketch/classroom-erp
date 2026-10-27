@@ -56,7 +56,7 @@ export type MfgPracticeSet = {
   items: { sku: string; name: string; type: string; uom: string; plannedPrice?: number; standardCost?: number; qty: number }[];
   boms: { item: string; lines: { sku: string; qty: number }[] }[];
   routings: { item: string; ops: { op: number; workCenter: string; setup: number; run: number; labor: number; machine: number }[] }[];
-  purchaseOrders: { vendor: string; total: number }[];
+  purchaseOrders: { vendor: string; total: number; status?: string }[];   // status defaults to 'closed'; an order that had goods returned after receipt is 'sent' again
   vendorInvoices: { total: number; invoiceDate: string; due: string; status?: string }[];
   orders: { item: string; planned: number; good: number; scrap: number }[];
   invoices: { total: number; date: string; due: string }[];
@@ -152,10 +152,15 @@ export function runMfgPracticeChecks(s: MfgSnapshot, set: MfgPracticeSet): Check
   }
 
   // ---- purchasing
+  const usedPo = new Set<number>();
   for (const po of set.purchaseOrders) {
-    const f = s.purchase_orders.find((x) => x.vendor === po.vendor && same(Number(x.total), po.total));
-    add("Purchasing", `Purchase order ${po.vendor}`, `${peso(po.total)}, fully received`, f ? `${peso(Number(f.total))}, ${f.status}` : "not found",
-      !!f && f.status === "closed", "Check the vendor, quantities and unit prices on the order, and that every line was received.");
+    const wantStatus = po.status ?? "closed";
+    const at = s.purchase_orders.findIndex((x, i) => !usedPo.has(i) && x.vendor === po.vendor && same(Number(x.total), po.total) && x.status === wantStatus);
+    const at2 = at >= 0 ? at : s.purchase_orders.findIndex((x, i) => !usedPo.has(i) && x.vendor === po.vendor && same(Number(x.total), po.total));
+    if (at2 >= 0) usedPo.add(at2);
+    const f = at2 >= 0 ? s.purchase_orders[at2] : undefined;
+    add("Purchasing", `Purchase order ${po.vendor}`, `${peso(po.total)}, ${wantStatus === "closed" ? "fully received" : "received (goods were returned, so the order stays open)"}`, f ? `${peso(Number(f.total))}, ${f.status}` : "not found",
+      !!f && f.status === wantStatus, "Check the vendor, quantities and unit prices on the order, and that every line was received.");
   }
   for (const vi of set.vendorInvoices) {
     const wantStatus = vi.status ?? "POSTED";
@@ -235,15 +240,28 @@ export function runMfgPracticeChecks(s: MfgSnapshot, set: MfgPracticeSet): Check
       add("Quality", `Inspection plan ${p.item}: ${p.characteristic}`, spec(p.min, p.max), h ? spec(h.min, h.max) : "no plan", !!h && spec(h.min, h.max) === spec(p.min, p.max),
         "Quality → Plans and settings: one characteristic with the minimum and maximum from the set.");
     }
-    q.lots.forEach((l, i) => {
-      const h = (s.inspection_lots ?? []).filter((x) => x.item === l.item)[i];
+    // lots are matched by what was decided, not by their position (several lots of one item can be made on the same day)
+    const usedLots = new Set<number>();
+    const seen: Record<string, number> = {};
+    q.lots.forEach((l) => {
+      const lots = s.inspection_lots ?? [];
+      const exact = lots.findIndex((x, j) => !usedLots.has(j) && x.item === l.item && same(Number(x.qty), l.qty) && same(Number(x.accept), l.accept) && same(Number(x.scrap), l.scrap) && same(Number(x.return), l.return) && same(Number(x.rework), l.rework));
+      const any = exact >= 0 ? exact : lots.findIndex((x, j) => !usedLots.has(j) && x.item === l.item);
+      if (any >= 0) usedLots.add(any);
+      const h = any >= 0 ? lots[any] : undefined;
+      const i = (seen[l.item] = (seen[l.item] ?? 0) + 1) - 1;
       add("Quality", `Inspection lot ${i + 1} of ${l.item}`, `${l.qty}: accept ${l.accept}, scrap ${l.scrap}, return ${l.return}`,
         h ? `${num(Number(h.qty))}: accept ${num(Number(h.accept))}, scrap ${num(Number(h.scrap))}, return ${num(Number(h.return))}` : "no lot",
         !!h && same(Number(h.qty), l.qty) && same(Number(h.accept), l.accept) && same(Number(h.scrap), l.scrap) && same(Number(h.return), l.return) && same(Number(h.rework), l.rework),
         "Receive the goods into Quarantine, record the measurement, then decide the accepted, scrapped and returned quantities exactly as the set says.");
     });
+    const usedNcr = new Set<number>();
     q.ncrs.forEach((n, i) => {
-      const h = (s.ncrs ?? [])[i];
+      const all = s.ncrs ?? [];
+      const hit = all.findIndex((x, j) => !usedNcr.has(j) && x.item === n.item && x.root_cause === n.rootCause && same(Number(x.qty), n.qty));
+      const idx = hit >= 0 ? hit : all.findIndex((_, j) => !usedNcr.has(j));
+      if (idx >= 0) usedNcr.add(idx);
+      const h = idx >= 0 ? all[idx] : undefined;
       add("Quality", `Non-conformance report ${i + 1}`, `${n.item}, ${n.rootCause}, ${n.qty}, closed with a corrective action`,
         h ? `${h.item}, ${h.root_cause}, ${num(Number(h.qty))}, ${h.status.toLowerCase()}${h.action_written ? " with an action" : " without an action"}` : "none",
         !!h && h.item === n.item && h.root_cause === n.rootCause && same(Number(h.qty), n.qty) && h.status === "CLOSED" && h.action_written,
