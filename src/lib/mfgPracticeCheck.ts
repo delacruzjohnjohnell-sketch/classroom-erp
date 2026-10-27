@@ -300,8 +300,13 @@ export function runMfgPracticeChecks(s: MfgSnapshot, set: MfgPracticeSet): Check
     add("Corrections", "Reversed journal vouchers", `${set.reversals.vouchers}`, `${r?.vouchers ?? 0}`, (r?.vouchers ?? 0) === set.reversals.vouchers,
       "Finance: reverse the wrongly booked voucher, then post a new one to the right account.");
   }
+  const usedDown = new Set<number>();
   for (const d of set.downtime ?? []) {
-    const h = (s.downtime ?? []).find((x) => x.work_center === d.workCenter && x.category === d.category);
+    const all = s.downtime ?? [];
+    const hit = all.findIndex((x, j) => !usedDown.has(j) && x.work_center === d.workCenter && x.category === d.category && same(Number(x.hours), d.hours));
+    const idx = hit >= 0 ? hit : all.findIndex((x, j) => !usedDown.has(j) && x.work_center === d.workCenter && x.category === d.category);
+    if (idx >= 0) usedDown.add(idx);
+    const h = idx >= 0 ? all[idx] : undefined;
     add("Shop floor", `Downtime on ${d.workCenter}`, `${d.hours} h, ${d.category.toLowerCase().replace(/_/g, " ")}`, h ? `${num(Number(h.hours))} h, ${h.category.toLowerCase().replace(/_/g, " ")}` : "not logged",
       !!h && same(Number(h.hours), d.hours), "Shop Floor → Downtime: log the hours and the reason from the set.");
   }
