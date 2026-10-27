@@ -214,8 +214,8 @@ export default function TeacherPage() {
           <>
             <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}>
               <KpiCard icon={<Building2 size={16} />} label="Companies" value={visible.length} />
-              <KpiCard icon={<CheckCircle2 size={16} />} label="Manufacturing at 100%" value={`${mfgComplete} of ${mfgVisible.length}`} accent={TEAL} />
-              <KpiCard icon={<CalendarCheck size={16} />} label="Manufacturing months closed" value={monthsClosed} />
+              <KpiCard icon={<CheckCircle2 size={16} />} label="Mfg at 100%" value={`${mfgComplete} of ${mfgVisible.length}`} accent={TEAL} />
+              <KpiCard icon={<CalendarCheck size={16} />} label="Mfg months closed" value={monthsClosed} />
               <KpiCard icon={<CircleDashed size={16} />} label="Not started" value={notStarted} accent={notStarted > 0 ? GOLD : undefined} />
               <KpiCard icon={<Briefcase size={16} />} label="Total employees" value={classHeadcount} />
             </div>
@@ -240,7 +240,7 @@ export default function TeacherPage() {
 
             {editionFilter !== "STANDARD" && mfgSorted.length > 0 && (
               <Panel title={`Manufacturing ERP · ${mfgSorted.length}`}>
-                <div className="grid items-center gap-2 px-3.5 pb-1.5 text-[10.5px] font-bold uppercase tracking-wide text-[#7F8EA0]" style={{ gridTemplateColumns: "minmax(0,1.6fr) minmax(0,1.5fr) 70px 110px 110px auto" }}>
+                <div className="grid items-center gap-2 px-3.5 pb-1.5 text-[10.5px] font-bold uppercase tracking-wide text-[#7F8EA0]" style={{ gridTemplateColumns: "minmax(0,1.5fr) minmax(0,1.5fr) 80px 110px 100px 130px" }}>
                   <div>Company</div><div>Practice set check</div><div>Months closed</div><div>Net income</div><div>Last entry</div><div />
                 </div>
                 <div className="flex flex-col gap-1.5">
@@ -248,7 +248,7 @@ export default function TeacherPage() {
                     const pr = mfgProgress[tenant.id];
                     const ratio = pr && pr.total ? pr.passed / pr.total : 0;
                     return (
-                      <div key={tenant.id} className="grid items-center gap-2 px-3.5 py-2.5 rounded-md border border-hairline bg-paper text-[12.5px]" style={{ gridTemplateColumns: "minmax(0,1.6fr) minmax(0,1.5fr) 70px 110px 110px auto" }}>
+                      <div key={tenant.id} className="grid items-center gap-2 px-3.5 py-2.5 rounded-md border border-hairline bg-paper text-[12.5px]" style={{ gridTemplateColumns: "minmax(0,1.5fr) minmax(0,1.5fr) 80px 110px 100px 130px" }}>
                         <button onClick={() => open(tenant.id)} className="flex items-center gap-1 min-w-0 text-left font-bold text-[13.5px]"><span className="truncate">{tenant.name}</span><ChevronRight size={14} color={INK} /></button>
                         <div className="min-w-0">
                           {entryCount === 0 ? <span className="text-[#7F8EA0]">Not started</span>
@@ -276,12 +276,12 @@ export default function TeacherPage() {
 
             {editionFilter !== "MANUFACTURING" && stdSorted.length > 0 && (
               <Panel title={`Standard ERP · ${stdSorted.length}`}>
-                <div className="grid items-center gap-2 px-3.5 pb-1.5 text-[10.5px] font-bold uppercase tracking-wide text-[#7F8EA0]" style={{ gridTemplateColumns: "minmax(0,1.6fr) 110px 110px 70px 110px auto" }}>
+                <div className="grid items-center gap-2 px-3.5 pb-1.5 text-[10.5px] font-bold uppercase tracking-wide text-[#7F8EA0]" style={{ gridTemplateColumns: "minmax(0,1.5fr) 110px 110px 70px 100px 100px" }}>
                   <div>Company</div><div>Revenue</div><div>Net income</div><div>Entries</div><div>Last entry</div><div />
                 </div>
                 <div className="flex flex-col gap-1.5">
                   {stdSorted.map(({ tenant, metrics, entryCount, lastEntry }) => (
-                    <div key={tenant.id} className="grid items-center gap-2 px-3.5 py-2.5 rounded-md border border-hairline bg-paper text-[12.5px]" style={{ gridTemplateColumns: "minmax(0,1.6fr) 110px 110px 70px 110px auto" }}>
+                    <div key={tenant.id} className="grid items-center gap-2 px-3.5 py-2.5 rounded-md border border-hairline bg-paper text-[12.5px]" style={{ gridTemplateColumns: "minmax(0,1.5fr) 110px 110px 70px 100px 100px" }}>
                       <button onClick={() => open(tenant.id)} className="flex items-center gap-1 min-w-0 text-left font-bold text-[13.5px]"><span className="truncate">{tenant.name}</span><ChevronRight size={14} color={INK} /></button>
                       <div className="font-semibold" style={{ color: TEAL }}>{money(metrics?.revenue || 0)}</div>
                       <div className="font-semibold" style={{ color: (metrics?.netIncome || 0) >= 0 ? TEAL : RED }}>{money(metrics?.netIncome || 0)}</div>
