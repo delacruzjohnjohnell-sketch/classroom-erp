@@ -82,6 +82,7 @@ function PlanningBody() {
   const [newOrder, setNewOrder] = useState<{ item_id: string; qty: string; start_date: string; finish_date: string } | null>(null);
   const [poFor, setPoFor] = useState<Req[] | null>(null);
   const [vendor, setVendor] = useState("");
+  const [newVendor, setNewVendor] = useState("");
   const [prices, setPrices] = useState<Record<string, string>>({});
   const [fc, setFc] = useState({ item_id: "", month: today().slice(0, 7), qty: "" });
 
@@ -229,12 +230,20 @@ function PlanningBody() {
     if (open.length === 0) { toast.error("Choose at least one open requisition."); return; }
     setPrices(Object.fromEntries(open.map((r) => [r.id, suggestedPrice(item(r.item_id))])));
     setVendor("");
+    setNewVendor("");
     setPoFor(open);
   };
   const createPo = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!poFor || busy) return;
-    const parsed = convertRequisitionsSchema.safeParse({ vendor_id: vendor, lines: poFor.map((r) => ({ req_id: r.id, unit_price: prices[r.id] ?? "" })) });
+    // a vendor typed here is created first, the same way the Purchasing screen does it
+    let vid = vendor;
+    if (!vid && newVendor.trim() && effectiveTenantId) {
+      const v = await mutate(supabase.from("vendors").insert({ tenant_id: effectiveTenantId, name: newVendor.trim() }).select("id").single());
+      if (!ok(v)) return;
+      vid = (v.data as { id: string }).id;
+    }
+    const parsed = convertRequisitionsSchema.safeParse({ vendor_id: vid, lines: poFor.map((r) => ({ req_id: r.id, unit_price: prices[r.id] ?? "" })) });
     if (!parsed.success) { toast.error(firstIssue(parsed.error)); return; }
     setBusy(true);
     const res = await mutate(supabase.rpc("mfg_convert_requisitions", { p_vendor: parsed.data.vendor_id, p_lines: parsed.data.lines }),
@@ -552,6 +561,7 @@ function PlanningBody() {
               <option value="">Choose a vendor…</option>
               {vendors.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
             </select>
+            {!vendor && <input className="input mt-2" placeholder="…or type a new vendor's name" value={newVendor} onChange={(e) => setNewVendor(e.target.value)} />}
             <div className="overflow-x-auto mt-3">
               <table style={{ minWidth: 420 }}>
                 <thead><tr><th>Item</th><th style={{ textAlign: "right" }}>Quantity</th><th>Needed on</th><th>Price each</th></tr></thead>
