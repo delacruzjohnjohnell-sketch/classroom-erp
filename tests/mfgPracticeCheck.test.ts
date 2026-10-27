@@ -106,3 +106,11 @@ test("two orders for the same item are each matched on their own quantity", () =
   assert.equal(r.filter((x) => x.pass).length, 1);
   assert.equal(r.filter((x) => !x.pass).length, 1);
 });
+
+test("an invoice the student voided and entered again is not a mistake", () => {
+  const s = key2();
+  s.vendor_invoices.push({ total: 23296, due_date: "2027-02-14", status: "VOIDED", invoice_date: "2027-01-15" });
+  s.bills!.push({ total: 23296, status: "void" });
+  const bad = runMfgPracticeChecks(s, MFG_SET_2).filter((r) => !r.pass).map((r) => r.label);
+  assert.deepEqual(bad, []);
+});

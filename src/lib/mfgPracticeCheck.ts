@@ -162,7 +162,9 @@ export function runMfgPracticeChecks(s: MfgSnapshot, set: MfgPracticeSet): Check
     add("Purchasing", `Vendor invoice of ${peso(vi.total)}`, `${wantStatus.toLowerCase()} ${vi.invoiceDate}, due ${vi.due}`, f ? `${f.status.toLowerCase()} ${f.invoice_date ?? ""}, due ${f.due_date ?? "—"}` : "not found",
       !!f && f.status === wantStatus && f.invoice_date === vi.invoiceDate && f.due_date === vi.due, "Enter the vendor invoice against the order, with the invoice date, due date and 12% tax from the set.");
   }
-  add("Purchasing", "Vendor invoices", `${set.vendorInvoices.length}`, `${s.vendor_invoices.length}`, s.vendor_invoices.length === set.vendorInvoices.length,
+  // an invoice the student voided to correct it is a legitimate correction, so it is not counted
+  const liveInvoices = s.vendor_invoices.filter((x) => x.status !== "VOIDED");
+  add("Purchasing", "Vendor invoices", `${set.vendorInvoices.length}`, `${liveInvoices.length}`, liveInvoices.length === set.vendorInvoices.length,
     "Compare with the vendor invoices in the set. A missing or duplicated invoice shows here; an invoice left uninvoiced on purpose is explained in the set.");
 
   // ---- production
@@ -267,7 +269,7 @@ export function runMfgPracticeChecks(s: MfgSnapshot, set: MfgPracticeSet): Check
       !!p && p.made_count === set.payments.madeCount && same(Number(p.made), set.payments.made), "Purchasing → Vendor invoices: pay each invoice with the amount from the set.");
   }
   if (set.bills) {
-    const have = (s.bills ?? []).map((b) => Number(b.total)).sort((a, b) => a - b);
+    const have = (s.bills ?? []).filter((b) => b.status !== "void").map((b) => Number(b.total)).sort((a, b) => a - b);
     const want = [...set.bills].sort((a, b) => a - b);
     add("Purchasing", "Vendor bills (invoices and landed cost)", want.map(peso).join(", "), have.map(peso).join(", ") || "none",
       have.length === want.length && have.every((v, i) => same(v, want[i])), "Every posted vendor invoice and the landed-cost bill must be there once; a rejected or voided invoice is not a bill.");
