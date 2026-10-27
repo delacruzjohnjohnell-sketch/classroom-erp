@@ -2,20 +2,21 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Building2, TrendingUp, TrendingDown, Wallet, Briefcase, ChevronRight, LogOut, Loader2, ClipboardCheck, Trash2, RotateCcw, MessageSquare } from "lucide-react";
+import { Building2, Briefcase, CheckCircle2, CalendarCheck, CircleDashed, ChevronRight, LogOut, Loader2, ClipboardCheck, Trash2, RotateCcw, MessageSquare } from "lucide-react";
 import { KpiCard, Panel, Empty, ConfirmDialog } from "@/components/ui";
 import PracticeCheckModal from "@/components/PracticeChecker";
 import MfgPracticeCheckModal from "@/components/MfgPracticeChecker";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { toast } from "@/lib/toast";
-import { money, round2, type Account } from "@/lib/types";
+import { money, type Account } from "@/lib/types";
 import { useUnreadMessages } from "@/lib/useUnreadMessages";
 import { computeMetrics, type EntryWithLines } from "@/lib/metrics";
+import { runMfgPracticeChecks, summarizeMfg, type MfgPracticeSet, type MfgSnapshot } from "@/lib/mfgPracticeCheck";
 
-const TEAL = "#22D3C5", GOLD = "#F2B13C", RED = "#FF6B7A", LINE = "#E4EAF3", INK = "#334155";
-const tooltipStyle = { background: "#FFFFFF", color: "#17213B", border: `1px solid ${LINE}`, borderRadius: 8, fontSize: 12 };
+const TEAL = "#22D3C5", GOLD = "#F2B13C", RED = "#FF6B7A", INK = "#334155";
+
+type MfgProgress = { setName: string; passed: number; total: number; closed: number };
 
 // Deleting a company is permanent, so it asks once before going ahead.
 function DeleteCompanyModal({ tenant, onClose, onDeleted }: { tenant: { id: string; name: string }; onClose: () => void; onDeleted: () => void }) {
@@ -84,7 +85,7 @@ export default function TeacherPage() {
   const { loading, userId, profile, tenants, viewTenantId, setViewTenantId, refresh, signOut } = useSession();
   const unreadMessages = useUnreadMessages(userId);
   const router = useRouter();
-  const [summaries, setSummaries] = useState<{ tenant: any; metrics: any }[]>([]);
+  const [summaries, setSummaries] = useState<{ tenant: any; metrics: any; entryCount: number; lastEntry: string | null }[]>([]);
   const [fetching, setFetching] = useState(true);
   const [checking, setChecking] = useState<{ id: string; name: string } | null>(null);
   // Which ERP's companies to show: all, Standard, or Manufacturing. A company with no edition row is Standard.
@@ -92,6 +93,8 @@ export default function TeacherPage() {
   const [editions, setEditions] = useState<Record<string, string>>({});
   const [deleting, setDeleting] = useState<{ id: string; name: string } | null>(null);
   const [resetting, setResetting] = useState<{ id: string; name: string } | null>(null);
+  // Manufacturing companies: the best-matching practice set and how many of its checks pass (read in the background, only a few companies)
+  const [mfgProgress, setMfgProgress] = useState<Record<string, MfgProgress | null>>({});
 
   useEffect(() => {
     if (loading) return;
@@ -129,12 +132,43 @@ export default function TeacherPage() {
         const entries = (ent.data as any as EntryWithLines[]) ?? [];
         const inventoryValue = (items.data ?? []).reduce((s: number, i: any) => s + i.qty_on_hand * i.unit_cost, 0);
         const metrics = computeMetrics(accounts, entries, inventoryValue, emp.data?.length ?? 0);
-        return { tenant: t, metrics };
+        const dates = entries.map((e) => e.entry_date).filter(Boolean).sort();
+        return { tenant: t, metrics, entryCount: entries.length, lastEntry: dates.length ? dates[dates.length - 1] : null };
       }));
       setSummaries(results);
       setFetching(false);
     })();
   }, [loading, profile, tenants]);
+
+  useEffect(() => {
+    if (loading || !profile || profile.role !== "teacher" || fetching) return;
+    const mfgIds = summaries.map((x) => x.tenant.id).filter((id) => editions[id] === "MANUFACTURING");
+    if (mfgIds.length === 0) return;
+    let live = true;
+    (async () => {
+      const list = await supabase.rpc("mfg_practice_set_list");
+      const sets: MfgPracticeSet[] = [];
+      for (const row of ((list.data as { id: string }[]) ?? [])) {
+        const r = await supabase.rpc("mfg_practice_set_get", { p_id: row.id });
+        if (!r.error && r.data) sets.push(r.data as MfgPracticeSet);
+      }
+      const out: Record<string, MfgProgress | null> = {};
+      await Promise.all(mfgIds.map(async (id) => {
+        let r = await supabase.rpc("mfg_practice_snapshot_a2", { p_tenant: id });
+        if (r.error) r = await supabase.rpc("mfg_practice_snapshot", { p_tenant: id });
+        if (r.error || !r.data) { out[id] = null; return; }
+        const snap = r.data as MfgSnapshot;
+        let best: MfgProgress | null = null;
+        for (const set of sets) {
+          const sum = summarizeMfg(runMfgPracticeChecks(snap, set));
+          if (!best || sum.passed / sum.total > best.passed / best.total) best = { setName: set.name.split(" — ")[0], passed: sum.passed, total: sum.total, closed: snap.periods.filter((p) => p.status === "CLOSED").length };
+        }
+        out[id] = best;
+      }));
+      if (live) setMfgProgress(out);
+    })();
+    return () => { live = false; };
+  }, [loading, profile, fetching, summaries, editions]);
 
   if (loading || !profile) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" size={20} color={TEAL} /></div>;
@@ -144,11 +178,16 @@ export default function TeacherPage() {
   const visible = summaries.filter((x) => editionFilter === "ALL" || editionOf(x.tenant.id) === editionFilter);
   const countFor = (e: "STANDARD" | "MANUFACTURING") => summaries.filter((x) => editionOf(x.tenant.id) === e).length;
 
-  const classRevenue = visible.reduce((s, x) => s + (x.metrics?.revenue || 0), 0);
-  const classExpenses = visible.reduce((s, x) => s + (x.metrics?.expenses || 0), 0);
-  const classNet = classRevenue - classExpenses;
   const classHeadcount = visible.reduce((s, x) => s + (x.metrics?.headcount || 0), 0);
-  const barData = visible.map((x) => ({ name: x.tenant.name.length > 14 ? x.tenant.name.slice(0, 13) + "…" : x.tenant.name, Revenue: round2(x.metrics?.revenue || 0), Expenses: round2(x.metrics?.expenses || 0) }));
+  const notStarted = visible.filter((x) => x.entryCount === 0).length;
+  const mfgVisible = visible.filter((x) => editionOf(x.tenant.id) === "MANUFACTURING");
+  const stdVisible = visible.filter((x) => editionOf(x.tenant.id) !== "MANUFACTURING");
+  const mfgComplete = mfgVisible.filter((x) => { const p = mfgProgress[x.tenant.id]; return !!p && p.passed === p.total; }).length;
+  const monthsClosed = mfgVisible.reduce((n, x) => n + (mfgProgress[x.tenant.id]?.closed ?? 0), 0);
+  const pct = (p: MfgProgress | null | undefined) => (p && p.total ? p.passed / p.total : -1);
+  const mfgSorted = [...mfgVisible].sort((a, b) => pct(mfgProgress[b.tenant.id]) - pct(mfgProgress[a.tenant.id]) || a.tenant.name.localeCompare(b.tenant.name));
+  const stdSorted = [...stdVisible].sort((a, b) => a.tenant.name.localeCompare(b.tenant.name));
+  const open = (id: string) => { setViewTenantId(id); router.push("/dashboard"); };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -175,27 +214,11 @@ export default function TeacherPage() {
           <>
             <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}>
               <KpiCard icon={<Building2 size={16} />} label="Companies" value={visible.length} />
-              <KpiCard icon={<TrendingUp size={16} />} label="Class revenue" value={money(classRevenue)} accent={TEAL} />
-              <KpiCard icon={<TrendingDown size={16} />} label="Class expenses" value={money(classExpenses)} accent={RED} />
-              <KpiCard icon={<Wallet size={16} />} label="Class net income" value={money(classNet)} accent={classNet >= 0 ? TEAL : RED} />
+              <KpiCard icon={<CheckCircle2 size={16} />} label="Manufacturing at 100%" value={`${mfgComplete} of ${mfgVisible.length}`} accent={TEAL} />
+              <KpiCard icon={<CalendarCheck size={16} />} label="Manufacturing months closed" value={monthsClosed} />
+              <KpiCard icon={<CircleDashed size={16} />} label="Not started" value={notStarted} accent={notStarted > 0 ? GOLD : undefined} />
               <KpiCard icon={<Briefcase size={16} />} label="Total employees" value={classHeadcount} />
             </div>
-
-            {tenants.length > 0 && (
-              <Panel title="Revenue & expenses by company">
-                <ResponsiveContainer width="100%" height={260}>
-                  <BarChart data={barData} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
-                    <CartesianGrid stroke={LINE} vertical={false} />
-                    <XAxis dataKey="name" tick={{ fontSize: 12, fill: INK }} axisLine={{ stroke: LINE }} tickLine={false} />
-                    <YAxis tick={{ fontSize: 12, fill: INK }} axisLine={{ stroke: LINE }} tickLine={false} tickFormatter={(v) => `₱${v}`} />
-                    <Tooltip formatter={(v: number) => money(v)} contentStyle={tooltipStyle} />
-                    <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Bar dataKey="Revenue" fill={TEAL} radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="Expenses" fill={GOLD} radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </Panel>
-            )}
 
             <div className="flex items-center gap-2 flex-wrap">
               {([["ALL", "All", summaries.length], ["STANDARD", "Standard ERP", countFor("STANDARD")], ["MANUFACTURING", "Manufacturing ERP", countFor("MANUFACTURING")]] as const).map(([key, label, n]) => (
@@ -213,37 +236,66 @@ export default function TeacherPage() {
               </span>
             </div>
 
-            <Panel title="Companies">
-              {tenants.length === 0 ? <Empty>No student companies yet. They&rsquo;ll appear here once students sign in and create one.</Empty> : (
+            {tenants.length === 0 && <Panel title="Companies"><Empty>No student companies yet. They&rsquo;ll appear here once students sign in and create one.</Empty></Panel>}
+
+            {editionFilter !== "STANDARD" && mfgSorted.length > 0 && (
+              <Panel title={`Manufacturing ERP · ${mfgSorted.length}`}>
+                <div className="grid items-center gap-2 px-3.5 pb-1.5 text-[10.5px] font-bold uppercase tracking-wide text-[#7F8EA0]" style={{ gridTemplateColumns: "minmax(0,1.6fr) minmax(0,1.5fr) 70px 110px 110px auto" }}>
+                  <div>Company</div><div>Practice set check</div><div>Months closed</div><div>Net income</div><div>Last entry</div><div />
+                </div>
                 <div className="flex flex-col gap-1.5">
-                  {visible.map(({ tenant, metrics }) => (
-                    <div key={tenant.id} className="flex items-center gap-2 px-3.5 py-2.5 rounded-md border border-hairline bg-paper">
-                      <button onClick={() => { setViewTenantId(tenant.id); router.push("/dashboard"); }}
-                        className="flex flex-1 min-w-0 items-center justify-between gap-3 text-left">
-                        <div className="text-[13.5px] font-bold truncate">{tenant.name}</div>
-                        <div className="flex items-center gap-3.5 text-[12.5px] font-semibold shrink-0">
-                          <span style={{ color: TEAL }}>{money(metrics?.revenue || 0)} rev</span>
-                          <span style={{ color: (metrics?.netIncome || 0) >= 0 ? TEAL : RED }}>{money(metrics?.netIncome || 0)} net</span>
-                          <ChevronRight size={16} color={INK} />
+                  {mfgSorted.map(({ tenant, metrics, entryCount, lastEntry }) => {
+                    const pr = mfgProgress[tenant.id];
+                    const ratio = pr && pr.total ? pr.passed / pr.total : 0;
+                    return (
+                      <div key={tenant.id} className="grid items-center gap-2 px-3.5 py-2.5 rounded-md border border-hairline bg-paper text-[12.5px]" style={{ gridTemplateColumns: "minmax(0,1.6fr) minmax(0,1.5fr) 70px 110px 110px auto" }}>
+                        <button onClick={() => open(tenant.id)} className="flex items-center gap-1 min-w-0 text-left font-bold text-[13.5px]"><span className="truncate">{tenant.name}</span><ChevronRight size={14} color={INK} /></button>
+                        <div className="min-w-0">
+                          {entryCount === 0 ? <span className="text-[#7F8EA0]">Not started</span>
+                            : pr === undefined ? <span className="text-[#7F8EA0]">checking…</span>
+                            : pr === null ? <span className="text-[#7F8EA0]">no check</span>
+                            : (<>
+                              <div className="flex items-center gap-2"><div className="h-1.5 flex-1 rounded-full bg-[#E4EAF3] overflow-hidden"><div className="h-full rounded-full" style={{ width: `${Math.round(ratio * 100)}%`, background: ratio === 1 ? TEAL : GOLD }} /></div><b style={{ color: ratio === 1 ? TEAL : INK }}>{pr.passed}/{pr.total}</b></div>
+                              <div className="text-[11px] text-[#7F8EA0] truncate">{pr.setName}</div>
+                            </>)}
                         </div>
-                      </button>
-                      {<button onClick={() => setChecking({ id: tenant.id, name: tenant.name })} title="Check practice set"
-                        className="flex items-center gap-1 border border-hairline rounded-md px-2 py-1.5 text-[11.5px] font-semibold text-teal bg-panel shrink-0">
-                        <ClipboardCheck size={13} /> Check
-                      </button>}
-                      {editionOf(tenant.id) === "MANUFACTURING" && <button onClick={() => setResetting({ id: tenant.id, name: tenant.name })} title="Reset to an empty Manufacturing company"
-                        className="flex items-center gap-1 border border-hairline rounded-md px-2 py-1.5 text-[11.5px] font-semibold bg-panel shrink-0" style={{ color: GOLD }}>
-                        <RotateCcw size={13} /> Reset
-                      </button>}
-                      <button onClick={() => setDeleting({ id: tenant.id, name: tenant.name })} title="Delete company"
-                        className="border border-hairline rounded-md px-2 py-1.5 bg-panel shrink-0" style={{ color: RED }}>
-                        <Trash2 size={13} />
-                      </button>
+                        <div className="font-semibold">{pr ? pr.closed : "—"}</div>
+                        <div className="font-semibold" style={{ color: (metrics?.netIncome || 0) >= 0 ? TEAL : RED }}>{money(metrics?.netIncome || 0)}</div>
+                        <div className="text-[#7F8EA0]">{lastEntry ?? "—"}</div>
+                        <div className="flex gap-1.5 justify-end">
+                          <button onClick={() => setChecking({ id: tenant.id, name: tenant.name })} title="Check practice set" className="flex items-center gap-1 border border-hairline rounded-md px-2 py-1.5 text-[11.5px] font-semibold text-teal bg-panel"><ClipboardCheck size={13} /> Check</button>
+                          <button onClick={() => setResetting({ id: tenant.id, name: tenant.name })} title="Reset to an empty Manufacturing company" className="border border-hairline rounded-md px-2 py-1.5 bg-panel" style={{ color: GOLD }}><RotateCcw size={13} /></button>
+                          <button onClick={() => setDeleting({ id: tenant.id, name: tenant.name })} title="Delete company" className="border border-hairline rounded-md px-2 py-1.5 bg-panel" style={{ color: RED }}><Trash2 size={13} /></button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Panel>
+            )}
+
+            {editionFilter !== "MANUFACTURING" && stdSorted.length > 0 && (
+              <Panel title={`Standard ERP · ${stdSorted.length}`}>
+                <div className="grid items-center gap-2 px-3.5 pb-1.5 text-[10.5px] font-bold uppercase tracking-wide text-[#7F8EA0]" style={{ gridTemplateColumns: "minmax(0,1.6fr) 110px 110px 70px 110px auto" }}>
+                  <div>Company</div><div>Revenue</div><div>Net income</div><div>Entries</div><div>Last entry</div><div />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  {stdSorted.map(({ tenant, metrics, entryCount, lastEntry }) => (
+                    <div key={tenant.id} className="grid items-center gap-2 px-3.5 py-2.5 rounded-md border border-hairline bg-paper text-[12.5px]" style={{ gridTemplateColumns: "minmax(0,1.6fr) 110px 110px 70px 110px auto" }}>
+                      <button onClick={() => open(tenant.id)} className="flex items-center gap-1 min-w-0 text-left font-bold text-[13.5px]"><span className="truncate">{tenant.name}</span><ChevronRight size={14} color={INK} /></button>
+                      <div className="font-semibold" style={{ color: TEAL }}>{money(metrics?.revenue || 0)}</div>
+                      <div className="font-semibold" style={{ color: (metrics?.netIncome || 0) >= 0 ? TEAL : RED }}>{money(metrics?.netIncome || 0)}</div>
+                      <div>{entryCount === 0 ? <span className="text-[#7F8EA0]">none</span> : entryCount}</div>
+                      <div className="text-[#7F8EA0]">{lastEntry ?? "—"}</div>
+                      <div className="flex gap-1.5 justify-end">
+                        <button onClick={() => setChecking({ id: tenant.id, name: tenant.name })} title="Check practice set" className="flex items-center gap-1 border border-hairline rounded-md px-2 py-1.5 text-[11.5px] font-semibold text-teal bg-panel"><ClipboardCheck size={13} /> Check</button>
+                        <button onClick={() => setDeleting({ id: tenant.id, name: tenant.name })} title="Delete company" className="border border-hairline rounded-md px-2 py-1.5 bg-panel" style={{ color: RED }}><Trash2 size={13} /></button>
+                      </div>
                     </div>
                   ))}
                 </div>
-              )}
-            </Panel>
+              </Panel>
+            )}
           </>
         )}
       </div>
