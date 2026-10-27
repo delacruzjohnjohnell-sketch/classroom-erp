@@ -51,16 +51,12 @@ export default function MfgPracticeCheckModal({ tenant, onClose }: { tenant: { i
   const release = async (who: "owner" | "class", on: boolean) => {
     if (relBusy) return;
     setRelBusy(true);
-    let user: string | null = null;
-    if (who === "owner") {
-      const t = await supabase.from("tenants").select("owner_id").eq("id", tenant.id).single();
-      user = (t.data as { owner_id: string | null } | null)?.owner_id ?? null;
-      if (!user) { setRelBusy(false); toast.error("This company has no single owner (it may be a team company)."); return; }
-    }
-    const r = await supabase.rpc("mfg_activity_release", { p_activity: ACTIVITY, p_user: user, p_release: on });
+    const r = who === "class"
+      ? await supabase.rpc("mfg_activity_release", { p_activity: ACTIVITY, p_user: null, p_release: on })
+      : await supabase.rpc("mfg_activity_release_company", { p_activity: ACTIVITY, p_tenant: tenant.id, p_release: on });
     setRelBusy(false);
     if (r.error) { toast.error(r.error.message); return; }
-    toast.success(on ? (who === "class" ? "Answer key released to the whole class." : "Answer key released to this student.") : "Answer key taken back.");
+    toast.success(on ? (who === "class" ? "Answer key released to the whole class." : "Answer key released to the student(s) of this company.") : "Answer key taken back.");
     loadRelease();
   };
 
@@ -150,11 +146,11 @@ export default function MfgPracticeCheckModal({ tenant, onClose }: { tenant: { i
             <div className="flex gap-2 flex-wrap items-center">
               {rel?.has_owner && (
                 <button disabled={relBusy} onClick={() => release("owner", !rel.owner)} className="rounded-md px-3 py-2 text-xs font-semibold border border-hairline disabled:opacity-50"
-                  style={{ color: TEAL }}>{rel.owner ? "Take the key back from this student" : "Release the key to this student"}</button>
+                  style={{ color: TEAL }}>{rel.owner ? "Take the key back from this company's student(s)" : "Release the key to this company's student(s)"}</button>
               )}
               <button disabled={relBusy || !rel} onClick={() => release("class", !rel?.class)} className="rounded-md px-3 py-2 text-xs font-semibold border border-hairline disabled:opacity-50"
                 style={{ color: TEAL }}>{rel?.class ? "Take the key back from the whole class" : "Release the key to the whole class"}</button>
-              {rel && <span className="text-[12px] text-[#A3B1C2]">{rel.class ? "Released to the whole class." : rel.owner ? "Released to this student." : "Not released."}</span>}
+              {rel && <span className="text-[12px] text-[#A3B1C2]">{rel.class ? "Released to the whole class." : rel.owner ? "Released to this company's student(s)." : "Not released."}</span>}
             </div>
           </div>
         </>

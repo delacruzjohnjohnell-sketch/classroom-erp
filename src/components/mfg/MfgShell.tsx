@@ -128,7 +128,6 @@ export function MfgFrame({ children, pathname, fullName, role, tenantName, isTea
                 ) : companySlot}
               </div>
             </div>
-            {!isTeacher && <Link href="/companies" className="hidden lg:flex items-center gap-1 text-[12.5px] font-semibold text-[#2F6BFF] hover:underline"><Plus size={13} /> New company</Link>}
             <div className="flex items-center gap-2.5 pl-4 border-l border-hairline">
               <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#2F6BFF] to-[#7C5CFC] text-white text-[12.5px] font-bold flex items-center justify-center shrink-0">{initials}</div>
               <div className="hidden sm:block leading-tight">

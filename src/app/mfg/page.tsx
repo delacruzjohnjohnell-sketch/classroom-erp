@@ -122,5 +122,5 @@ function Body() {
 
   if (lkLoading || !data) return <div className="py-16 flex justify-center"><Loader2 className="animate-spin" size={20} color="#2F6BFF" /></div>;
   const empty = lk.items.length === 0 && profile?.role !== "teacher";        // a brand-new company is offered the demo shop
-  return empty ? <><ActivityKeyLoader /><DemoLoader /><MfgDashboard d={data} /></> : <MfgDashboard d={data} />;
+  return empty ? <><ActivityKeyLoader /><DemoLoader /><MfgDashboard d={data} /></> : <><ActivityKeyLoader /><MfgDashboard d={data} /></>;
 }
