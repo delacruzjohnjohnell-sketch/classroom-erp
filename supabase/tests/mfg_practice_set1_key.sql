@@ -1,7 +1,7 @@
 -- ============================================================
 -- Manufacturing ERP — Practice Set 1 ("Bamboo Basket Works, November 2026"): the ANSWER KEY.
 --
--- Runs the whole set exactly as a student would (same functions the screens call), then reports the snapshot the checker expects
+-- Runs the whole set exactly as a student does on the screens (no employee on a confirmation, no payroll) (same functions the screens call), then reports the snapshot the checker expects
 -- (tests/fixtures/mfgPracticeSet1.snapshot.json). Paste migration 0050 before it. It ends with RAISE EXCEPTION, so nothing is saved.
 -- ============================================================
 do $$
@@ -10,7 +10,7 @@ declare
   mfg uuid; res text := '';
   i_pole uuid; i_rat uuid; i_lac uuid; i_ctn uuid; i_bsk uuid; i_std uuid;
   wc_w uuid; wc_f uuid; b uuid; rt uuid; est uuid; loc uuid;
-  e_nena uuid; e_toto uuid; vend1 uuid; vend2 uuid; cust1 uuid; cust2 uuid;
+  vend1 uuid; vend2 uuid; cust1 uuid; cust2 uuid;
   po1 uuid; po2 uuid; l_pole uuid; l_rat uuid; l_ctn uuid; l_lac uuid; oa uuid; ob uuid;
   so1 uuid; so2 uuid; sl1 uuid; sl2 uuid; sl3 uuid; inv uuid; v uuid; pid uuid; j jsonb;
   m date := '2026-11-01';
@@ -24,8 +24,6 @@ begin
   insert into vendors (tenant_id, name) values (mfg, 'Pasig Packaging Supply') returning id into vend2;
   insert into customers (tenant_id, name) values (mfg, 'Greenleaf Home Store') returning id into cust1;
   insert into customers (tenant_id, name) values (mfg, 'Cebu Gift Shop') returning id into cust2;
-  insert into employees (tenant_id, name, title, salary, pay_type, hourly_rate) values (mfg, 'Aling Nena Reyes', 'Weaver', 0, 'hourly', 80) returning id into e_nena;
-  insert into employees (tenant_id, name, title, salary, pay_type, hourly_rate) values (mfg, 'Mang Totoy Cruz', 'Finisher', 0, 'hourly', 90) returning id into e_toto;
 
   i_pole := mfg_save_item(null, jsonb_build_object('sku','BAM-POLE','name','Bamboo pole','item_type','RAW','make_or_buy','BUY','base_uom','PC','planned_price',45,'procurement_lead_days',5));
   i_rat  := mfg_save_item(null, jsonb_build_object('sku','RAT-STR','name','Rattan strip','item_type','RAW','make_or_buy','BUY','base_uom','KG','planned_price',160,'procurement_lead_days',5));
@@ -89,15 +87,15 @@ begin
   perform mfg_post_material_issue(oa, (
     select jsonb_agg(jsonb_build_object('component_id', c.id, 'qty', case when c.item_id = i_rat then 78 else c.qty_required end))
       from mfg_prod_components c where c.order_id = oa), '2026-11-12');
-  perform mfg_post_confirmation(oa, 10, 50, 0, null, 0.5, 35, 10, false, '2026-11-14', e_nena);
-  perform mfg_post_confirmation(oa, 20, 48, 2, 'Lacquer blistered two baskets', 0.25, 13, 12, true, '2026-11-17', e_toto);
+  perform mfg_post_confirmation(oa, 10, 50, 0, null, 0.5, 35, 10, false, '2026-11-14', null);
+  perform mfg_post_confirmation(oa, 20, 48, 2, 'Lacquer blistered two baskets', 0.25, 13, 12, true, '2026-11-17', null);
   perform mfg_post_fg_receipt(oa, 48, null, null, null, '2026-11-18');
   perform mfg_settle_order(oa, '2026-11-25');
   ob := mfg_create_order(i_std, 20, '2026-11-12', '2026-11-19');
   perform mfg_release_order(ob);
   perform mfg_post_material_issue(ob, (select jsonb_agg(jsonb_build_object('component_id', c.id, 'qty', c.qty_required)) from mfg_prod_components c where c.order_id = ob), '2026-11-13');
-  perform mfg_post_confirmation(ob, 10, 20, 0, null, 0.5, 10, 8, false, '2026-11-16', e_nena);
-  perform mfg_post_confirmation(ob, 20, 20, 0, null, 0.2, 6, 6, true, '2026-11-18', e_toto);
+  perform mfg_post_confirmation(ob, 10, 20, 0, null, 0.5, 10, 8, false, '2026-11-16', null);
+  perform mfg_post_confirmation(ob, 20, 20, 0, null, 0.2, 6, 6, true, '2026-11-18', null);
   perform mfg_post_fg_receipt(ob, 20, null, null, null, '2026-11-19');
   perform mfg_settle_order(ob, '2026-11-25');
 
