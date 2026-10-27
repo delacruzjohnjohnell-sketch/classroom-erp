@@ -5,11 +5,12 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LogOut, ArrowLeft, LayoutDashboard, BookOpen, Truck, Package, ShoppingCart, Briefcase, FileBarChart, Landmark, Boxes, Building2,
-  ArrowLeftRight, Users, Settings, Database, Calculator, Factory, Send, Plus, CalendarRange, ShieldCheck, Gauge, CalendarCheck, BarChart3,
+  ArrowLeftRight, Users, Settings, MessageSquare, Database, Calculator, Factory, Send, Plus, CalendarRange, ShieldCheck, Gauge, CalendarCheck, BarChart3,
 } from "lucide-react";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { rolesText } from "@/lib/mfgTeams";
+import { useUnreadMessages } from "@/lib/useUnreadMessages";
 import GlobalSearch from "../GlobalSearch";
 import CompanySwitcher from "../CompanySwitcher";
 
@@ -35,6 +36,7 @@ const NAV = [
   { href: "/mfg/payroll", label: "Payroll", icon: Briefcase },
   { href: "/mfg/reports", label: "Reports", icon: FileBarChart },
   { href: "/mfg/settings", label: "Settings", icon: Settings },
+  { href: "/messages", label: "Messages", icon: MessageSquare },
 ];
 const COMPANIES_NAV = { href: "/companies", label: "My Companies", icon: Building2 };
 const TEACHER_NAV = { href: "/mfg/teams", label: "Team companies", icon: Users };
@@ -68,6 +70,8 @@ export type FrameProps = {
  */
 export function MfgFrame({ children, pathname, fullName, role, tenantName, isTeacher, otherViewers, searchSlot, companySlot, onSignOut, onAllCompanies, roleNote, items: menu, product = "Manufacturing ERP", logo }: FrameProps) {
   const items = menu ?? (isTeacher ? [...NAV, TEACHER_NAV] : [...NAV, COMPANIES_NAV]);
+  const { userId: meId } = useSession();
+  const unread = useUnreadMessages(meId);
   const initials = fullName ? fullName.split(/\s+/).slice(0, 2).map((p: string) => p[0]?.toUpperCase()).join("") : "?";
 
   return (
@@ -89,6 +93,7 @@ export function MfgFrame({ children, pathname, fullName, role, tenantName, isTea
               <Link key={item.href} href={item.href}
                 className={`flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-[14px] font-semibold transition-colors ${active ? "bg-[#2F6BFF] text-white shadow-[0_4px_12px_rgba(47,107,255,0.4)]" : "text-[#B4C0DC] hover:bg-[rgba(255,255,255,0.07)] hover:text-white"}`}>
                 <Icon size={18} /> {item.label}
+                {item.href === "/messages" && unread > 0 && <span className="ml-auto min-w-[20px] h-5 px-1.5 rounded-full bg-[#FF6B7A] text-white text-[11px] font-bold flex items-center justify-center">{unread}</span>}
               </Link>
             );
           })}

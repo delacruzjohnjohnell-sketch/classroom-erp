@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Loader2, LayoutDashboard, BookOpen, Truck,
-  Package, ShoppingCart, Briefcase, FileBarChart, Landmark, Boxes, Building2,
+  Package, ShoppingCart, Briefcase, FileBarChart, Landmark, Boxes, Building2, MessageSquare,
 } from "lucide-react";
 import { useSession } from "@/lib/session";
 import { usePagePresence } from "@/lib/presence";
@@ -16,6 +16,7 @@ import MfgShell, { MfgFrame } from "./mfg/MfgShell";
 
 // Students also get a menu item for their companies, so starting another one is never hidden.
 const COMPANIES_NAV = { href: "/companies", label: "My Companies", icon: Building2 };
+const MESSAGES_NAV = { href: "/messages", label: "Messages", icon: MessageSquare };
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -68,7 +69,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   if (isMfg) return <MfgShell otherViewers={otherViewers}>{children}</MfgShell>;
 
   const tenantName = tenants.find((t) => t.id === effectiveTenantId)?.name ?? "—";
-  const navItems = profile.role === "student" ? [...NAV, COMPANIES_NAV] : NAV;
+  const navItems = profile.role === "student" ? [...NAV, MESSAGES_NAV, COMPANIES_NAV] : [...NAV, MESSAGES_NAV];
 
   // The Standard ERP draws the same frame as the Manufacturing ERP (navy sidebar, light top bar); only the menu and the product name differ.
   return (

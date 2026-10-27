@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Building2, TrendingUp, TrendingDown, Wallet, Briefcase, ChevronRight, LogOut, Loader2, ClipboardCheck, Trash2, RotateCcw } from "lucide-react";
+import { Building2, TrendingUp, TrendingDown, Wallet, Briefcase, ChevronRight, LogOut, Loader2, ClipboardCheck, Trash2, RotateCcw, MessageSquare } from "lucide-react";
 import { KpiCard, Panel, Empty, ConfirmDialog } from "@/components/ui";
 import PracticeCheckModal from "@/components/PracticeChecker";
 import MfgPracticeCheckModal from "@/components/MfgPracticeChecker";
@@ -11,6 +11,7 @@ import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { toast } from "@/lib/toast";
 import { money, round2, type Account } from "@/lib/types";
+import { useUnreadMessages } from "@/lib/useUnreadMessages";
 import { computeMetrics, type EntryWithLines } from "@/lib/metrics";
 
 const TEAL = "#22D3C5", GOLD = "#F2B13C", RED = "#FF6B7A", LINE = "#E4EAF3", INK = "#334155";
@@ -81,6 +82,7 @@ function ResetCompanyModal({ tenant, onClose, onDone }: { tenant: { id: string; 
 
 export default function TeacherPage() {
   const { loading, userId, profile, tenants, viewTenantId, setViewTenantId, refresh, signOut } = useSession();
+  const unreadMessages = useUnreadMessages(userId);
   const router = useRouter();
   const [summaries, setSummaries] = useState<{ tenant: any; metrics: any }[]>([]);
   const [fetching, setFetching] = useState(true);
@@ -155,9 +157,15 @@ export default function TeacherPage() {
           <div className="font-serif text-lg font-bold">Class overview</div>
           <div className="text-xs text-[#7F8EA0]">Teacher · {profile.full_name}</div>
         </div>
-        <button onClick={() => signOut()} className="flex items-center gap-1.5 border border-hairline rounded-md px-3 py-1.5 text-xs text-[#A3B1C2]">
-          <LogOut size={15} /> Sign out
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => router.push("/teacher/messages")} className="flex items-center gap-1.5 border border-hairline rounded-md px-3 py-1.5 text-xs font-semibold" style={{ color: "#2F6BFF" }}>
+            <MessageSquare size={15} /> Messages
+            {unreadMessages > 0 && <span className="min-w-[18px] h-[18px] px-1 rounded-full text-white text-[10.5px] font-bold flex items-center justify-center" style={{ background: RED }}>{unreadMessages}</span>}
+          </button>
+          <button onClick={() => signOut()} className="flex items-center gap-1.5 border border-hairline rounded-md px-3 py-1.5 text-xs text-[#A3B1C2]">
+            <LogOut size={15} /> Sign out
+          </button>
+        </div>
       </div>
 
       <div className="max-w-[1000px] w-full mx-auto px-5 py-5 flex flex-col gap-4">

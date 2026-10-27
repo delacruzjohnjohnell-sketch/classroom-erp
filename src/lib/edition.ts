@@ -19,7 +19,7 @@ const TWINS: [string, string][] = [
 ];
 
 // Pages that work the same in either edition (managing your companies).
-export const NEUTRAL_PATHS = ["/companies"];
+export const NEUTRAL_PATHS = ["/companies", "/messages"];
 
 export const isMfgPath = (pathname: string) => pathname === "/mfg" || pathname.startsWith("/mfg/");
 
