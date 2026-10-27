@@ -39,14 +39,15 @@ export default function MfgPracticeCheckModal({ tenant, onClose }: { tenant: { i
   const [practiceSet, setPracticeSet] = useState<MfgPracticeSet | null>(null);
   const [rel, setRel] = useState<{ class: boolean; owner: boolean; has_owner: boolean } | null>(null);
   const [relBusy, setRelBusy] = useState(false);
-  const ACTIVITY = "activity-1-manufacturing";
+  // the answer key released belongs to the practice set being checked
+  const ACTIVITY = setId === "rattan-dec-2026-jan-2027" ? "activity-2-manufacturing" : "activity-1-manufacturing";
 
   const loadRelease = async () => {
     const r = await supabase.rpc("mfg_activity_release_state", { p_activity: ACTIVITY, p_tenant: tenant.id });
     if (!r.error) setRel(r.data as { class: boolean; owner: boolean; has_owner: boolean });
   };
   // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { loadRelease(); }, [tenant.id]);   // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { loadRelease(); }, [tenant.id, setId]);   // eslint-disable-line react-hooks/exhaustive-deps
 
   const release = async (who: "owner" | "class", on: boolean) => {
     if (relBusy) return;
