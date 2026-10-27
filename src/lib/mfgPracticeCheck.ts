@@ -222,7 +222,7 @@ const DEFAULT_HINTS: Record<string, string> = {
 // ---------- Practice set 1: Bamboo Basket Works, November 2026 ----------
 export const MFG_SET_1: MfgPracticeSet = {
   id: "bamboo-nov-2026",
-  name: "Set 1 — Bamboo Basket Works, November 2026 (solo company)",
+  name: "Activity 1 Manufacturing — Bamboo Basket Works, November 2026 (solo company)",
   summary: "Standard costing. One month: set up, buy, make, sell, a manual voucher, then settle and close November. Ends in a net profit of ₱10,105.95.",
   vendors: ["Laguna Bamboo Traders", "Pasig Packaging Supply"],
   customers: ["Cebu Gift Shop", "Greenleaf Home Store"],
