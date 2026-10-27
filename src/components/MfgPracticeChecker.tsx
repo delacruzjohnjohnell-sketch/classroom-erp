@@ -144,7 +144,7 @@ export default function MfgPracticeCheckModal({ tenant, onClose }: { tenant: { i
           <div className="mt-5 pt-4 border-t border-hairline">
             <div className="text-[11px] font-bold uppercase tracking-wide text-[#7F8EA0] mb-2">Answer key for students</div>
             <div className="text-[12.5px] text-[#A3B1C2] mb-2">
-              Students see nothing until you release it. Then they can load the Activity 1 answer key into a new, empty company and compare it with their own.
+              Students see nothing until you release it. Then they can open the answer key as a separate read-only company and compare it with their own.
             </div>
             <div className="flex gap-2 flex-wrap items-center">
               {rel?.has_owner && (
