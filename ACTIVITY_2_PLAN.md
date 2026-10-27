@@ -54,3 +54,6 @@ Payroll LEFT OUT on purpose: run_payroll_ph takes a breakdown computed in the br
 Final GL (both months): 1000=415334.40, 1100=64064, 1160=14756.16, 1500=120000, 1590=-6000, 2000=-34314.56, 2200=-27408, 3000=-500000, 4000=-228400, 5000=173968, 5100=48000, 5200=5000, 5700=-29472, 5710=-4476, 5720=-11052.
 Screen-faithfulness notes: goods receipt of an inspected item passes the Quarantine location_id (purchasing screen prefills it); frames need default location Raw Material Store so the issue screen finds them; a held invoice is rejected with mfg_reject_held_invoice, a posted one is voided with mfg_void_vendor_invoice; PO and sales-order dates for converted requisitions are today; maintenance log cannot be future-dated.
 Next: stage 2 (extend mfg_practice_snapshot for inspection lots, NCRs, landed costs, assets, payments, voucher reversals; checker; definition in mfg_practice_sets).
+
+## Stage 2 done (2026-10-27)
+Migrations 0059 (mfg_practice_snapshot_a2) and 0060 (set rattan-dec-2026-jan-2027, teacher-only) APPLIED. Checker + tests committed (9 pass). Website code change (checker modal reads the a2 snapshot) NOT deployed yet. Next: stage 3 handout + teacher key PDFs, stage 4 loader mfg__load_activity_2 + generalize mfg_open_answer_key / release functions (hard-coded to activity-1-manufacturing), stage 5 browser pilot.
