@@ -47,3 +47,10 @@ Reports to read and answer: balance sheet, income statement, cash flow, trial ba
 - Settle order button appears only after the final confirmation AND the finished-goods receipt.
 - Sales page "Convert to invoice" is the Standard path; Manufacturing invoices come from Shipping → Create invoice for what was delivered, then Sales → Send invoice.
 - Period End lists the month before the first activity (October 2026) as open with nothing in it; ignore it.
+
+## Stage 1 result (2026-10-27, later): key complete for December 2026 and January 2027 (both periods CLOSED)
+January added: quality plan on rattan (receipt to Quarantine, moisture 13.5 out of 8-12, decide accept 57 / return 4, NCR closed, 4 kg redelivered and accepted), landed cost trucking 1,300 + 12% on wood and screws, varnish invoice at 340 vs order 320 (held, rejected, entered again at 320), chair confirmation reversed and reposted, Greenleaf 24 chairs + 6 tables, Cebu's last 2 chairs, customer and vendor payments, loom depreciation, rent and ads vouchers (ads booked to 5100 then reversed with mfg_reverse_voucher and re-booked to 5200).
+Payroll LEFT OUT on purpose: run_payroll_ph takes a breakdown computed in the browser (philippinePayroll.ts); it belongs to the Standard HR module and Manufacturing labour cost already comes from activity rates.
+Final GL (both months): 1000=415334.40, 1100=64064, 1160=14756.16, 1500=120000, 1590=-6000, 2000=-34314.56, 2200=-27408, 3000=-500000, 4000=-228400, 5000=173968, 5100=48000, 5200=5000, 5700=-29472, 5710=-4476, 5720=-11052.
+Screen-faithfulness notes: goods receipt of an inspected item passes the Quarantine location_id (purchasing screen prefills it); frames need default location Raw Material Store so the issue screen finds them; a held invoice is rejected with mfg_reject_held_invoice, a posted one is voided with mfg_void_vendor_invoice; PO and sales-order dates for converted requisitions are today; maintenance log cannot be future-dated.
+Next: stage 2 (extend mfg_practice_snapshot for inspection lots, NCRs, landed costs, assets, payments, voucher reversals; checker; definition in mfg_practice_sets).
