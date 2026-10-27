@@ -42,11 +42,13 @@ export default function MfgSetupPage() {
     if (!userId) { router.replace("/login"); return; }
     if (profile?.role === "teacher") { router.replace("/choose"); return; }
     (async () => {
-      const [{ data: setting }, { data: mine }] = await Promise.all([
+      const wantsNew = new URLSearchParams(window.location.search).get("new") === "1";   // "+ New company" from inside the Manufacturing ERP
+      const [{ data: setting }, { count }] = await Promise.all([
         supabase.from("edition_settings").select("enabled").eq("edition", "MANUFACTURING").maybeSingle(),
-        supabase.from("tenant_editions").select("tenant_id").eq("edition", "MANUFACTURING").eq("owner_id", userId).maybeSingle(),
+        supabase.from("tenant_editions").select("tenant_id", { count: "exact", head: true }).eq("edition", "MANUFACTURING").eq("owner_id", userId),
       ]);
-      if (mine) { router.replace("/choose"); return; }          // already has one
+      if ((count ?? 0) > 0 && !wantsNew) { router.replace("/choose"); return; }   // already has one (the first-time wizard is only for the first company)
+      if ((count ?? 0) >= 5) { toast.error("You already have five Manufacturing companies, the most you can have. Ask your teacher to delete one you no longer need."); router.replace("/mfg"); return; }
       setOpen(!!(setting as { enabled?: boolean } | null)?.enabled);
       setChecking(false);
     })();
