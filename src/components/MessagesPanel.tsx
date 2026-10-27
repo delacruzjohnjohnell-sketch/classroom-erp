@@ -7,13 +7,15 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "@/lib/toast";
 import { useSession } from "@/lib/session";
 
-type Row = { thread_id: string; subject: string; audience: string; audience_label: string; last_post_at: string; last_body: string; last_sender: string; posts: number; unread: boolean };
-type Post = { id: string; sender: string; role: string; body: string; at: string; mine: boolean };
-type Thread = { id: string; subject: string; audience: string; audience_label: string; posts: Post[] };
+type Row = { thread_id: string; subject: string; audience: string; audience_label: string; kind: string; last_post_at: string; last_body: string; last_sender: string; posts: number; unread: boolean };
+type Post = { id: string; sender: string; role: string; label: string | null; body: string; at: string; mine: boolean };
+type Thread = { id: string; subject: string; audience: string; audience_label: string; kind: string; posts: Post[] };
 type Targets = { students: { id: string; name: string }[]; teams: { id: string; name: string }[] };
 
 const when = (iso: string) => new Date(iso).toLocaleString("en-PH", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 const AUDIENCE_TAG: Record<string, string> = { CLASS: "Class", TEAM: "Team", STUDENT: "Private" };
+const tagOf = (audience: string, kind: string) => (kind === "TEAMCHAT" ? "Team chat" : AUDIENCE_TAG[audience] ?? "");
+const initials = (name: string) => name.split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
 const notify = () => window.dispatchEvent(new Event("messages-changed"));
 
 /** The inbox and conversation screen. The teacher can write to the whole class, one team or one student; a student writes to the teacher. */
@@ -81,8 +83,8 @@ export default function MessagesPanel() {
                 <span className={`text-[13.5px] truncate ${r.unread ? "font-bold" : "font-semibold"}`}>{r.subject}</span>
                 <span className="ml-auto text-[10.5px] text-[#7F8EA0] shrink-0">{when(r.last_post_at)}</span>
               </div>
-              <div className="text-[11px] text-[#7F8EA0] mt-0.5">{AUDIENCE_TAG[r.audience] ?? ""} · {r.audience_label} · {r.posts} message{r.posts === 1 ? "" : "s"}</div>
-              <div className="text-[12px] text-[#A3B1C2] truncate mt-0.5">{r.last_sender}: {r.last_body}</div>
+              <div className="text-[11px] text-[#7F8EA0] mt-0.5">{tagOf(r.audience, r.kind)} · {r.audience_label} · {r.posts} message{r.posts === 1 ? "" : "s"}</div>
+              <div className="text-[12px] text-[#A3B1C2] truncate mt-0.5">{r.last_body ? `${r.last_sender}: ${r.last_body}` : "No messages yet. Say hello."}</div>
             </button>
           ))}
         </div>
@@ -93,13 +95,24 @@ export default function MessagesPanel() {
             <>
               <div className="px-5 py-3 border-b border-hairline">
                 <div className="text-[15px] font-bold">{thread.subject}</div>
-                <div className="text-[11.5px] text-[#7F8EA0]">{AUDIENCE_TAG[thread.audience]} · {thread.audience_label}</div>
+                <div className="text-[11.5px] text-[#7F8EA0]">{tagOf(thread.audience, thread.kind)} · {thread.audience_label}{thread.kind === "TEAMCHAT" ? " · everyone in the team and your teacher" : ""}</div>
               </div>
               <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+                {thread.posts.length === 0 && <div className="text-[13px] text-[#7F8EA0]">No messages yet. Say hello to your team.</div>}
                 {thread.posts.map((p) => (
-                  <div key={p.id} className={`flex ${p.mine ? "justify-end" : "justify-start"}`}>
+                  <div key={p.id} className={`flex gap-2.5 ${p.mine ? "flex-row-reverse" : ""}`}>
+                    {thread.kind === "TEAMCHAT" && (
+                      <div className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-[11px] font-bold text-white" style={{ background: p.role === "teacher" ? "#7C5CFC" : "#2F6BFF" }}>{initials(p.sender)}</div>
+                    )}
                     <div className="max-w-[78%] rounded-xl px-3.5 py-2.5 text-[13px]" style={{ background: p.mine ? "rgba(47,107,255,0.12)" : "rgba(127,142,160,0.14)" }}>
-                      <div className="text-[11px] font-semibold text-[#7F8EA0] mb-0.5">{p.mine ? "You" : p.sender}{p.role === "teacher" ? " (teacher)" : ""} · {when(p.at)}</div>
+                      <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
+                        <span className="text-[11.5px] font-bold">{p.mine ? "You" : p.sender}</span>
+                        {thread.kind === "TEAMCHAT" && p.label && (
+                          <span className="text-[10.5px] font-semibold rounded-full px-2 py-0.5" style={{ background: p.role === "teacher" ? "rgba(124,92,252,0.16)" : "rgba(47,107,255,0.14)", color: p.role === "teacher" ? "#6B49E8" : "#2F6BFF" }}>{p.label}</span>
+                        )}
+                        {thread.kind !== "TEAMCHAT" && p.role === "teacher" && <span className="text-[10.5px] text-[#7F8EA0]">(teacher)</span>}
+                        <span className="text-[10.5px] text-[#7F8EA0]">{when(p.at)}</span>
+                      </div>
                       <div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{p.body}</div>
                     </div>
                   </div>
@@ -107,7 +120,7 @@ export default function MessagesPanel() {
                 <div ref={bottom} />
               </div>
               <form onSubmit={send} className="px-4 py-3 border-t border-hairline flex gap-2 items-end">
-                <textarea className="input flex-1" rows={2} maxLength={4000} placeholder="Write a reply…" value={reply} onChange={(e) => setReply(e.target.value)} />
+                <textarea className="input flex-1" rows={2} maxLength={4000} placeholder={thread?.kind === "TEAMCHAT" ? "Message your team…" : "Write a reply…"} value={reply} onChange={(e) => setReply(e.target.value)} />
                 <GoldBtn type="submit" disabled={busy || !reply.trim()}>{busy ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />} Send</GoldBtn>
               </form>
             </>
@@ -160,10 +173,13 @@ function Compose({ isTeacher, onClose, onSent }: { isTeacher: boolean; onClose: 
               <option value="STUDENT">One student</option>
             </select>
             {audience === "TEAM" && (
-              <select className="input mt-2" value={target} onChange={(e) => setTarget(e.target.value)}>
-                <option value="">Choose a team…</option>
-                {targets?.teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-              </select>
+              <>
+                <select className="input mt-2" value={target} onChange={(e) => setTarget(e.target.value)}>
+                  <option value="">Choose a team…</option>
+                  {targets?.teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+                </select>
+                <div className="text-[11.5px] text-[#7F8EA0] mt-1">This is posted in that team&apos;s group chat, where every member sees it.</div>
+              </>
             )}
             {audience === "STUDENT" && (
               <select className="input mt-2" value={target} onChange={(e) => setTarget(e.target.value)}>
@@ -173,13 +189,13 @@ function Compose({ isTeacher, onClose, onSent }: { isTeacher: boolean; onClose: 
             )}
           </>
         )}
-        <div className="mt-3"><Label>Subject</Label>
+        <div className="mt-3"><Label>{isTeacher && audience === "TEAM" ? "Subject (optional)" : "Subject"}</Label>
           <input className="input" maxLength={120} value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="e.g. Activity 1 is open" autoFocus /></div>
         <div className="mt-3"><Label>Message</Label>
           <textarea className="input" rows={5} maxLength={4000} value={body} onChange={(e) => setBody(e.target.value)} /></div>
         <div className="flex gap-2 justify-end mt-4">
           <OutlineBtn type="button" onClick={onClose}>Cancel</OutlineBtn>
-          <GoldBtn type="submit" disabled={busy || !subject.trim() || !body.trim()}>{busy ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />} Send</GoldBtn>
+          <GoldBtn type="submit" disabled={busy || (!(isTeacher && audience === "TEAM") && !subject.trim()) || !body.trim()}>{busy ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />} Send</GoldBtn>
         </div>
       </form>
     </Modal>
