@@ -43,6 +43,7 @@ function ShippingBody() {
   const [date, setDate] = useState(today());
   const [from, setFrom] = useState("");
   const [due, setDue] = useState(plusDays(today(), 30));
+  const [invDate, setInvDate] = useState(today());
   const [busy, setBusy] = useState(false);
   const [revDoc, setRevDoc] = useState<DocRow | null>(null);
   const [showDoc, setShowDoc] = useState<string | null>(null);
@@ -115,7 +116,7 @@ function ShippingBody() {
   const invoice = async () => {
     if (!so || busy) return;
     setBusy(true);
-    const res = await mutate(supabase.rpc("mfg_create_invoice_from_so", { p_so: so.id, p_due: due }), { successMessage: "Invoice created as a draft. Post it on the Sales page." });
+    const res = await mutate(supabase.rpc("mfg_create_invoice_from_so", { p_so: so.id, p_due: due, p_date: invDate }), { successMessage: "Invoice created as a draft. Post it on the Sales page." });
     setBusy(false);
     if (ok(res)) { await load(); setOpen(null); }
   };
@@ -209,6 +210,7 @@ function ShippingBody() {
                     {lk.locations.filter((x) => x.kind !== "WIP").map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
                   </select></div>
                 <div><Label>Delivery date</Label><input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div>
+                <div><Label>Invoice date</Label><input className="input" type="date" value={invDate} onChange={(e) => setInvDate(e.target.value)} /></div>
                 <div><Label>Invoice due</Label><input className="input" type="date" value={due} onChange={(e) => setDue(e.target.value)} /></div>
               </div>
             )}

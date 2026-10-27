@@ -6,6 +6,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { Building2, TrendingUp, TrendingDown, Wallet, Briefcase, ChevronRight, LogOut, Loader2, ClipboardCheck, Trash2 } from "lucide-react";
 import { KpiCard, Panel, Empty, ConfirmDialog } from "@/components/ui";
 import PracticeCheckModal from "@/components/PracticeChecker";
+import MfgPracticeCheckModal from "@/components/MfgPracticeChecker";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { toast } from "@/lib/toast";
@@ -187,7 +188,7 @@ export default function TeacherPage() {
                           <ChevronRight size={16} color={INK} />
                         </div>
                       </button>
-                      {editionOf(tenant.id) === "STANDARD" && <button onClick={() => setChecking({ id: tenant.id, name: tenant.name })} title="Check practice set"
+                      {<button onClick={() => setChecking({ id: tenant.id, name: tenant.name })} title="Check practice set"
                         className="flex items-center gap-1 border border-hairline rounded-md px-2 py-1.5 text-[11.5px] font-semibold text-teal bg-panel shrink-0">
                         <ClipboardCheck size={13} /> Check
                       </button>}
@@ -204,7 +205,9 @@ export default function TeacherPage() {
         )}
       </div>
 
-      {checking && <PracticeCheckModal tenant={checking} onClose={() => setChecking(null)} />}
+      {checking && (editionOf(checking.id) === "MANUFACTURING"
+        ? <MfgPracticeCheckModal tenant={checking} onClose={() => setChecking(null)} />
+        : <PracticeCheckModal tenant={checking} onClose={() => setChecking(null)} />)}
       {deleting && (
         <DeleteCompanyModal tenant={deleting} onClose={() => setDeleting(null)}
           onDeleted={async () => {
