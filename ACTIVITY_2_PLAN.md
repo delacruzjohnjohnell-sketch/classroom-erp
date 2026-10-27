@@ -60,3 +60,18 @@ Migrations 0059 (mfg_practice_snapshot_a2) and 0060 (set rattan-dec-2026-jan-202
 
 ## Stage 4 done (2026-10-27)
 Migration 0061 APPLIED (mfg__load_activity_2; release + open functions accept both activities). Tested end to end in rolled-back runs for both activities (key opens read-only with AUDITOR role; Activity 2 key GL = answer key). The scratch key company was DELETED. Website code (student card per activity, release buttons per set) committed, NOT deployed. Next: stage 3 handout + teacher key PDFs, stage 5 browser pilot, then deploy.
+
+## Stage 5 pilot done (2026-10-27) — a real click-through on the live site as the test student
+Company "ZZ Pilot Rattan Furniture Works" (owner johnell). Every step through the real screens; final books equal the answer key to the centavo (all 15 GL balances, 4 payments each way, 6 manual vouchers, 1 reversed confirmation, 1 reversed voucher, QI-0001/0002, NCR-0001 closed). The teacher's Check showed 107/109, the 2 failures being the pilot's own voided invoice (checker now ignores voided invoices and void bills).
+Bug found and fixed (deployed): Planning "Create purchase order" could not create a vendor (Manufacturing has no vendor list); it now has "…or type a new vendor's name".
+Things the handout MUST say (screens behave this way):
+- Master data: item unit and default store; work centers keep the defaults (1 shift, 8 h, 85%, Mon-Fri) — only the name is typed; BOM/routing "Valid from" 1 Dec 2026 for BOMs; routing save draft then Activate; Activate has a confirm step; cost estimates: lot size + costing date 2026-12-01 -> Work out the cost -> Mark this cost -> Release as standard cost.
+- Fixed overhead = Master Data -> Costing sheet -> Edit "Fixed overhead" -> "Plus ₱ per hour" 30.
+- Finance: account fields are typed as "1000 — Cash"; voucher date, reversal date and settle date all DEFAULT TO TODAY — always change them.
+- Production "Issue material to the order" is the submit button of an inline form (not a dialog): set the Date BEFORE clicking, or it posts today's date (the pilot did this once and reversed it).
+- Production confirm form keeps the last hours; choose Operation 20 to see the final-confirmation box; scrap reason box appears when scrapped > 0.
+- Period End: October and November are listed and must be settled and closed (empty) before December; the "Settle…" screen warns "not over yet" — go on.
+- Shipping: "Post delivery" then "Create invoice for what was delivered" (set invoice date and due date first); then Sales -> Invoices -> Send invoice (confirm) ; payments via Details.
+- Enter the PO-0004 vendor invoice only AFTER the 4 kg redelivery is received and inspected (the pilot entered it too early and voided it).
+- Vendor invoice at a different price goes ON HOLD; reject it with a reason and a date.
+Stages left: handout + teacher key PDFs (build.py in handbook-mfg/activity-2-manufacturing/, shots from the pilot company), deploy of the checker tweak, then delete the pilot company when the screenshots are taken.
