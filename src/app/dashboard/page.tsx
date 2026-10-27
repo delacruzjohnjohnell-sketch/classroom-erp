@@ -1,23 +1,18 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import {
-  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-} from "recharts";
-import { TrendingUp, TrendingDown, Wallet, Receipt, Package, Briefcase, Truck, ShoppingCart, AlertTriangle, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import AppShell from "@/components/AppShell";
-import { KpiCard, Panel, Empty } from "@/components/ui";
+import StdDashboard, { type StdDashData } from "@/components/StdDashboard";
 import PracticeReportPanel from "@/components/PracticeReportPanel";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { money, round2 } from "@/lib/types";
 import { computeMetrics, buildMonthlySeries, buildExpenseBreakdown, type EntryWithLines } from "@/lib/metrics";
-import type { Account, Item, PurchaseOrder, SalesOrder, PayrollRun } from "@/lib/types";
+import { firstName, greeting, isoDay, pctChange, shareOf, shortDay } from "@/lib/mfgDash";
+import type { Account, Item, PayrollRun } from "@/lib/types";
 
-const TEAL = "#22D3C5", GOLD = "#F2B13C", RED = "#FF6B7A", LINE = "#E4EAF3", INK = "#334155";
-const PIE_COLORS = ["#22D3C5", "#F2B13C", "#FF6B7A", "#5AA9FF", "#7F8EA0", "#4ADE9C"];
-const tooltipStyle = { background: "#FFFFFF", color: "#17213B", border: `1px solid ${LINE}`, borderRadius: 8, fontSize: 12 };
+const TEAL = "#22D3C5";
 
 export default function DashboardPage() {
   return (
@@ -28,16 +23,15 @@ export default function DashboardPage() {
 }
 
 function DashboardBody() {
-  const { effectiveTenantId } = useSession();
+  const { effectiveTenantId, profile, tenants } = useSession();
   const [loading, setLoading] = useState(true);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [entries, setEntries] = useState<EntryWithLines[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [headcount, setHeadcount] = useState(0);
-  const [openPOs, setOpenPOs] = useState(0);
-  const [openSOs, setOpenSOs] = useState(0);
-  const [customerRevenue, setCustomerRevenue] = useState<{ name: string; value: number }[]>([]);
-  const [activity, setActivity] = useState<{ date: string; type: string; label: string }[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);       // the "invoices" table holds the sales orders of the Standard ERP
+  const [bills, setBills] = useState<any[]>([]);          // and "bills" holds its purchase orders
+  const [payroll, setPayroll] = useState<PayrollRun[]>([]);
 
   useEffect(() => {
     if (!effectiveTenantId) return;
@@ -52,139 +46,71 @@ function DashboardBody() {
         supabase.from("invoices").select("*, customers(name)").eq("tenant_id", effectiveTenantId),
         supabase.from("payroll_runs").select("*").eq("tenant_id", effectiveTenantId),
       ]);
-
-      const accountsData = (acc.data as Account[]) ?? [];
-      const entriesData = (ent.data as any as EntryWithLines[]) ?? [];
-      const itemsData = (itemsRes.data as Item[]) ?? [];
-      const pos = (poRes.data as any[]) ?? [];
-      const sos = (soRes.data as any[]) ?? [];
-      const prs = (prRes.data as PayrollRun[]) ?? [];
-
-      setAccounts(accountsData);
-      setEntries(entriesData);
-      setItems(itemsData);
+      setAccounts((acc.data as Account[]) ?? []);
+      setEntries((ent.data as any as EntryWithLines[]) ?? []);
+      setItems((itemsRes.data as Item[]) ?? []);
       setHeadcount(empRes.data?.length ?? 0);
-      setOpenPOs(pos.filter((p) => p.status !== "received").length);
-      setOpenSOs(sos.filter((s) => s.status !== "fulfilled").length);
-
-      const revByCustomer: Record<string, number> = {};
-      sos.filter((s) => s.status === "fulfilled").forEach((s) => {
-        const name = s.customers?.name ?? "Unknown";
-        revByCustomer[name] = (revByCustomer[name] || 0) + s.total;
-      });
-      setCustomerRevenue(Object.entries(revByCustomer).sort(([, a], [, b]) => b - a).slice(0, 6).map(([name, value]) => ({ name, value: round2(value) })));
-
-      const feed = [
-        ...entriesData.map((e) => ({ date: e.entry_date, type: "Journal", label: e.memo || "Journal entry" })),
-        ...pos.map((p) => ({ date: p.order_date, type: "Purchase order", label: `${p.vendors?.name ?? "Vendor"} · ${money(p.total)} · ${p.status}` })),
-        ...sos.map((s) => ({ date: s.order_date, type: "Sales order", label: `${s.customers?.name ?? "Customer"} · ${money(s.total)} · ${s.status}` })),
-        ...prs.map((r) => ({ date: r.run_date, type: "Payroll", label: `${money(r.total)} · ${r.headcount} employees` })),
-      ].sort((a, b) => (a.date < b.date ? 1 : -1)).slice(0, 8);
-      setActivity(feed);
-
+      setBills((poRes.data as any[]) ?? []);
+      setOrders((soRes.data as any[]) ?? []);
+      setPayroll((prRes.data as PayrollRun[]) ?? []);
       setLoading(false);
     })();
   }, [effectiveTenantId]);
 
-  const metrics = useMemo(() => {
+  const data = useMemo<StdDashData>(() => {
+    const now = new Date();
+    const today = isoDay(now);
     const inventoryValue = items.reduce((s, i) => s + i.qty_on_hand * i.unit_cost, 0);
-    return computeMetrics(accounts, entries, inventoryValue, headcount);
-  }, [accounts, entries, items, headcount]);
+    const metrics = computeMetrics(accounts, entries, inventoryValue, headcount);
+    const series = buildMonthlySeries(accounts, entries, "4000");
+    const last = series[series.length - 1], before = series[series.length - 2];
+    const expenses = shareOf(buildExpenseBreakdown(accounts, entries).map((e) => ({ name: e.name, qty: e.value })), 4).map((e) => ({ name: e.name, value: round2(e.qty), pct: e.pct }));
 
-  const revenueSeries = useMemo(() => buildMonthlySeries(accounts, entries, "4000"), [accounts, entries]);
-  const expenseBreakdown = useMemo(() => buildExpenseBreakdown(accounts, entries), [accounts, entries]);
-  const topInventory = useMemo(() => [...items].sort((a, b) => b.qty_on_hand * b.unit_cost - a.qty_on_hand * a.unit_cost).slice(0, 6)
-    .map((i) => ({ name: i.name.length > 12 ? i.name.slice(0, 11) + "…" : i.name, Value: round2(i.qty_on_hand * i.unit_cost) })), [items]);
-  const lowStockCount = items.filter((i) => i.qty_on_hand <= i.reorder_point).length;
+    const openSales = orders.filter((s) => s.status !== "fulfilled");
+    const openBills = bills.filter((p) => p.status !== "received");
+    const overdueSales = openSales.filter((s) => s.due_date && s.due_date < today && s.status !== "draft").length;
+    const overdueBills = openBills.filter((p) => p.due_date && p.due_date < today).length;
+    const low = items.filter((i) => i.qty_on_hand <= i.reorder_point);
+    const stock = [...low].sort((a, b) => a.qty_on_hand - b.qty_on_hand).slice(0, 6)
+      .map((i) => ({ id: i.id, name: i.name, onHand: i.qty_on_hand, reorder: i.reorder_point, state: (i.qty_on_hand <= 0 ? "OUT" : "LOW") as "OUT" | "LOW" }));
+
+    const feed = [
+      ...entries.map((e) => ({ date: e.entry_date, kind: "Journal", title: e.memo || "Journal entry", detail: "Journal entry" })),
+      ...bills.map((p) => ({ date: p.order_date, kind: "Purchase order", title: p.vendors?.name ?? "Vendor", detail: `Purchase order · ${money(p.total)} · ${p.status}` })),
+      ...orders.map((s) => ({ date: s.order_date, kind: "Sales order", title: s.customers?.name ?? "Customer", detail: `Sales order · ${money(s.total)} · ${s.status}` })),
+      ...payroll.map((r) => ({ date: r.run_date, kind: "Payroll", title: `Payroll · ${money(r.total)}`, detail: `${r.headcount} employees` })),
+    ].filter((a) => a.date).sort((a, b) => (a.date < b.date ? 1 : -1)).slice(0, 6)
+      .map((a, i) => ({ key: `${i}-${a.date}`, kind: a.kind, title: a.title, detail: a.detail, when: shortDay(a.date) }));
+
+    return {
+      firstName: firstName(profile?.full_name),
+      greeting: greeting(now.getHours()),
+      dateLabel: now.toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" }),
+      timeLabel: now.toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit" }),
+      viewingOther: profile?.role === "teacher" ? tenants.find((x) => x.id === effectiveTenantId)?.name ?? "this company" : null,
+      kpis: { revenue: metrics.revenue, revenueChange: last && before ? pctChange(last.value, before.value) : null, netIncome: metrics.netIncome, cash: metrics.cash, openSales: openSales.length, openPurchases: openBills.length },
+      revenueSeries: series,
+      expenses,
+      openOrders: [...openSales].sort((a, b) => ((a.due_date ?? "9999") < (b.due_date ?? "9999") ? -1 : 1)).slice(0, 6)
+        .map((s) => ({ id: s.id, customer: s.customers?.name ?? "Customer", total: Number(s.total), due: s.due_date ?? "", status: s.status, overdue: !!s.due_date && s.due_date < today && s.status !== "draft" })),
+      stock,
+      activity: feed,
+      attention: [
+        { label: "Invoices past their due date", count: overdueSales, href: "/sales", tone: "bad" },
+        { label: "Bills past their due date", count: overdueBills, href: "/procurement", tone: "bad" },
+        { label: "Items out of stock or below the reorder level", count: low.length, href: "/inventory", tone: "warn" },
+        { label: "Sales orders not yet fulfilled", count: openSales.length, href: "/sales", tone: "warn" },
+        { label: "Purchase orders not yet received", count: openBills.length, href: "/procurement", tone: "warn" },
+      ],
+    };
+  }, [accounts, entries, items, headcount, orders, bills, payroll, profile, tenants, effectiveTenantId]);
 
   if (loading) return <div className="py-16 flex justify-center"><Loader2 className="animate-spin" size={20} color={TEAL} /></div>;
 
   return (
     <>
       <PracticeReportPanel />
-      <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}>
-        <KpiCard badge={0} icon={<TrendingUp size={16} />} label="Total revenue" value={money(metrics.revenue)} accent={TEAL} />
-        <KpiCard badge={1} icon={<TrendingDown size={16} />} label="Total expenses" value={money(metrics.expenses)} accent={RED} />
-        <KpiCard badge={2} icon={<Wallet size={16} />} label="Net income" value={money(metrics.netIncome)} accent={metrics.netIncome >= 0 ? TEAL : RED} />
-        <KpiCard badge={3} icon={<Receipt size={16} />} label="Cash balance" value={money(metrics.cash)} />
-        <KpiCard icon={<Package size={16} />} label="Inventory value" value={money(metrics.inventoryValue)} />
-        <KpiCard icon={<Briefcase size={16} />} label="Employees" value={metrics.headcount} />
-        <KpiCard icon={<Truck size={16} />} label="Open POs" value={openPOs} />
-        <KpiCard icon={<ShoppingCart size={16} />} label="Open sales orders" value={openSOs} />
-        <KpiCard icon={<AlertTriangle size={16} />} label="Low stock items" value={lowStockCount} accent={lowStockCount > 0 ? RED : TEAL} />
-      </div>
-
-      <div className="grid grid-cols-2 gap-3.5">
-        <Panel title="Revenue over time">
-          {revenueSeries.length === 0 ? <Empty>No sales recorded yet.</Empty> : (
-            <ResponsiveContainer width="100%" height={230}>
-              <LineChart data={revenueSeries} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
-                <CartesianGrid stroke={LINE} vertical={false} />
-                <XAxis dataKey="label" tick={{ fontSize: 12, fill: INK }} axisLine={{ stroke: LINE }} tickLine={false} />
-                <YAxis tick={{ fontSize: 12, fill: INK }} axisLine={{ stroke: LINE }} tickLine={false} tickFormatter={(v) => `₱${v}`} />
-                <Tooltip formatter={(v: number) => money(v)} contentStyle={tooltipStyle} />
-                <Line type="monotone" dataKey="value" stroke={TEAL} strokeWidth={2.5} dot={{ r: 3, fill: TEAL }} />
-              </LineChart>
-            </ResponsiveContainer>
-          )}
-        </Panel>
-        <Panel title="Expense breakdown">
-          {expenseBreakdown.length === 0 ? <Empty>No expenses recorded yet.</Empty> : (
-            <ResponsiveContainer width="100%" height={230}>
-              <PieChart>
-                <Pie data={expenseBreakdown} dataKey="value" nameKey="name" innerRadius={50} outerRadius={85} paddingAngle={2}>
-                  {expenseBreakdown.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
-                </Pie>
-                <Tooltip formatter={(v: number) => money(v)} contentStyle={tooltipStyle} />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
-              </PieChart>
-            </ResponsiveContainer>
-          )}
-        </Panel>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3.5">
-        <Panel title="Top customers by revenue">
-          {customerRevenue.length === 0 ? <Empty>No fulfilled sales orders yet.</Empty> : (
-            <ResponsiveContainer width="100%" height={210}>
-              <PieChart>
-                <Pie data={customerRevenue} dataKey="value" nameKey="name" innerRadius={45} outerRadius={80} paddingAngle={2}>
-                  {customerRevenue.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
-                </Pie>
-                <Tooltip formatter={(v: number) => money(v)} contentStyle={tooltipStyle} />
-                <Legend wrapperStyle={{ fontSize: 11.5 }} />
-              </PieChart>
-            </ResponsiveContainer>
-          )}
-        </Panel>
-        <Panel title="Top inventory value">
-          {topInventory.length === 0 ? <Empty>No inventory items yet.</Empty> : (
-            <ResponsiveContainer width="100%" height={210}>
-              <BarChart data={topInventory} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
-                <CartesianGrid stroke={LINE} vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 11, fill: INK }} axisLine={{ stroke: LINE }} tickLine={false} />
-                <YAxis tick={{ fontSize: 12, fill: INK }} axisLine={{ stroke: LINE }} tickLine={false} tickFormatter={(v) => `₱${v}`} />
-                <Tooltip formatter={(v: number) => money(v)} contentStyle={tooltipStyle} />
-                <Bar dataKey="Value" fill={GOLD} radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </Panel>
-      </div>
-
-      <Panel title="Recent activity across all modules">
-        {activity.length === 0 ? <Empty>Nothing recorded yet — activity from every module will show up here.</Empty> : (
-          <div className="flex flex-col">
-            {activity.map((a, i) => (
-              <div key={i} className="flex items-center gap-2.5 py-2 border-b border-hairline text-[12.5px]">
-                <span className="text-[10.5px] font-bold border rounded-full px-2 py-0.5 whitespace-nowrap" style={{ color: TEAL, borderColor: TEAL }}>{a.type}</span>
-                <span className="flex-1">{a.label}</span>
-                <span className="text-[#7F8EA0] text-xs whitespace-nowrap">{a.date}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </Panel>
+      <StdDashboard d={data} />
     </>
   );
 }

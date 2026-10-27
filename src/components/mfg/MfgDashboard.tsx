@@ -33,7 +33,7 @@ const pesos = (n: number) => `₱${Math.round(n).toLocaleString("en-PH")}`;
 const BLUE = "#2F6BFF", GREEN = "#14A56B", ORANGE = "#F5A524", PURPLE = "#7C5CFC", GREY = "#9AA8BF";
 const DONUT = [BLUE, GREEN, ORANGE, PURPLE, GREY];
 
-function Card({ title, link, children, className = "" }: { title: string; link?: { href: string; label: string }; children: React.ReactNode; className?: string }) {
+export function Card({ title, link, children, className = "" }: { title: string; link?: { href: string; label: string }; children: React.ReactNode; className?: string }) {
   return (
     <section className={`bg-white border border-[#E4EAF3] rounded-[14px] p-5 shadow-[0_1px_3px_rgba(23,33,59,0.05)] ${className}`}>
       <div className="flex items-center justify-between mb-3">
@@ -45,7 +45,7 @@ function Card({ title, link, children, className = "" }: { title: string; link?:
   );
 }
 
-function Kpi({ icon, tint, tile, label, value, unit, sub, delta }: {
+export function Kpi({ icon, tint, tile, label, value, unit, sub, delta }: {
   icon: React.ReactNode; tint: string; tile: string; label: string; value: string; unit?: string; sub: string; delta?: number | null;
 }) {
   return (
