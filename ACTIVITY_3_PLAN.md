@@ -44,3 +44,20 @@ Key = what the SCREENS post (dates default to today; the issue-material button p
 
 ## Harder items to include (user: comprehensive and a little difficult), two months
 BOM change with a new version and a re-costed standard; purchase unit conversion (buy in bundles, stock in kg); a stock count difference (adjustment) and a transfer between stores; held vendor invoice APPROVED by the Finance manager; a by-product sold as scrap; a voucher that must be approved by someone other than its preparer; a reversed confirmation; landed cost; inspection with return/rework; downtime; fixed asset and depreciation; backflushed component; a recurring entry for rent. Two months closed in order (October and November also need closing first).
+
+## Volume: "like a real company, each role gets numerous transactions" (user, 2026-10-27)
+Business (working name): Capiz Lantern Works, a small Philippine lamp maker. Two months (months to be fixed in stage 1; create the team company with a fiscal-year start in the first month so only the activity months are open).
+Master data (breadth of a real small factory): 21 items = 10 raw/packaging (capiz shells bought in 5 kg bundles but stocked in kg, wire frame, brass rod, brass fitting, LED kit, cord set, adhesive, clear coat [batch tracked], carton, foam padding), 3 semi-finished (small shade, large shade, brass base), 5 finished (small pendant, large pendant, table lamp, floor lamp, chandelier); 5 vendors, 6 customers, 4 work centers (Cutting, Assembly, Finishing, Packing), activity rates and overhead, 1 machine (capiz cutter) as a fixed asset.
+Target transaction counts over the two months (every role must have at least about 40; the whole company about 350):
+| Role | What they post (approx. count over 2 months) |
+| Sales | 6 customers, 2 quotes, 12 sales orders (some with 3-4 lines), 16 invoices from deliveries, 16 Send invoice |
+| Purchasing | 5 vendors, 16 purchase orders (from requisitions and by hand), 4 landed-cost bills, 14 vendor payments |
+| Warehouse | 18 goods receipts (several partial), 20 material issues, 16 deliveries, 3 stock adjustments (count differences), 3 transfers between stores |
+| Production | 21 items + 8 BOMs (one revised) + 8 routings, 4 work centers, 2 planning runs, ~20 production orders, ~40 confirmations, ~20 finished-goods receipts, 4 downtime logs |
+| Quality | 3 inspection plans, ~8 inspection lots, 3 non-conformance reports closed |
+| Accountant | 4 rates, overhead, ~8 cost estimates, ~14 vouchers, ~16 vendor invoices (some held), ~16 customer payments, 2 depreciations, ~20 order settlements, 2 month settlements |
+| Finance manager | approves ~10 vouchers and the held invoices, closes 2 months, also pays/approves as needed |
+Everything is spread so each role has work in BOTH months, with hand-offs (e.g. Production releases an order, Warehouse issues, Production confirms, Quality inspects, Warehouse delivers, Sales invoices, Accountant records the payment).
+
+## How to build it without writing 350 transactions by hand (decision)
+ONE spec drives everything: `handbook-mfg/activity-3-manufacturing/spec.py` lists every transaction (role, date, kind, parameters). A generator produces (1) the answer-key loader SQL (mfg__load_activity_3, run as a student holding all roles), (2) the handout tables grouped by role then by date, (3) a browser-pilot runner in JS built on the helper functions used for Activity 2 (forms filled by label, real clicks), (4) the stored answer set from the key's own snapshot (never typed by hand). The pilot then runs the whole spec through the real screens as test student johnell holding ALL roles (the real team company must be made by the teacher via mfg_create_team_company), plus a few role-refusal tests with single roles.
