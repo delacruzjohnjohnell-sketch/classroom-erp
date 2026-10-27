@@ -6,7 +6,7 @@ import { Modal } from "@/components/ui";
 import { supabase } from "@/lib/supabase";
 import type { CheckResult } from "@/lib/practiceCheck";
 import { toast } from "@/lib/toast";
-import { MFG_PRACTICE_SETS, netIncome, runMfgPracticeChecks, summarizeMfg, type MfgSnapshot } from "@/lib/mfgPracticeCheck";
+import { netIncome, runMfgPracticeChecks, summarizeMfg, type MfgPracticeSet, type MfgSnapshot } from "@/lib/mfgPracticeCheck";
 
 const TEAL = "#22D3C5", RED = "#FF6B7A";
 
@@ -34,7 +34,9 @@ export default function MfgPracticeCheckModal({ tenant, onClose }: { tenant: { i
   const [snap, setSnap] = useState<MfgSnapshot | null>(null);
   const [error, setError] = useState("");
   const [showPassed, setShowPassed] = useState(false);
-  const [setId, setSetId] = useState(MFG_PRACTICE_SETS[0].id);
+  const [sets, setSets] = useState<{ id: string; name: string; summary: string }[]>([]);
+  const [setId, setSetId] = useState("");
+  const [practiceSet, setPracticeSet] = useState<MfgPracticeSet | null>(null);
   const [rel, setRel] = useState<{ class: boolean; owner: boolean; has_owner: boolean } | null>(null);
   const [relBusy, setRelBusy] = useState(false);
   const ACTIVITY = "activity-1-manufacturing";
@@ -73,8 +75,32 @@ export default function MfgPracticeCheckModal({ tenant, onClose }: { tenant: { i
     return () => { live = false; };
   }, [tenant.id]);
 
-  const practiceSet = MFG_PRACTICE_SETS.find((p) => p.id === setId) ?? MFG_PRACTICE_SETS[0];
-  const results = useMemo(() => (snap ? runMfgPracticeChecks(snap, practiceSet) : null), [snap, practiceSet]);
+  // The expected figures are fetched from the database (teacher only); they are not part of the website's code.
+  useEffect(() => {
+    let live = true;
+    (async () => {
+      const r = await supabase.rpc("mfg_practice_set_list");
+      if (!live) return;
+      if (r.error) { setError(r.error.message || "Could not load the practice sets."); return; }
+      const list = (r.data as { id: string; name: string; summary: string }[]) ?? [];
+      setSets(list);
+      if (list[0]) setSetId((cur) => cur || list[0].id);
+    })();
+    return () => { live = false; };
+  }, []);
+  useEffect(() => {
+    if (!setId) return;
+    let live = true;
+    (async () => {
+      const r = await supabase.rpc("mfg_practice_set_get", { p_id: setId });
+      if (!live) return;
+      if (r.error) setError(r.error.message || "Could not load the practice set.");
+      else setPracticeSet(r.data as MfgPracticeSet);
+    })();
+    return () => { live = false; };
+  }, [setId]);
+
+  const results = useMemo(() => (snap && practiceSet ? runMfgPracticeChecks(snap, practiceSet) : null), [snap, practiceSet]);
   const s = results ? summarizeMfg(results) : null;
   const failed = results?.filter((r) => !r.pass) ?? [];
   const passed = results?.filter((r) => r.pass) ?? [];
@@ -83,10 +109,10 @@ export default function MfgPracticeCheckModal({ tenant, onClose }: { tenant: { i
   return (
     <Modal title={`Practice set check — ${tenant.name}`} onClose={onClose} wide>
       <label className="block text-[11px] font-bold uppercase tracking-wide text-[#7F8EA0] mt-3 mb-1" htmlFor="mfg-practice-set-select">Practice set</label>
-      <select id="mfg-practice-set-select" className="input" value={setId} onChange={(e) => { setSetId(e.target.value); setShowPassed(false); }}>
-        {MFG_PRACTICE_SETS.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+      <select id="mfg-practice-set-select" className="input" value={setId} onChange={(e) => { setPracticeSet(null); setSetId(e.target.value); setShowPassed(false); }}>
+        {sets.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
       </select>
-      <div className="text-[12px] text-[#A3B1C2] mt-1.5">{practiceSet.summary}</div>
+      <div className="text-[12px] text-[#A3B1C2] mt-1.5">{practiceSet?.summary}</div>
 
       {!results && !error && <div className="py-10 flex justify-center"><Loader2 className="animate-spin" size={20} color={TEAL} /></div>}
       {error && <div className="mt-3 text-[13px]" style={{ color: RED }}>{error}</div>}

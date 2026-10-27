@@ -5,7 +5,9 @@
 // posting functions in a rolled-back transaction (supabase/tests/mfg_practice_set1_key.sql), not from hand arithmetic; the test
 // tests/mfgPracticeCheck.test.ts holds that run's snapshot and must pass every check.
 //
-// To add a set: write its answer-key script, run it, keep the snapshot as a fixture, and add its MfgPracticeSet below.
+// The expected figures of a set (MfgPracticeSet) are NOT in this file: they live in the database (mfg_practice_sets, migration 0052) and only the
+// teacher can read them, so a student cannot find them in the website's code. tests/fixtures/mfgPracticeSet1.definition.json is the same set for the tests.
+// To add a set: write its answer-key script, run it, keep the snapshot as a fixture, and insert its definition in a migration.
 
 import type { CheckResult } from "./practiceCheck";
 
@@ -168,7 +170,7 @@ export function runMfgPracticeChecks(s: MfgSnapshot, set: MfgPracticeSet): Check
     const have = Number(s.gl[code] ?? 0);
     const side = (n: number) => (n === 0 ? "nil" : n > 0 ? `${peso(n)} Dr` : `${peso(-n)} Cr`);
     add("Ledger balances", `${code} ${ACCOUNT_NAMES[code] ?? ""}`.trim(), want ? side(want.amount) : "nil", side(have), same(have, want?.amount ?? 0),
-      want?.hint ?? DEFAULT_HINTS[code] ?? "This account should not have a balance in this set. Look for an extra or duplicated posting.");
+      want?.hint ?? "This account should not have a balance in this set. Look for an extra or duplicated posting.");
   }
   const wantNet = netIncome(Object.fromEntries(set.balances.map((b) => [b.code, b.amount])));
   const haveNet = netIncome(s.gl);
@@ -198,69 +200,3 @@ const ACCOUNT_NAMES: Record<string, string> = {
   "5540": "Machine / Variable Overhead Variance", "5550": "Fixed Overhead Volume Variance", "5560": "Scrap & Rework Loss",
   "5700": "Applied Direct Labor", "5710": "Applied Machine Overhead", "5720": "Applied Fixed Overhead",
 };
-
-const DEFAULT_HINTS: Record<string, string> = {
-  "1000": "Cash is the 100,000 capital less the 6,000 rent. No payments are made in this set, so nothing else touches Cash.",
-  "1100": "Both invoices stay unpaid, including 12% VAT. Check the quantities, prices and that each invoice was posted once.",
-  "1160": "12% input VAT on the one vendor invoice only.",
-  "1200": "Raw materials left after the two production orders, valued at standard cost. Check receipts, issues (including the extra rattan on the basket order) and quantities.",
-  "1210": "Work in process must be nil after both orders were settled.",
-  "1220": "Finished goods left after the deliveries, at standard cost. Check receipts (48 baskets, 20 stands) and deliveries (45 baskets, 10 stands).",
-  "1230": "Gift cartons left, at standard cost.",
-  "2000": "The one vendor invoice, including 12% VAT, and no payment.",
-  "2050": "The bamboo and rattan receipt that was never invoiced, at purchase-order prices.",
-  "2200": "12% output VAT on the two invoices.",
-  "3000": "The 100,000 capital voucher.",
-  "4000": "Sales before VAT on both invoices.",
-  "5000": "Cost of goods sold at standard cost, plus the variances that Period End closes into it.",
-  "5100": "The 6,000 November rent only.",
-  "5300": "This credit is expected: Period End moves the labor applied to production out of Payroll Expense. Payroll is not run in this set.",
-  "5710": "Machine overhead applied at the standard machine rate; the settled balance after variances.",
-  "5720": "Fixed overhead applied at the standard overhead rate; the settled balance after variances.",
-};
-
-// ---------- Practice set 1: Bamboo Basket Works, November 2026 ----------
-export const MFG_SET_1: MfgPracticeSet = {
-  id: "bamboo-nov-2026",
-  name: "Activity 1 Manufacturing — Bamboo Basket Works, November 2026 (solo company)",
-  summary: "Standard costing. One month: set up, buy, make, sell, a manual voucher, then settle and close November. Ends in a net profit of ₱10,105.95.",
-  vendors: ["Laguna Bamboo Traders", "Pasig Packaging Supply"],
-  customers: ["Cebu Gift Shop", "Greenleaf Home Store"],
-  employees: [{ name: "Aling Nena Reyes", hourlyRate: 80 }, { name: "Mang Totoy Cruz", hourlyRate: 90 }],
-  workCenters: ["Finishing", "Weaving"],
-  rates: [
-    { workCenter: "Weaving", kind: "LABOR", rate: 80 }, { workCenter: "Weaving", kind: "MACHINE", rate: 25 },
-    { workCenter: "Finishing", kind: "LABOR", rate: 80 }, { workCenter: "Finishing", kind: "MACHINE", rate: 40 },
-  ],
-  ohRate: 30,
-  items: [
-    { sku: "BAM-POLE", name: "Bamboo pole", type: "RAW", uom: "PC", plannedPrice: 45, qty: 80 },
-    { sku: "RAT-STR", name: "Rattan strip", type: "RAW", uom: "KG", plannedPrice: 160, qty: 32 },
-    { sku: "LAC-CL", name: "Clear lacquer", type: "RAW", uom: "L", plannedPrice: 280, qty: 20 },
-    { sku: "CTN-GB", name: "Gift carton", type: "PACKAGING", uom: "PC", plannedPrice: 30, qty: 30 },
-    { sku: "BSK-LD", name: "Laundry basket", type: "FINISHED", uom: "PC", standardCost: 599.15, qty: 3 },
-    { sku: "STD-PL", name: "Plant stand", type: "FINISHED", uom: "PC", standardCost: 563.85, qty: 10 },
-  ],
-  boms: [
-    { item: "BSK-LD", lines: [{ sku: "BAM-POLE", qty: 4 }, { sku: "CTN-GB", qty: 1 }, { sku: "LAC-CL", qty: 0.1 }, { sku: "RAT-STR", qty: 1.5 }] },
-    { item: "STD-PL", lines: [{ sku: "BAM-POLE", qty: 6 }, { sku: "CTN-GB", qty: 1 }, { sku: "LAC-CL", qty: 0.25 }, { sku: "RAT-STR", qty: 0.5 }] },
-  ],
-  routings: [
-    { item: "BSK-LD", ops: [{ op: 10, workCenter: "Weaving", setup: 30, run: 42, labor: 42, machine: 12 }, { op: 20, workCenter: "Finishing", setup: 15, run: 15, labor: 15, machine: 15 }] },
-    { item: "STD-PL", ops: [{ op: 10, workCenter: "Weaving", setup: 30, run: 30, labor: 30, machine: 24 }, { op: 20, workCenter: "Finishing", setup: 12, run: 18, labor: 18, machine: 18 }] },
-  ],
-  purchaseOrders: [{ vendor: "Laguna Bamboo Traders", total: 38600 }, { vendor: "Pasig Packaging Supply", total: 11700 }],
-  vendorInvoices: [{ total: 13104, invoiceDate: "2026-11-10", due: "2026-12-10" }],
-  orders: [{ item: "BSK-LD", planned: 50, good: 48, scrap: 2 }, { item: "STD-PL", planned: 20, good: 20, scrap: 0 }],
-  invoices: [{ total: 35728, date: "2026-11-21", due: "2026-12-21" }, { total: 13272, date: "2026-11-27", due: "2026-12-27" }],
-  balances: [
-    { code: "1000", amount: 94000 }, { code: "1100", amount: 49000 }, { code: "1160", amount: 1404 }, { code: "1200", amount: 14320 },
-    { code: "1220", amount: 7435.95 }, { code: "1230", amount: 900 }, { code: "2000", amount: -13104 }, { code: "2050", amount: -38600 },
-    { code: "2200", amount: -5250 }, { code: "3000", amount: -100000 }, { code: "4000", amount: -43750 }, { code: "5000", amount: 36208.05 },
-    { code: "5100", amount: 6000 }, { code: "5300", amount: -5430.5 }, { code: "5710", amount: -1170 }, { code: "5720", amount: -1963.5 },
-  ],
-  manualVouchers: { count: 2, totalDebit: 106000 },
-  month: "2026-11",
-};
-
-export const MFG_PRACTICE_SETS: MfgPracticeSet[] = [MFG_SET_1];

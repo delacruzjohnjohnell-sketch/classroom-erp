@@ -1,9 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { MFG_SET_1, MFG_PRACTICE_SETS, runMfgPracticeChecks, summarizeMfg, netIncome, type MfgSnapshot } from "../src/lib/mfgPracticeCheck.ts";
+import { runMfgPracticeChecks, summarizeMfg, netIncome, type MfgSnapshot, type MfgPracticeSet } from "../src/lib/mfgPracticeCheck.ts";
 
 // The snapshot is a real run of Practice Set 1 (supabase/tests/mfg_practice_set1_key.sql) read by mfg_practice_snapshot.
+const MFG_SET_1: MfgPracticeSet = JSON.parse(readFileSync(new URL("./fixtures/mfgPracticeSet1.definition.json", import.meta.url), "utf8"));
 const key = (): MfgSnapshot => JSON.parse(readFileSync(new URL("./fixtures/mfgPracticeSet1.snapshot.json", import.meta.url), "utf8"));
 
 test("the answer-key run passes every check of Set 1", () => {
@@ -13,8 +14,7 @@ test("the answer-key run passes every check of Set 1", () => {
   assert.ok(results.length > 50);
 });
 
-test("practice set ids are unique and the net profit in the summary is the ledger's", () => {
-  assert.equal(new Set(MFG_PRACTICE_SETS.map((s) => s.id)).size, MFG_PRACTICE_SETS.length);
+test("the net profit in the summary is the ledger's", () => {
   assert.equal(netIncome(key().gl), 10105.95);
   assert.ok(MFG_SET_1.summary.includes("10,105.95"));
 });
