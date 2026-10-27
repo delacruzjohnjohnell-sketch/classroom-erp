@@ -57,3 +57,6 @@ Next: stage 2 (extend mfg_practice_snapshot for inspection lots, NCRs, landed co
 
 ## Stage 2 done (2026-10-27)
 Migrations 0059 (mfg_practice_snapshot_a2) and 0060 (set rattan-dec-2026-jan-2027, teacher-only) APPLIED. Checker + tests committed (9 pass). Website code change (checker modal reads the a2 snapshot) NOT deployed yet. Next: stage 3 handout + teacher key PDFs, stage 4 loader mfg__load_activity_2 + generalize mfg_open_answer_key / release functions (hard-coded to activity-1-manufacturing), stage 5 browser pilot.
+
+## Stage 4 done (2026-10-27)
+Migration 0061 APPLIED (mfg__load_activity_2; release + open functions accept both activities). Tested end to end in rolled-back runs for both activities (key opens read-only with AUDITOR role; Activity 2 key GL = answer key). The scratch key company was DELETED. Website code (student card per activity, release buttons per set) committed, NOT deployed. Next: stage 3 handout + teacher key PDFs, stage 5 browser pilot, then deploy.
