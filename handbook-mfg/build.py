@@ -126,7 +126,7 @@ chapter("Purchasing", "SIDEBAR → PURCHASING",
  "Buying from vendors: create the purchase order, receive the goods into stock, then enter the vendor's invoice.",
  "".join([
   shot("purchasing", "Purchase orders with received quantities and status.") + sec('Purchasing', 'purchasing'),
-  steps(["<b>New purchase order</b> — pick the vendor, items, quantities and prices.", "<b>Receive into stock</b> — when goods arrive, record the receipt. Stock goes up and the books show 'Goods received / invoice received'.", "Enter the <b>vendor invoice</b>. The system does a three-way match of order, receipt and invoice; a difference above the tolerance is held for the teacher.", "Pay the vendor from Banking."]),
+  steps(["<b>New purchase order</b> — pick the vendor, items, quantities and prices.", "<b>Receive into stock</b> — when goods arrive, record the receipt. Stock goes up and the books show 'Goods received / invoice received'.", "Enter the <b>vendor invoice</b>. The system does a three-way match of order, receipt and invoice; a difference above the tolerance is held for the teacher.", "Pay the vendor with <b>Pay</b> on the invoice (Banking is not needed)."]),
   shot("purchasing-scrolled", "Order lines and receiving.") + sec('Purchasing', 'purchasing-scrolled'),
   warn("An invoice that differs from the order or the receipt by more than the tolerance in Settings is put on hold. See Reports → Three-way match exceptions."),
  ]))
@@ -176,7 +176,7 @@ chapter("Shipping", "SIDEBAR → SHIPPING",
  "Delivering what customers ordered and billing them for it.",
  "".join([
   shot("shipping", "Sales orders to ship, with delivered and invoiced quantities.") + sec('Shipping', 'shipping'),
-  steps(["Open the sales order and press <b>Deliver now</b>. Stock goes down and cost of goods sold is recorded.", "Press <b>Create invoice for what was delivered</b>. Receivable and revenue are recorded, and the invoice due date is set from the customer's terms.", "Collect payment from Banking."]),
+  steps(["Open the sales order and press <b>Deliver now</b>. Stock goes down and cost of goods sold is recorded.", "Press <b>Create invoice for what was delivered</b>. Receivable and revenue are recorded, and the invoice due date is set from the customer's terms.", "Record the customer's payment on the invoice in Sales (Banking is not needed)."]),
   tip("You can deliver in parts. The order shows Ordered, Delivered and Invoiced so nothing is billed twice."),
  ]))
 
@@ -228,7 +228,7 @@ chapter("Analytics", "SIDEBAR → ANALYTICS",
 
 # ---------------------------------------------------------------- 16
 chapter("Banking, Fixed Assets, Payroll and Settings", "SIDEBAR → BANKING · FIXED ASSETS · PAYROLL · SETTINGS",
- "Four supporting modules reached from the lower part of the sidebar.",
+ "Four supporting modules reached from the lower part of the sidebar. <b>Fixed Assets</b> is used by the practice activities (it drives machine cost). <b>Banking</b> and <b>Payroll</b> are optional general practice: the activities do not use them and team companies do not show them.",
  "".join([
   "<h3>Banking</h3><p>Bank accounts and transactions, with ledger balance, statement balance and the unreconciled count. Use <b>Auto-match</b> to pair bank lines with the books.</p>", shot("banking", "Banking.") + sec('Banking, Fixed Assets, Payroll and Settings', 'banking'),
   "<h3>Fixed Assets</h3><p>The register of machines, vehicles and equipment, with cost, accumulated depreciation and net book value. Depreciation feeds machine cost.</p>", shot("fixed-assets", "Fixed asset register.") + sec('Banking, Fixed Assets, Payroll and Settings', 'fixed'),
@@ -295,8 +295,8 @@ chapter("Month in the Life: a Worked Cycle", "PUTTING IT TOGETHER",
         "<b>Quality</b>: inspect receipts and decide.",
         "<b>Production</b>: issue materials, confirm operations on the Shop Floor, receive finished goods.",
         "<b>Shipping</b>: deliver and invoice.",
-        "<b>Banking</b>: collect and pay.",
-        "<b>Payroll</b> and <b>Fixed Assets</b>: post payroll and depreciation.",
+        "<b>Sales</b> and <b>Purchasing</b>: record customer payments and pay vendor invoices.",
+        "<b>Finance</b> and <b>Fixed Assets</b>: post wages by voucher and record the machine's monthly depreciation.",
         "<b>Finance</b>: adjusting vouchers.",
         "<b>Period End</b>: settle, close variances, close the month.",
         "<b>Reports</b>: print the statements and the integrity check."]) )

@@ -69,7 +69,8 @@ export type FrameProps = {
  * never gets it. This part only draws; MfgShell below feeds it from the session.
  */
 export function MfgFrame({ children, pathname, fullName, role, tenantName, isTeacher, otherViewers, searchSlot, companySlot, onSignOut, onAllCompanies, roleNote, items: menu, product = "Manufacturing ERP", logo }: FrameProps) {
-  const items = menu ?? (isTeacher ? [...NAV, TEACHER_NAV] : [...NAV, COMPANIES_NAV]);
+  // Banking and Payroll are not part of the team practice sets (wages go through a voucher), so a team member does not see them
+  const items = menu ?? (isTeacher ? [...NAV, TEACHER_NAV] : [...NAV, COMPANIES_NAV]).filter((i) => !(roleNote && (i.href === "/mfg/banking" || i.href === "/mfg/payroll")));
   const { userId: meId } = useSession();
   const unread = useUnreadMessages(meId);
   const initials = fullName ? fullName.split(/\s+/).slice(0, 2).map((p: string) => p[0]?.toUpperCase()).join("") : "?";
