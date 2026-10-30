@@ -51,7 +51,7 @@ export default function AisTeamsPage() {
   const [draft, setDraft] = useState<Record<string, Seat[]>>({});
   const [sod, setSod] = useState<"ENFORCE" | "ALLOW_LOGGED">("ENFORCE");
   const [adding, setAdding] = useState("");
-  const [addSeats, setAddSeats] = useState<Seat[]>(["ACCOUNTING", "AUDIT"]);
+  const [addSeats, setAddSeats] = useState<Seat[]>(["ACCOUNTING"]);
   const [busy, setBusy] = useState(false);
   const [sets, setSets] = useState<SetRow[]>([]);
   const [importing, setImporting] = useState(false);
@@ -63,6 +63,9 @@ export default function AisTeamsPage() {
   const [aSeed, setASeed] = useState("");
   const [review, setReview] = useState<ReviewRow[] | null>(null);
   const [auditRev, setAuditRev] = useState<AuditReview | null>(null);
+  const [pairA, setPairA] = useState(""); const [pairU, setPairU] = useState("");
+  const [newSet, setNewSet] = useState(""); const [newMode, setNewMode] = useState<"IMMEDIATE" | "AFTER_CLOSE">("IMMEDIATE"); const [newLock, setNewLock] = useState(""); const [newSeed, setNewSeed] = useState("");
+  const [solo, setSolo] = useState(false); const [restarting, setRestarting] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -83,7 +86,7 @@ export default function AisTeamsPage() {
   const loadRoster = useCallback(async (tenant: string) => {
     const [r, s, i] = await Promise.all([
       supabase.rpc("ais_roster", { p_tenant: tenant }),
-      supabase.from("ais_company_settings").select("sod_mode").eq("tenant_id", tenant).maybeSingle(),
+      supabase.from("ais_company_settings").select("sod_mode, allow_solo").eq("tenant_id", tenant).maybeSingle(),
       supabase.from("ais_instances").select("set_id, mode, phase, lock_date, seed").eq("tenant_id", tenant).maybeSingle(),
     ]);
     setInst((i.data as Instance | null) ?? null);
@@ -92,18 +95,43 @@ export default function AisTeamsPage() {
     setRoster(list);
     setDraft(Object.fromEntries(list.map((m) => [m.user_id, m.seats])));
     setSod(((s.data as { sod_mode?: "ENFORCE" | "ALLOW_LOGGED" } | null)?.sod_mode) ?? "ENFORCE");
+    setSolo(((s.data as { allow_solo?: boolean } | null)?.allow_solo) ?? false);
   }, []);
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
     if (busy || !name.trim()) return;
+    if (pairA && pairA === pairU) { toast.error("Choose two different students: one for the Accounting seat and one for the Audit seat."); return; }
     setBusy(true);
-    const res = await mutate(supabase.rpc("ais_create_company", { p_name: name.trim(), p_fiscal_year_start: fy }), { successMessage: "AIS company created. Add the students next." });
+    const res = await mutate(supabase.rpc("ais_create_company", { p_name: name.trim(), p_fiscal_year_start: fy }));
+    if (!ok(res)) { setBusy(false); return; }
+    const tid = res.data as unknown as string;
+    let good = true;
+    if (pairA) good = ok(await mutate(supabase.rpc("ais_set_seats", { p_tenant: tid, p_user: pairA, p_seats: ["ACCOUNTING"] })));
+    if (good && pairU) good = ok(await mutate(supabase.rpc("ais_set_seats", { p_tenant: tid, p_user: pairU, p_seats: ["AUDIT"] })));
+    if (good && newSet) good = ok(await mutate(supabase.rpc("ais_assign_set", { p_tenant: tid, p_set: newSet, p_seed: newSeed.trim() ? Number(newSeed) : null, p_mode: newMode, p_lock: newLock || null })));
     setBusy(false);
-    if (ok(res)) { setCreating(false); setName(""); await loadCompanies(); }
+    if (good) toast.success(newSet ? "Company created, students seated and the practice set assigned." : "AIS company created. Add the students next.");
+    setCreating(false); setName(""); setPairA(""); setPairU(""); setNewSet(""); setNewSeed(""); setNewLock("");
+    await loadCompanies();
   };
 
-  const openManage = async (c: Company) => { setManage(c); setAdding(""); setAddSeats(["ACCOUNTING", "AUDIT"]); await loadRoster(c.tenant_id); };
+  const restart = async () => {
+    if (!manage || busy) return;
+    setBusy(true);
+    const res = await mutate(supabase.rpc("ais_restart_company", { p_tenant: manage.tenant_id, p_set: newSet || null, p_seed: newSeed.trim() ? Number(newSeed) : null, p_mode: newMode, p_lock: newLock || null }), { successMessage: "A new round has started. The members are in it with the same seats." });
+    setBusy(false);
+    if (ok(res)) { setRestarting(false); setManage(null); setNewSet(""); setNewSeed(""); setNewLock(""); await loadCompanies(); }
+  };
+  const saveSolo = async (v: boolean) => {
+    if (!manage || busy) return;
+    setBusy(true);
+    const res = await mutate(supabase.rpc("ais_set_solo", { p_tenant: manage.tenant_id, p_allow: v }), { successMessage: v ? "One student may now hold both seats." : "The Accounting and Audit seats must go to two different students." });
+    setBusy(false);
+    if (ok(res)) setSolo(v);
+  };
+
+  const openManage = async (c: Company) => { setManage(c); setAdding(""); setAddSeats(["ACCOUNTING"]); await loadRoster(c.tenant_id); };
   const saveMember = async (memberId: string) => {
     if (!manage || busy) return;
     setBusy(true);
@@ -230,7 +258,21 @@ export default function AisTeamsPage() {
           <form onSubmit={create}>
             <Label>Company name</Label><input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Sinag Rice Trading Co. — Section A" required />
             <Label>Fiscal year starts</Label><input className="input" type="date" value={fy} onChange={(e) => setFy(e.target.value)} required />
-            <div className="text-[11.5px] text-[#7F8EA0] mt-2">The company starts with a merchandising chart of accounts and an empty ledger. You are not a member of it; add the students on the next step.</div>
+            <div className="grid gap-2 mt-3" style={{ gridTemplateColumns: "1fr 1fr" }}>
+              <div><Label>Accounting seat (optional)</Label><select className="input" value={pairA} onChange={(e) => setPairA(e.target.value)}><option value="">Add later…</option>{students.map((st) => <option key={st.id} value={st.id}>{st.full_name ?? "Student"}</option>)}</select></div>
+              <div><Label>Audit seat (optional)</Label><select className="input" value={pairU} onChange={(e) => setPairU(e.target.value)}><option value="">Add later…</option>{students.map((st) => <option key={st.id} value={st.id}>{st.full_name ?? "Student"}</option>)}</select></div>
+            </div>
+            <div className="text-[11.5px] text-[#7F8EA0] mt-1">Two different students: the auditor must be independent of the person who posted. You can allow one student to do both later (solo practice).</div>
+            <Label>Practice set (optional)</Label>
+            <select className="input" value={newSet} onChange={(e) => setNewSet(e.target.value)}><option value="">Assign later…</option>{sets.map((x) => <option key={x.id} value={x.id}>{x.title}</option>)}</select>
+            {newSet && (
+              <div className="grid gap-2 mt-2" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))" }}>
+                <div><Label>Mode</Label><select className="input" value={newMode} onChange={(e) => setNewMode(e.target.value as "IMMEDIATE" | "AFTER_CLOSE")}><option value="IMMEDIATE">Practice: instant feedback</option><option value="AFTER_CLOSE">Graded: scores after close</option></select></div>
+                <div><Label>Lock the books on</Label><input className="input" type="date" value={newLock} onChange={(e) => setNewLock(e.target.value)} /></div>
+                <div><Label>Seed (optional)</Label><input className="input" inputMode="numeric" value={newSeed} placeholder="random" onChange={(e) => setNewSeed(e.target.value)} /></div>
+              </div>
+            )}
+            <div className="text-[11.5px] text-[#7F8EA0] mt-2">The company starts with a merchandising chart of accounts and an empty ledger. You are not a member of it. The AIS edition must be open (Choose ERP page) before students can be seated.</div>
             <div className="flex gap-2 justify-end mt-5"><OutlineBtn type="button" onClick={() => setCreating(false)} disabled={busy}>Cancel</OutlineBtn><GoldBtn type="submit" disabled={busy || !name.trim()}>Create</GoldBtn></div>
           </form>
         </Modal>
@@ -241,6 +283,20 @@ export default function AisTeamsPage() {
           <div className="text-[12px] text-[#7F8EA0] mb-2">Paste the contents of the set&rsquo;s .json file (for example <code>supabase/seed/ais_set_sinag_revenue.json</code>). A set that has already been assigned to a company cannot be replaced; import it under a new id instead.</div>
           <textarea className="input" style={{ minHeight: 260, fontFamily: "monospace", fontSize: 11.5 }} value={jsonText} onChange={(e) => setJsonText(e.target.value)} placeholder='{ "id": "...", "title": "...", "txns": [ ... ] }' />
           <div className="flex gap-2 justify-end mt-4"><OutlineBtn type="button" onClick={() => setImporting(false)} disabled={busy}>Cancel</OutlineBtn><GoldBtn type="button" onClick={importSet} disabled={busy || !jsonText.trim()}>Import</GoldBtn></div>
+        </Modal>
+      )}
+
+      {restarting && manage && (
+        <Modal title="Start a new round" onClose={() => setRestarting(false)}>
+          <div className="text-[12.5px] text-[#A3B1C2] mb-2">This makes a new company with the same members and seats, and assigns the practice set again with fresh numbers. The current company stays as the record of this round.</div>
+          <Label>Practice set</Label>
+          <select className="input" value={newSet} onChange={(e) => setNewSet(e.target.value)}>{sets.map((x) => <option key={x.id} value={x.id}>{x.title}</option>)}</select>
+          <div className="grid gap-2 mt-2" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))" }}>
+            <div><Label>Mode</Label><select className="input" value={newMode} onChange={(e) => setNewMode(e.target.value as "IMMEDIATE" | "AFTER_CLOSE")}><option value="IMMEDIATE">Practice: instant feedback</option><option value="AFTER_CLOSE">Graded: scores after close</option></select></div>
+            <div><Label>Lock the books on</Label><input className="input" type="date" value={newLock} onChange={(e) => setNewLock(e.target.value)} /></div>
+            <div><Label>Seed (optional)</Label><input className="input" inputMode="numeric" value={newSeed} placeholder="random" onChange={(e) => setNewSeed(e.target.value)} /></div>
+          </div>
+          <div className="flex gap-2 justify-end mt-4"><OutlineBtn type="button" onClick={() => setRestarting(false)} disabled={busy}>Cancel</OutlineBtn><GoldBtn type="button" onClick={restart} disabled={busy || !newSet}>Start the new round</GoldBtn></div>
         </Modal>
       )}
 
@@ -284,7 +340,7 @@ export default function AisTeamsPage() {
               <div className="text-[12.5px]">
                 <b>{sets.find((x) => x.id === inst.set_id)?.title ?? inst.set_id}</b>
                 <div className="text-[#7F8EA0]">{inst.mode === "IMMEDIATE" ? "Practice round" : "Graded round"} · {inst.phase === "ACCOUNTING" ? "Accounting phase open" : "Accounting phase closed"} · seed {inst.seed}{inst.lock_date ? ` · books lock on ${inst.lock_date}` : ""}</div>
-                <div className="mt-2"><TinyBtn type="button" onClick={openReview}>Accounting: answer key and results</TinyBtn>{" "}<TinyBtn type="button" onClick={openAuditReview}>Audit: planted exceptions and results</TinyBtn></div>
+                <div className="mt-2"><TinyBtn type="button" onClick={() => { setNewSet(inst.set_id); setNewMode(inst.mode); setRestarting(true); }}>Start a new round…</TinyBtn>{" "}<TinyBtn type="button" onClick={openReview}>Accounting: answer key and results</TinyBtn>{" "}<TinyBtn type="button" onClick={openAuditReview}>Audit: planted exceptions and results</TinyBtn></div>
               </div>
             ) : (
               <div>
@@ -306,6 +362,9 @@ export default function AisTeamsPage() {
             )}
           </div>
           <div className="border border-hairline rounded-md p-3 mb-4">
+            <div className="text-[13px] font-semibold mb-1">Who holds the seats</div>
+            <label className="flex items-start gap-2 text-[12.5px] mb-3"><input type="checkbox" className="mt-0.5" checked={solo} disabled={busy} onChange={(e) => saveSolo(e.target.checked)} />
+              <span><b>Solo practice</b>: allow one student to hold both the Accounting and the Audit seat. Leave it off for a class exercise, so the auditor is independent of the person who posted.</span></label>
             <div className="text-[13px] font-semibold mb-1">Segregation of duties</div>
             <label className="flex items-start gap-2 text-[12.5px] mb-1"><input type="radio" className="mt-0.5" checked={sod === "ENFORCE"} disabled={busy} onChange={() => saveSod("ENFORCE")} />
               <span><b>Enforce</b> (practice rounds): nobody can approve what they entered.</span></label>

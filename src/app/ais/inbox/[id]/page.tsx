@@ -18,7 +18,9 @@ type PacketResp = {
   id: string; seq: number; title: string; doc_date: string; status: InboxRow["status"]; wrong_attempts: number;
   packet: Packet; decision: "POST" | "HOLD" | null; failed_control: string | null; lines: { acct: string; debit: number; credit: number }[] | null;
 };
-type Result = { status: string; result?: string; message?: string; wrong_attempts?: number; points?: number | null; max_points?: number | null; detail?: string | null; explanation?: string | null };
+type Review = { visible: boolean; message?: string; key_decision?: "POST" | "HOLD"; failed_control?: string | null; failed_label?: string | null; explanation?: string | null;
+  key_journal?: { acct: string; name: string | null; debit: number; credit: number }[]; your_decision?: string | null; your_control_label?: string | null; points?: number; max?: number; detail?: string | null; correct_decision?: boolean };
+type Result = { status: string; result?: string; message?: string; hint?: string | null; wrong_attempts?: number; points?: number | null; max_points?: number | null; detail?: string | null; explanation?: string | null };
 type Account = { code: string; name: string };
 
 export default function AisReviewPage() {
@@ -39,6 +41,7 @@ function Review() {
   const [control, setControl] = useState("");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
+  const [review, setReview] = useState<Review | null>(null);
 
   const load = useCallback(async () => {
     const [p, i, c, a] = await Promise.all([
@@ -48,7 +51,12 @@ function Review() {
       supabase.from("accounts").select("code, name").eq("tenant_id", effectiveTenantId ?? "").order("code"),
     ]);
     showQueryErrors(p, i, c, a);
-    setData((p.data as PacketResp | null) ?? null);
+    const pd = (p.data as PacketResp | null) ?? null;
+    setData(pd);
+    if (pd && pd.status !== "PENDING") {
+      const rv = await supabase.rpc("ais_doc_review", { p_txn: id });
+      setReview(rv.error ? null : (rv.data as Review));
+    } else setReview(null);
     setRows(((i.data as InboxRow[]) ?? []).map((x) => ({ ...x, seq: Number(x.seq) })));
     setControls((c.data as Control[]) ?? []);
     setAccounts((a.data as Account[]) ?? []);
@@ -128,6 +136,23 @@ function Review() {
                 </div>
               )}
               {result && (result.points === undefined || result.points === null) && <div className="mt-3 text-[12px] text-[#7F8EA0]">Recorded. Your score appears when you close the Accounting phase.</div>}
+              {review && review.visible && (
+                <div className="mt-4 rounded-md border p-3 text-[12.5px]" style={{ borderColor: "rgba(157,124,255,0.45)", background: "rgba(157,124,255,0.06)" }}>
+                  <div className="font-semibold mb-1">Why: what the documents showed</div>
+                  <div className="mb-1.5">The right decision was <b>{review.key_decision === "POST" ? "to post it" : `to hold it: ${review.failed_label ?? review.failed_control}`}</b>.
+                    {review.correct_decision === false && <span style={{ color: "#FF6B7A" }}> {review.key_decision === "HOLD" ? "A control had failed; the document should not have been posted." : "It was a valid document and should have been posted."}</span>}
+                    {review.your_decision === "HOLD" && review.key_decision === "HOLD" && review.your_control_label && review.your_control_label !== review.failed_label && <span> You named “{review.your_control_label}”.</span>}</div>
+                  {review.explanation && <div className="text-[#C9D3E0] mb-2">{review.explanation}</div>}
+                  {review.key_journal && review.key_journal.length > 0 && (
+                    <table style={{ margin: "4px 0" }}>
+                      <thead><tr><th>The right journal</th><th style={{ textAlign: "right" }}>Debit</th><th style={{ textAlign: "right" }}>Credit</th></tr></thead>
+                      <tbody>{review.key_journal.map((l, i) => <tr key={i}><td>{l.acct} {l.name}</td><td style={{ textAlign: "right" }}>{Number(l.debit) ? money(Number(l.debit)) : ""}</td><td style={{ textAlign: "right" }}>{Number(l.credit) ? money(Number(l.credit)) : ""}</td></tr>)}</tbody>
+                    </table>
+                  )}
+                  <div className="text-[#7F8EA0]">{review.points} of {review.max} points. {review.detail}</div>
+                </div>
+              )}
+              {review && !review.visible && <div className="mt-3 text-[12px] text-[#7F8EA0]">{review.message}</div>}
               <div className="flex gap-2 mt-4">
                 {next ? <GoldBtn onClick={() => router.push(`/ais/inbox/${next}`)}>Next document</GoldBtn>
                       : <OutlineBtn onClick={() => router.push("/ais/inbox")}>Back to the inbox</OutlineBtn>}
@@ -136,7 +161,7 @@ function Review() {
           ) : (
             <Panel title="Your decision">
               {result?.result === "journal_mismatch" && (
-                <div className="mb-3 rounded-md border p-3 text-[12.5px]" style={{ borderColor: "rgba(255,107,122,0.5)", background: "rgba(255,107,122,0.08)" }}>{result.message}</div>
+                <div className="mb-3 rounded-md border p-3 text-[12.5px]" style={{ borderColor: "rgba(255,107,122,0.5)", background: "rgba(255,107,122,0.08)" }}>{result.message}{result.hint && <div className="mt-1.5 font-semibold">Hint: {result.hint}</div>}</div>
               )}
               <div className="flex gap-4 mb-3">
                 <label className="flex items-center gap-2 text-[13px]"><input type="radio" checked={choice === "POST"} onChange={() => setChoice("POST")} /> <b>Post</b> it to the ledger</label>
