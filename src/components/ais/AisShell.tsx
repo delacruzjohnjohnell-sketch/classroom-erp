@@ -28,7 +28,7 @@ const TEACHER_NAV = { href: "/ais/teams", label: "AIS companies", icon: Users };
 const SEAT_LABEL: Record<string, string> = { ACCOUNTING: "Accounting", AUDIT: "Audit" };
 
 /** Which of the optional menu groups exist yet. Flipped on as each phase adds its pages. */
-export const AIS_PAGES_LIVE = { accounting: false, audit: false, scores: false };
+export const AIS_PAGES_LIVE = { accounting: true, audit: false, scores: false };
 
 export default function AisShell({ children, otherViewers }: { children: React.ReactNode; otherViewers: { userId: string; name: string }[] }) {
   const { profile, tenants, effectiveTenantId, setViewTenantId, signOut } = useSession();

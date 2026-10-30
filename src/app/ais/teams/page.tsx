@@ -8,11 +8,15 @@ import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
 import { showQueryErrors } from "@/lib/queryErrors";
+import { toast } from "@/lib/toast";
 import { SEATS, seatsText, toggleSeat, type Seat } from "@/lib/aisSeats";
 
 type Company = { tenant_id: string; name: string; members: number; created_at: string };
 type Member = { user_id: string; full_name: string | null; seats: Seat[] };
 type Student = { id: string; full_name: string | null };
+type SetRow = { id: string; title: string; topic: string | null; summary: string | null; txns: number; assigned: number };
+type Instance = { set_id: string; mode: "IMMEDIATE" | "AFTER_CLOSE"; phase: string; lock_date: string | null; seed: number };
+type ReviewRow = { seq: number; title: string; status: string; key: { decision: string; failed_control: string | null; explanation: string | null }; decision: string | null; failed_control: string | null; points: number | null; detail: string | null; wrong_attempts: number };
 
 const VIOLET = "#9D7CFF";
 const yearStart = () => `${new Date().getFullYear()}-01-01`;
@@ -47,6 +51,15 @@ export default function AisTeamsPage() {
   const [adding, setAdding] = useState("");
   const [addSeats, setAddSeats] = useState<Seat[]>(["ACCOUNTING", "AUDIT"]);
   const [busy, setBusy] = useState(false);
+  const [sets, setSets] = useState<SetRow[]>([]);
+  const [importing, setImporting] = useState(false);
+  const [jsonText, setJsonText] = useState("");
+  const [inst, setInst] = useState<Instance | null>(null);
+  const [aSet, setASet] = useState("");
+  const [aMode, setAMode] = useState<"IMMEDIATE" | "AFTER_CLOSE">("IMMEDIATE");
+  const [aLock, setALock] = useState("");
+  const [aSeed, setASeed] = useState("");
+  const [review, setReview] = useState<ReviewRow[] | null>(null);
 
   useEffect(() => {
     if (loading) return;
@@ -55,8 +68,9 @@ export default function AisTeamsPage() {
   }, [loading, userId, profile, isTeacher, router]);
 
   const loadCompanies = useCallback(async () => {
-    const [c, s] = await Promise.all([supabase.rpc("ais_companies_list"), supabase.rpc("ais_class_students")]);
-    showQueryErrors(c, s);
+    const [c, s, st] = await Promise.all([supabase.rpc("ais_companies_list"), supabase.rpc("ais_class_students"), supabase.rpc("ais_set_list")]);
+    showQueryErrors(c, s, st);
+    setSets(((st.data as SetRow[]) ?? []).map((x) => ({ ...x, txns: Number(x.txns), assigned: Number(x.assigned) })));
     setCompanies(((c.data as Company[]) ?? []).map((x) => ({ ...x, members: Number(x.members) })));
     setStudents((s.data as Student[]) ?? []);
   }, []);
@@ -64,10 +78,12 @@ export default function AisTeamsPage() {
   useEffect(() => { if (!loading && isTeacher) loadCompanies(); }, [loading, isTeacher, loadCompanies]);
 
   const loadRoster = useCallback(async (tenant: string) => {
-    const [r, s] = await Promise.all([
+    const [r, s, i] = await Promise.all([
       supabase.rpc("ais_roster", { p_tenant: tenant }),
       supabase.from("ais_company_settings").select("sod_mode").eq("tenant_id", tenant).maybeSingle(),
+      supabase.from("ais_instances").select("set_id, mode, phase, lock_date, seed").eq("tenant_id", tenant).maybeSingle(),
     ]);
+    setInst((i.data as Instance | null) ?? null);
     if (showQueryErrors(r)) return;
     const list = (r.data as Member[]) ?? [];
     setRoster(list);
@@ -112,6 +128,27 @@ export default function AisTeamsPage() {
     const res = await mutate(supabase.rpc("ais_set_sod_mode", { p_tenant: manage.tenant_id, p_mode: mode }), { successMessage: mode === "ENFORCE" ? "Segregation of duties is enforced." : "Violations are now allowed but logged." });
     setBusy(false);
     if (ok(res)) setSod(mode);
+  };
+  const importSet = async () => {
+    let def: unknown;
+    try { def = JSON.parse(jsonText); } catch { toast.error("That is not valid JSON. Paste the whole set file."); return; }
+    setBusy(true);
+    const res = await mutate(supabase.rpc("ais_set_import", { p_def: def }), { successMessage: "Practice set imported." });
+    setBusy(false);
+    if (ok(res)) { setImporting(false); setJsonText(""); await loadCompanies(); }
+  };
+  const assign = async () => {
+    if (!manage || !aSet || busy) return;
+    setBusy(true);
+    const res = await mutate(supabase.rpc("ais_assign_set", { p_tenant: manage.tenant_id, p_set: aSet, p_seed: aSeed.trim() ? Number(aSeed) : null, p_mode: aMode, p_lock: aLock || null }), { successMessage: "Practice set assigned. The documents are in the Accounting seat's inbox." });
+    setBusy(false);
+    if (ok(res)) { await loadRoster(manage.tenant_id); await loadCompanies(); }
+  };
+  const openReview = async () => {
+    if (!manage) return;
+    const r = await supabase.rpc("ais_teacher_review", { p_tenant: manage.tenant_id });
+    if (showQueryErrors(r)) return;
+    setReview(((r.data as ReviewRow[]) ?? []).map((x) => ({ ...x, seq: Number(x.seq), points: x.points === null ? null : Number(x.points) })));
   };
   const openBooks = (c: Company) => { setViewTenantId(c.tenant_id); router.push("/ais"); };
 
@@ -161,6 +198,16 @@ export default function AisTeamsPage() {
             )}
         </Panel>
 
+        <Panel title="Practice sets">
+          <div className="mb-3"><GoldBtn onClick={() => setImporting(true)}><Plus size={14} /> Import a practice set</GoldBtn></div>
+          {sets.length === 0 ? <Empty>No practice set yet. Import one: paste the set&rsquo;s JSON file.</Empty> : (
+            <table>
+              <thead><tr><th>Set</th><th>Topic</th><th style={{ textAlign: "right" }}>Documents</th><th style={{ textAlign: "right" }}>Assigned to</th></tr></thead>
+              <tbody>{sets.map((x) => <tr key={x.id}><td><b>{x.title}</b><div className="text-[11px] text-[#7F8EA0]">{x.id}</div></td><td>{x.topic}</td><td style={{ textAlign: "right" }}>{x.txns}</td><td style={{ textAlign: "right" }}>{x.assigned} compan{x.assigned === 1 ? "y" : "ies"}</td></tr>)}</tbody>
+            </table>
+          )}
+        </Panel>
+
         <Panel title="The seats">
           <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))" }}>
             {SEATS.map((s) => <div key={s.key} className="text-[12.5px]"><b>{s.label}</b><div className="text-[#7F8EA0] text-[11.5px]">{s.does}</div></div>)}
@@ -179,8 +226,63 @@ export default function AisTeamsPage() {
         </Modal>
       )}
 
+      {importing && (
+        <Modal title="Import a practice set" onClose={() => setImporting(false)} wide>
+          <div className="text-[12px] text-[#7F8EA0] mb-2">Paste the contents of the set&rsquo;s .json file (for example <code>supabase/seed/ais_set_sinag_revenue.json</code>). A set that has already been assigned to a company cannot be replaced; import it under a new id instead.</div>
+          <textarea className="input" style={{ minHeight: 260, fontFamily: "monospace", fontSize: 11.5 }} value={jsonText} onChange={(e) => setJsonText(e.target.value)} placeholder='{ "id": "...", "title": "...", "txns": [ ... ] }' />
+          <div className="flex gap-2 justify-end mt-4"><OutlineBtn type="button" onClick={() => setImporting(false)} disabled={busy}>Cancel</OutlineBtn><GoldBtn type="button" onClick={importSet} disabled={busy || !jsonText.trim()}>Import</GoldBtn></div>
+        </Modal>
+      )}
+
+      {review && manage && (
+        <Modal title={`${manage.name} — answer key and results`} onClose={() => setReview(null)} wide>
+          <table>
+            <thead><tr><th>#</th><th>Document</th><th>Key says</th><th>Student did</th><th style={{ textAlign: "right" }}>Points</th></tr></thead>
+            <tbody>
+              {review.map((r) => (
+                <tr key={r.seq}>
+                  <td>{r.seq}</td>
+                  <td><b>{r.title}</b><div className="text-[11px] text-[#7F8EA0]">{r.key.explanation}</div>{r.detail && <div className="text-[11px] text-[#A3B1C2]">{r.detail}{r.wrong_attempts > 0 ? ` (${r.wrong_attempts} refused tries)` : ""}</div>}</td>
+                  <td>{r.key.decision}{r.key.failed_control ? ` · ${r.key.failed_control}` : ""}</td>
+                  <td>{r.decision ? `${r.decision}${r.failed_control ? " · " + r.failed_control : ""}` : r.status === "PENDING" ? "not decided" : r.status}</td>
+                  <td style={{ textAlign: "right" }}>{r.points ?? ""}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="flex justify-end mt-4"><OutlineBtn type="button" onClick={() => setReview(null)}>Close</OutlineBtn></div>
+        </Modal>
+      )}
+
       {manage && (
         <Modal title={`${manage.name} — members and seats`} onClose={() => setManage(null)} wide>
+          <div className="border border-hairline rounded-md p-3 mb-4">
+            <div className="text-[13px] font-semibold mb-1">Practice set</div>
+            {inst ? (
+              <div className="text-[12.5px]">
+                <b>{sets.find((x) => x.id === inst.set_id)?.title ?? inst.set_id}</b>
+                <div className="text-[#7F8EA0]">{inst.mode === "IMMEDIATE" ? "Practice round" : "Graded round"} · {inst.phase === "ACCOUNTING" ? "Accounting phase open" : "Accounting phase closed"} · seed {inst.seed}{inst.lock_date ? ` · books lock on ${inst.lock_date}` : ""}</div>
+                <div className="mt-2"><TinyBtn type="button" onClick={openReview}>Answer key and results</TinyBtn></div>
+              </div>
+            ) : (
+              <div>
+                <select className="input mb-2" value={aSet} onChange={(e) => setASet(e.target.value)}>
+                  <option value="">Choose a practice set…</option>
+                  {sets.map((x) => <option key={x.id} value={x.id}>{x.title}</option>)}
+                </select>
+                <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))" }}>
+                  <div><Label>Mode</Label>
+                    <select className="input" value={aMode} onChange={(e) => setAMode(e.target.value as "IMMEDIATE" | "AFTER_CLOSE")}>
+                      <option value="IMMEDIATE">Practice: instant feedback</option><option value="AFTER_CLOSE">Graded: scores after close</option>
+                    </select></div>
+                  <div><Label>Lock the books on</Label><input className="input" type="date" value={aLock} onChange={(e) => setALock(e.target.value)} /></div>
+                  <div><Label>Seed (optional)</Label><input className="input" inputMode="numeric" value={aSeed} placeholder="random" onChange={(e) => setASeed(e.target.value)} /></div>
+                </div>
+                <div className="text-[11px] text-[#7F8EA0] mt-1">Same seed, same numbers. Give two companies the same seed for a class-wide worked example. Locking the books closes the period when the Accounting phase ends.</div>
+                <div className="mt-2"><GoldBtn type="button" onClick={assign} disabled={busy || !aSet}>Assign this set</GoldBtn></div>
+              </div>
+            )}
+          </div>
           <div className="border border-hairline rounded-md p-3 mb-4">
             <div className="text-[13px] font-semibold mb-1">Segregation of duties</div>
             <label className="flex items-start gap-2 text-[12.5px] mb-1"><input type="radio" className="mt-0.5" checked={sod === "ENFORCE"} disabled={busy} onChange={() => saveSod("ENFORCE")} />

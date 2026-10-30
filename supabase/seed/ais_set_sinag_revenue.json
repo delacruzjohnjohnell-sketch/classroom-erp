@@ -1,0 +1,2396 @@
+{
+ "id": "sinag-revenue-jan-2027",
+ "title": "Revenue cycle: credit and shipping controls (Sinag Rice Trading Co., January 2027)",
+ "topic": "Revenue cycle",
+ "summary": "Thirteen sales-cycle documents at a rice wholesaler. Review each packet (sales order, delivery receipt, invoice and supporting records), post the valid ones with the right journal, and hold the ones that fail a control, naming the control. Tests credit authorization, shipping evidence, accuracy, cutoff, returns and segregation of duties.",
+ "meta": {
+  "hall_topic": "Revenue cycle",
+  "documents": 13,
+  "valid": 5,
+  "exceptions": 8,
+  "period": "2027-01",
+  "vat_rate": 12
+ },
+ "txns": [
+  {
+   "seq": 1,
+   "template": {
+    "title": "Credit sale: {{qty}} sacks to {{cust.name}}",
+    "date": "2027-01-05",
+    "company": "Sinag Rice Trading Co.",
+    "docs": [
+     {
+      "type": "Sales order",
+      "fields": {
+       "Order no.": "SO-{{so}}",
+       "Date": "2027-01-04",
+       "Customer": "{{cust.name}} ({{cust.addr}})",
+       "Item": "{{prod.name}}",
+       "Quantity ordered": "{{qty}}",
+       "Unit price": "{{unit}}",
+       "Order total (incl. 12% VAT)": "{{gross}}",
+       "Customer credit limit": "{{limit}}",
+       "Balance owed before this order": "0.00",
+       "Credit approval": "Credit manager L. Reyes"
+      }
+     },
+     {
+      "type": "Delivery receipt",
+      "fields": {
+       "DR no.": "DR-{{dr}}",
+       "Date delivered": "2027-01-05",
+       "Item": "{{prod.name}}",
+       "Quantity delivered": "{{qty}}",
+       "Signed": "Received by: customer's storekeeper (signed)"
+      }
+     },
+     {
+      "type": "Sales invoice",
+      "fields": {
+       "Invoice no.": "INV-{{inv}}",
+       "Invoice date": "2027-01-05",
+       "Customer": "{{cust.name}}",
+       "Quantity billed": "{{qty}}",
+       "Unit price": "{{unit}}",
+       "Net sales": "{{net}}",
+       "VAT 12%": "{{vat}}",
+       "Total due": "{{gross}}",
+       "Prepared by": "A. Santos (billing clerk)",
+       "Approved by": "L. Reyes (sales manager)",
+       "Terms": "30 days"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "cust",
+      "pick": [
+       {
+        "name": "Mang Tomas Grocery",
+        "addr": "Cabanatuan City"
+       },
+       {
+        "name": "Bagong Silang Store",
+        "addr": "Talavera, Nueva Ecija"
+       },
+       {
+        "name": "Lucena Rice Mart",
+        "addr": "Lucena City"
+       },
+       {
+        "name": "Dalisay Wholesale",
+        "addr": "San Jose City"
+       },
+       {
+        "name": "Mercado Foods Inc.",
+        "addr": "Gapan City"
+       }
+      ]
+     },
+     {
+      "name": "prod",
+      "pick": [
+       {
+        "name": "Dinorado rice, 50 kg sack",
+        "price": 2250,
+        "cost": 1780
+       },
+       {
+        "name": "Jasmine rice, 50 kg sack",
+        "price": 2050,
+        "cost": 1610
+       },
+       {
+        "name": "Sinandomeng rice, 50 kg sack",
+        "price": 1950,
+        "cost": 1520
+       },
+       {
+        "name": "Premium Malagkit, 25 kg sack",
+        "price": 1450,
+        "cost": 1130
+       }
+      ]
+     },
+     {
+      "name": "unit",
+      "op": "add",
+      "terms": [
+       "prod.price",
+       0
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "qty",
+      "range": [
+       20,
+       60,
+       5
+      ]
+     },
+     {
+      "name": "net",
+      "op": "mul",
+      "a": "qty",
+      "b": "prod.price",
+      "fmt": "money"
+     },
+     {
+      "name": "vat",
+      "op": "pct",
+      "a": "net",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "net",
+       "vat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "cost",
+      "op": "mul",
+      "a": "qty",
+      "b": "prod.cost",
+      "fmt": "money"
+     },
+     {
+      "name": "limit",
+      "range": [
+       250000,
+       400000,
+       50000
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "so",
+      "range": [
+       3100,
+       3899,
+       1
+      ]
+     },
+     {
+      "name": "dr",
+      "range": [
+       5100,
+       5899,
+       1
+      ]
+     },
+     {
+      "name": "inv",
+      "range": [
+       7100,
+       7899,
+       1
+      ]
+     }
+    ]
+   },
+   "key": {
+    "decision": "POST",
+    "journal": [
+     {
+      "acct": "1100",
+      "dr": "gross"
+     },
+     {
+      "acct": "4000",
+      "cr": "net"
+     },
+     {
+      "acct": "2200",
+      "cr": "vat"
+     },
+     {
+      "acct": "5000",
+      "dr": "cost"
+     },
+     {
+      "acct": "1200",
+      "cr": "cost"
+     }
+    ],
+    "explanation": "Every document agrees: the order is within the {{limit}} credit limit and approved, the goods were delivered and signed for ({{qty}} sacks), and the invoice bills the same quantity at the list price. Record the sale (A/R, sales, output VAT) and the cost of the goods sold."
+   }
+  },
+  {
+   "seq": 2,
+   "template": {
+    "title": "Credit sale: {{qty}} sacks to {{cust.name}}",
+    "date": "2027-01-08",
+    "company": "Sinag Rice Trading Co.",
+    "docs": [
+     {
+      "type": "Sales order",
+      "fields": {
+       "Order no.": "SO-{{so}}",
+       "Date": "2027-01-07",
+       "Customer": "{{cust.name}} ({{cust.addr}})",
+       "Item": "{{prod.name}}",
+       "Quantity ordered": "{{qty}}",
+       "Unit price": "{{unit}}",
+       "Order total (incl. 12% VAT)": "{{gross}}",
+       "Customer credit limit": "{{limit}}",
+       "Balance owed before this order": "0.00",
+       "Credit approval": "Credit manager L. Reyes"
+      }
+     },
+     {
+      "type": "Delivery receipt",
+      "fields": {
+       "DR no.": "DR-{{dr}}",
+       "Date delivered": "2027-01-08",
+       "Item": "{{prod.name}}",
+       "Quantity delivered": "{{qty}}",
+       "Signed": "Received by: customer's storekeeper (signed)"
+      }
+     },
+     {
+      "type": "Sales invoice",
+      "fields": {
+       "Invoice no.": "INV-{{inv}}",
+       "Invoice date": "2027-01-08",
+       "Customer": "{{cust.name}}",
+       "Quantity billed": "{{qty}}",
+       "Unit price": "{{unit}}",
+       "Net sales": "{{net}}",
+       "VAT 12%": "{{vat}}",
+       "Total due": "{{gross}}",
+       "Prepared by": "A. Santos (billing clerk)",
+       "Approved by": "L. Reyes (sales manager)",
+       "Terms": "30 days"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "cust",
+      "pick": [
+       {
+        "name": "Mang Tomas Grocery",
+        "addr": "Cabanatuan City"
+       },
+       {
+        "name": "Bagong Silang Store",
+        "addr": "Talavera, Nueva Ecija"
+       },
+       {
+        "name": "Lucena Rice Mart",
+        "addr": "Lucena City"
+       },
+       {
+        "name": "Dalisay Wholesale",
+        "addr": "San Jose City"
+       },
+       {
+        "name": "Mercado Foods Inc.",
+        "addr": "Gapan City"
+       }
+      ]
+     },
+     {
+      "name": "prod",
+      "pick": [
+       {
+        "name": "Dinorado rice, 50 kg sack",
+        "price": 2250,
+        "cost": 1780
+       },
+       {
+        "name": "Jasmine rice, 50 kg sack",
+        "price": 2050,
+        "cost": 1610
+       },
+       {
+        "name": "Sinandomeng rice, 50 kg sack",
+        "price": 1950,
+        "cost": 1520
+       },
+       {
+        "name": "Premium Malagkit, 25 kg sack",
+        "price": 1450,
+        "cost": 1130
+       }
+      ]
+     },
+     {
+      "name": "unit",
+      "op": "add",
+      "terms": [
+       "prod.price",
+       0
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "qty",
+      "range": [
+       25,
+       70,
+       5
+      ]
+     },
+     {
+      "name": "net",
+      "op": "mul",
+      "a": "qty",
+      "b": "prod.price",
+      "fmt": "money"
+     },
+     {
+      "name": "vat",
+      "op": "pct",
+      "a": "net",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "net",
+       "vat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "cost",
+      "op": "mul",
+      "a": "qty",
+      "b": "prod.cost",
+      "fmt": "money"
+     },
+     {
+      "name": "limit",
+      "range": [
+       300000,
+       450000,
+       50000
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "so",
+      "range": [
+       3100,
+       3899,
+       1
+      ]
+     },
+     {
+      "name": "dr",
+      "range": [
+       5100,
+       5899,
+       1
+      ]
+     },
+     {
+      "name": "inv",
+      "range": [
+       7100,
+       7899,
+       1
+      ]
+     }
+    ]
+   },
+   "key": {
+    "decision": "POST",
+    "journal": [
+     {
+      "acct": "1100",
+      "dr": "gross"
+     },
+     {
+      "acct": "4000",
+      "cr": "net"
+     },
+     {
+      "acct": "2200",
+      "cr": "vat"
+     },
+     {
+      "acct": "5000",
+      "dr": "cost"
+     },
+     {
+      "acct": "1200",
+      "cr": "cost"
+     }
+    ],
+    "explanation": "A clean three-document match: authorized order, signed delivery receipt and a matching invoice. Post it."
+   }
+  },
+  {
+   "seq": 3,
+   "template": {
+    "title": "Credit sale: {{qty}} sacks to {{cust.name}}",
+    "date": "2027-01-11",
+    "company": "Sinag Rice Trading Co.",
+    "docs": [
+     {
+      "type": "Sales order",
+      "fields": {
+       "Order no.": "SO-{{so}}",
+       "Date": "2027-01-10",
+       "Customer": "{{cust.name}} ({{cust.addr}})",
+       "Item": "{{prod.name}}",
+       "Quantity ordered": "{{qty}}",
+       "Unit price": "{{unit}}",
+       "Order total (incl. 12% VAT)": "{{gross}}",
+       "Customer credit limit": "{{limit}}",
+       "Balance owed before this order": "0.00",
+       "Credit approval": "(blank)"
+      }
+     },
+     {
+      "type": "Delivery receipt",
+      "fields": {
+       "DR no.": "DR-{{dr}}",
+       "Date delivered": "2027-01-11",
+       "Item": "{{prod.name}}",
+       "Quantity delivered": "{{qty}}",
+       "Signed": "Received by: customer's storekeeper (signed)"
+      }
+     },
+     {
+      "type": "Sales invoice",
+      "fields": {
+       "Invoice no.": "INV-{{inv}}",
+       "Invoice date": "2027-01-11",
+       "Customer": "{{cust.name}}",
+       "Quantity billed": "{{qty}}",
+       "Unit price": "{{unit}}",
+       "Net sales": "{{net}}",
+       "VAT 12%": "{{vat}}",
+       "Total due": "{{gross}}",
+       "Prepared by": "A. Santos (billing clerk)",
+       "Approved by": "L. Reyes (sales manager)",
+       "Terms": "30 days"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "cust",
+      "pick": [
+       {
+        "name": "Mang Tomas Grocery",
+        "addr": "Cabanatuan City"
+       },
+       {
+        "name": "Bagong Silang Store",
+        "addr": "Talavera, Nueva Ecija"
+       },
+       {
+        "name": "Lucena Rice Mart",
+        "addr": "Lucena City"
+       },
+       {
+        "name": "Dalisay Wholesale",
+        "addr": "San Jose City"
+       },
+       {
+        "name": "Mercado Foods Inc.",
+        "addr": "Gapan City"
+       }
+      ]
+     },
+     {
+      "name": "prod",
+      "pick": [
+       {
+        "name": "Dinorado rice, 50 kg sack",
+        "price": 2250,
+        "cost": 1780
+       },
+       {
+        "name": "Jasmine rice, 50 kg sack",
+        "price": 2050,
+        "cost": 1610
+       },
+       {
+        "name": "Sinandomeng rice, 50 kg sack",
+        "price": 1950,
+        "cost": 1520
+       },
+       {
+        "name": "Premium Malagkit, 25 kg sack",
+        "price": 1450,
+        "cost": 1130
+       }
+      ]
+     },
+     {
+      "name": "unit",
+      "op": "add",
+      "terms": [
+       "prod.price",
+       0
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "qty",
+      "range": [
+       60,
+       80,
+       5
+      ]
+     },
+     {
+      "name": "net",
+      "op": "mul",
+      "a": "qty",
+      "b": "prod.price",
+      "fmt": "money"
+     },
+     {
+      "name": "vat",
+      "op": "pct",
+      "a": "net",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "net",
+       "vat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "cost",
+      "op": "mul",
+      "a": "qty",
+      "b": "prod.cost",
+      "fmt": "money"
+     },
+     {
+      "name": "limit",
+      "range": [
+       80000,
+       120000,
+       10000
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "so",
+      "range": [
+       3100,
+       3899,
+       1
+      ]
+     },
+     {
+      "name": "dr",
+      "range": [
+       5100,
+       5899,
+       1
+      ]
+     },
+     {
+      "name": "inv",
+      "range": [
+       7100,
+       7899,
+       1
+      ]
+     }
+    ]
+   },
+   "key": {
+    "decision": "HOLD",
+    "failed_control": "CREDIT_LIMIT",
+    "explanation": "The order total of {{gross}} is above the customer's {{limit}} credit limit and the credit approval line is blank. Nobody authorized exceeding the limit, so the sale should be held for approval."
+   }
+  },
+  {
+   "seq": 4,
+   "template": {
+    "title": "Credit sale: {{qty}} sacks to {{cust.name}}",
+    "date": "2027-01-12",
+    "company": "Sinag Rice Trading Co.",
+    "docs": [
+     {
+      "type": "Sales order",
+      "fields": {
+       "Order no.": "SO-{{so}}",
+       "Date": "2027-01-11",
+       "Customer": "{{cust.name}} ({{cust.addr}})",
+       "Item": "{{prod.name}}",
+       "Quantity ordered": "{{qty}}",
+       "Unit price": "{{unit}}",
+       "Order total (incl. 12% VAT)": "{{gross}}",
+       "Customer credit limit": "{{limit}}",
+       "Balance owed before this order": "0.00",
+       "Credit approval": "Credit manager L. Reyes"
+      }
+     },
+     {
+      "type": "Delivery receipt",
+      "fields": {
+       "DR no.": "—",
+       "Status": "NOT ATTACHED: the warehouse could not find a signed delivery receipt for this order"
+      }
+     },
+     {
+      "type": "Sales invoice",
+      "fields": {
+       "Invoice no.": "INV-{{inv}}",
+       "Invoice date": "2027-01-12",
+       "Customer": "{{cust.name}}",
+       "Quantity billed": "{{qty}}",
+       "Unit price": "{{unit}}",
+       "Net sales": "{{net}}",
+       "VAT 12%": "{{vat}}",
+       "Total due": "{{gross}}",
+       "Prepared by": "A. Santos (billing clerk)",
+       "Approved by": "L. Reyes (sales manager)",
+       "Terms": "30 days"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "cust",
+      "pick": [
+       {
+        "name": "Mang Tomas Grocery",
+        "addr": "Cabanatuan City"
+       },
+       {
+        "name": "Bagong Silang Store",
+        "addr": "Talavera, Nueva Ecija"
+       },
+       {
+        "name": "Lucena Rice Mart",
+        "addr": "Lucena City"
+       },
+       {
+        "name": "Dalisay Wholesale",
+        "addr": "San Jose City"
+       },
+       {
+        "name": "Mercado Foods Inc.",
+        "addr": "Gapan City"
+       }
+      ]
+     },
+     {
+      "name": "prod",
+      "pick": [
+       {
+        "name": "Dinorado rice, 50 kg sack",
+        "price": 2250,
+        "cost": 1780
+       },
+       {
+        "name": "Jasmine rice, 50 kg sack",
+        "price": 2050,
+        "cost": 1610
+       },
+       {
+        "name": "Sinandomeng rice, 50 kg sack",
+        "price": 1950,
+        "cost": 1520
+       },
+       {
+        "name": "Premium Malagkit, 25 kg sack",
+        "price": 1450,
+        "cost": 1130
+       }
+      ]
+     },
+     {
+      "name": "unit",
+      "op": "add",
+      "terms": [
+       "prod.price",
+       0
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "qty",
+      "range": [
+       20,
+       50,
+       5
+      ]
+     },
+     {
+      "name": "net",
+      "op": "mul",
+      "a": "qty",
+      "b": "prod.price",
+      "fmt": "money"
+     },
+     {
+      "name": "vat",
+      "op": "pct",
+      "a": "net",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "net",
+       "vat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "cost",
+      "op": "mul",
+      "a": "qty",
+      "b": "prod.cost",
+      "fmt": "money"
+     },
+     {
+      "name": "limit",
+      "range": [
+       250000,
+       400000,
+       50000
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "so",
+      "range": [
+       3100,
+       3899,
+       1
+      ]
+     },
+     {
+      "name": "dr",
+      "range": [
+       5100,
+       5899,
+       1
+      ]
+     },
+     {
+      "name": "inv",
+      "range": [
+       7100,
+       7899,
+       1
+      ]
+     }
+    ]
+   },
+   "key": {
+    "decision": "HOLD",
+    "failed_control": "NO_SHIPPING_NOTICE",
+    "explanation": "There is an invoice but no signed delivery receipt, so there is no proof that the {{qty}} sacks left the warehouse. Revenue must not be recorded for goods that may not have been shipped."
+   }
+  },
+  {
+   "seq": 5,
+   "template": {
+    "title": "Invoice INV-{{inv_ref_no}}: {{qty}} sacks to {{cust.name}}",
+    "date": "2027-01-13",
+    "company": "Sinag Rice Trading Co.",
+    "docs": [
+     {
+      "type": "Sales order",
+      "fields": {
+       "Order no.": "SO-{{so}}",
+       "Date": "2027-01-06",
+       "Customer": "{{cust.name}} ({{cust.addr}})",
+       "Item": "{{prod.name}}",
+       "Quantity ordered": "{{qty}}",
+       "Unit price": "{{unit}}",
+       "Order total (incl. 12% VAT)": "{{gross}}",
+       "Customer credit limit": "{{limit}}",
+       "Balance owed before this order": "0.00",
+       "Credit approval": "Credit manager L. Reyes"
+      }
+     },
+     {
+      "type": "Delivery receipt",
+      "fields": {
+       "DR no.": "DR-{{dr}}",
+       "Date delivered": "2027-01-07",
+       "Item": "{{prod.name}}",
+       "Quantity delivered": "{{qty}}",
+       "Signed": "Received by: customer's storekeeper (signed)"
+      }
+     },
+     {
+      "type": "Sales invoice",
+      "fields": {
+       "Invoice no.": "INV-{{inv_ref_no}}",
+       "Invoice date": "2027-01-13",
+       "Customer": "{{cust.name}}",
+       "Quantity billed": "{{qty}}",
+       "Unit price": "{{unit}}",
+       "Net sales": "{{net}}",
+       "VAT 12%": "{{vat}}",
+       "Total due": "{{gross}}",
+       "Prepared by": "A. Santos (billing clerk)",
+       "Approved by": "L. Reyes (sales manager)",
+       "Terms": "30 days"
+      }
+     },
+     {
+      "type": "Invoice register extract",
+      "fields": {
+       "Invoice no.": "INV-{{inv_ref_no}}",
+       "Already posted on": "2027-01-07",
+       "Customer": "{{cust.name}}",
+       "Amount": "{{gross}}",
+       "Status": "POSTED to the ledger"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "cust",
+      "pick": [
+       {
+        "name": "Mang Tomas Grocery",
+        "addr": "Cabanatuan City"
+       },
+       {
+        "name": "Bagong Silang Store",
+        "addr": "Talavera, Nueva Ecija"
+       },
+       {
+        "name": "Lucena Rice Mart",
+        "addr": "Lucena City"
+       },
+       {
+        "name": "Dalisay Wholesale",
+        "addr": "San Jose City"
+       },
+       {
+        "name": "Mercado Foods Inc.",
+        "addr": "Gapan City"
+       }
+      ]
+     },
+     {
+      "name": "prod",
+      "pick": [
+       {
+        "name": "Dinorado rice, 50 kg sack",
+        "price": 2250,
+        "cost": 1780
+       },
+       {
+        "name": "Jasmine rice, 50 kg sack",
+        "price": 2050,
+        "cost": 1610
+       },
+       {
+        "name": "Sinandomeng rice, 50 kg sack",
+        "price": 1950,
+        "cost": 1520
+       },
+       {
+        "name": "Premium Malagkit, 25 kg sack",
+        "price": 1450,
+        "cost": 1130
+       }
+      ]
+     },
+     {
+      "name": "unit",
+      "op": "add",
+      "terms": [
+       "prod.price",
+       0
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "qty",
+      "range": [
+       20,
+       60,
+       5
+      ]
+     },
+     {
+      "name": "net",
+      "op": "mul",
+      "a": "qty",
+      "b": "prod.price",
+      "fmt": "money"
+     },
+     {
+      "name": "vat",
+      "op": "pct",
+      "a": "net",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "net",
+       "vat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "cost",
+      "op": "mul",
+      "a": "qty",
+      "b": "prod.cost",
+      "fmt": "money"
+     },
+     {
+      "name": "limit",
+      "range": [
+       250000,
+       400000,
+       50000
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "so",
+      "range": [
+       3100,
+       3899,
+       1
+      ]
+     },
+     {
+      "name": "dr",
+      "range": [
+       5100,
+       5899,
+       1
+      ]
+     },
+     {
+      "name": "inv",
+      "range": [
+       7100,
+       7899,
+       1
+      ]
+     },
+     {
+      "name": "inv_ref_no",
+      "range": [
+       7000,
+       7099,
+       1
+      ]
+     }
+    ]
+   },
+   "key": {
+    "decision": "HOLD",
+    "failed_control": "DUP_INVOICE",
+    "explanation": "The register shows INV-{{inv_ref_no}} for {{gross}} was already posted on January 7. This is the same invoice, billed again on January 13. Posting it would record the sale twice."
+   }
+  },
+  {
+   "seq": 6,
+   "template": {
+    "title": "Credit sale: {{qty}} sacks billed to {{cust.name}}",
+    "date": "2027-01-14",
+    "company": "Sinag Rice Trading Co.",
+    "docs": [
+     {
+      "type": "Sales order",
+      "fields": {
+       "Order no.": "SO-{{so}}",
+       "Date": "2027-01-13",
+       "Customer": "{{cust.name}} ({{cust.addr}})",
+       "Item": "{{prod.name}}",
+       "Quantity ordered": "{{qty}}",
+       "Unit price": "{{unit}}",
+       "Order total (incl. 12% VAT)": "{{gross}}",
+       "Customer credit limit": "{{limit}}",
+       "Balance owed before this order": "0.00",
+       "Credit approval": "Credit manager L. Reyes"
+      }
+     },
+     {
+      "type": "Delivery receipt",
+      "fields": {
+       "DR no.": "DR-{{dr}}",
+       "Date delivered": "2027-01-14",
+       "Item": "{{prod.name}}",
+       "Quantity delivered": "{{short}}",
+       "Signed": "Received by: customer's storekeeper (signed)"
+      }
+     },
+     {
+      "type": "Sales invoice",
+      "fields": {
+       "Invoice no.": "INV-{{inv}}",
+       "Invoice date": "2027-01-14",
+       "Customer": "{{cust.name}}",
+       "Quantity billed": "{{qty}}",
+       "Unit price": "{{unit}}",
+       "Net sales": "{{net}}",
+       "VAT 12%": "{{vat}}",
+       "Total due": "{{gross}}",
+       "Prepared by": "A. Santos (billing clerk)",
+       "Approved by": "L. Reyes (sales manager)",
+       "Terms": "30 days"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "cust",
+      "pick": [
+       {
+        "name": "Mang Tomas Grocery",
+        "addr": "Cabanatuan City"
+       },
+       {
+        "name": "Bagong Silang Store",
+        "addr": "Talavera, Nueva Ecija"
+       },
+       {
+        "name": "Lucena Rice Mart",
+        "addr": "Lucena City"
+       },
+       {
+        "name": "Dalisay Wholesale",
+        "addr": "San Jose City"
+       },
+       {
+        "name": "Mercado Foods Inc.",
+        "addr": "Gapan City"
+       }
+      ]
+     },
+     {
+      "name": "prod",
+      "pick": [
+       {
+        "name": "Dinorado rice, 50 kg sack",
+        "price": 2250,
+        "cost": 1780
+       },
+       {
+        "name": "Jasmine rice, 50 kg sack",
+        "price": 2050,
+        "cost": 1610
+       },
+       {
+        "name": "Sinandomeng rice, 50 kg sack",
+        "price": 1950,
+        "cost": 1520
+       },
+       {
+        "name": "Premium Malagkit, 25 kg sack",
+        "price": 1450,
+        "cost": 1130
+       }
+      ]
+     },
+     {
+      "name": "unit",
+      "op": "add",
+      "terms": [
+       "prod.price",
+       0
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "qty",
+      "range": [
+       30,
+       70,
+       5
+      ]
+     },
+     {
+      "name": "net",
+      "op": "mul",
+      "a": "qty",
+      "b": "prod.price",
+      "fmt": "money"
+     },
+     {
+      "name": "vat",
+      "op": "pct",
+      "a": "net",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "net",
+       "vat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "cost",
+      "op": "mul",
+      "a": "qty",
+      "b": "prod.cost",
+      "fmt": "money"
+     },
+     {
+      "name": "short",
+      "op": "sub",
+      "a": "qty",
+      "b": 10
+     },
+     {
+      "name": "limit",
+      "range": [
+       250000,
+       400000,
+       50000
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "so",
+      "range": [
+       3100,
+       3899,
+       1
+      ]
+     },
+     {
+      "name": "dr",
+      "range": [
+       5100,
+       5899,
+       1
+      ]
+     },
+     {
+      "name": "inv",
+      "range": [
+       7100,
+       7899,
+       1
+      ]
+     }
+    ]
+   },
+   "key": {
+    "decision": "HOLD",
+    "failed_control": "QTY_MISMATCH",
+    "explanation": "The delivery receipt shows {{short}} sacks delivered, but the invoice bills {{qty}}. Ten sacks are being billed that were never shipped."
+   }
+  },
+  {
+   "seq": 7,
+   "template": {
+    "title": "Credit sale: {{qty}} sacks to {{cust.name}}",
+    "date": "2027-01-15",
+    "company": "Sinag Rice Trading Co.",
+    "docs": [
+     {
+      "type": "Sales order",
+      "fields": {
+       "Order no.": "SO-{{so}}",
+       "Date": "2027-01-14",
+       "Customer": "{{cust.name}} ({{cust.addr}})",
+       "Item": "{{prod.name}}",
+       "Quantity ordered": "{{qty}}",
+       "Unit price": "{{unit}}",
+       "Order total (incl. 12% VAT)": "{{gross}}",
+       "Customer credit limit": "{{limit}}",
+       "Balance owed before this order": "0.00",
+       "Credit approval": "Credit manager L. Reyes"
+      }
+     },
+     {
+      "type": "Delivery receipt",
+      "fields": {
+       "DR no.": "DR-{{dr}}",
+       "Date delivered": "2027-01-15",
+       "Item": "{{prod.name}}",
+       "Quantity delivered": "{{qty}}",
+       "Signed": "Received by: customer's storekeeper (signed)"
+      }
+     },
+     {
+      "type": "Sales invoice",
+      "fields": {
+       "Invoice no.": "INV-{{inv}}",
+       "Invoice date": "2027-01-15",
+       "Customer": "{{cust.name}}",
+       "Quantity billed": "{{qty}}",
+       "Unit price": "{{bad_price}}",
+       "Net sales": "{{net}}",
+       "VAT 12%": "{{vat}}",
+       "Total due": "{{gross}}",
+       "Prepared by": "A. Santos (billing clerk)",
+       "Approved by": "L. Reyes (sales manager)",
+       "Terms": "30 days"
+      }
+     },
+     {
+      "type": "Approved price list",
+      "fields": {
+       "Item": "{{prod.name}}",
+       "Approved unit price": "{{unit}}",
+       "Effective": "2027-01-01"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "cust",
+      "pick": [
+       {
+        "name": "Mang Tomas Grocery",
+        "addr": "Cabanatuan City"
+       },
+       {
+        "name": "Bagong Silang Store",
+        "addr": "Talavera, Nueva Ecija"
+       },
+       {
+        "name": "Lucena Rice Mart",
+        "addr": "Lucena City"
+       },
+       {
+        "name": "Dalisay Wholesale",
+        "addr": "San Jose City"
+       },
+       {
+        "name": "Mercado Foods Inc.",
+        "addr": "Gapan City"
+       }
+      ]
+     },
+     {
+      "name": "prod",
+      "pick": [
+       {
+        "name": "Dinorado rice, 50 kg sack",
+        "price": 2250,
+        "cost": 1780
+       },
+       {
+        "name": "Jasmine rice, 50 kg sack",
+        "price": 2050,
+        "cost": 1610
+       },
+       {
+        "name": "Sinandomeng rice, 50 kg sack",
+        "price": 1950,
+        "cost": 1520
+       },
+       {
+        "name": "Premium Malagkit, 25 kg sack",
+        "price": 1450,
+        "cost": 1130
+       }
+      ]
+     },
+     {
+      "name": "unit",
+      "op": "add",
+      "terms": [
+       "prod.price",
+       0
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "bad_price",
+      "op": "add",
+      "terms": [
+       "prod.price",
+       150
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "qty",
+      "range": [
+       20,
+       60,
+       5
+      ]
+     },
+     {
+      "name": "net",
+      "op": "mul",
+      "a": "qty",
+      "b": "bad_price",
+      "fmt": "money"
+     },
+     {
+      "name": "vat",
+      "op": "pct",
+      "a": "net",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "net",
+       "vat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "cost",
+      "op": "mul",
+      "a": "qty",
+      "b": "prod.cost",
+      "fmt": "money"
+     },
+     {
+      "name": "limit",
+      "range": [
+       300000,
+       450000,
+       50000
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "so",
+      "range": [
+       3100,
+       3899,
+       1
+      ]
+     },
+     {
+      "name": "dr",
+      "range": [
+       5100,
+       5899,
+       1
+      ]
+     },
+     {
+      "name": "inv",
+      "range": [
+       7100,
+       7899,
+       1
+      ]
+     }
+    ]
+   },
+   "key": {
+    "decision": "HOLD",
+    "failed_control": "PRICE_MISMATCH",
+    "explanation": "The invoice charges {{bad_price}} per sack but the approved price list says {{unit}}. The customer is being overbilled and the price was not authorized."
+   }
+  },
+  {
+   "seq": 8,
+   "template": {
+    "title": "Collection from {{cust.name}}",
+    "date": "2027-01-18",
+    "company": "Sinag Rice Trading Co.",
+    "vars": [
+     {
+      "name": "cust",
+      "pick": [
+       {
+        "name": "Mang Tomas Grocery",
+        "addr": "Cabanatuan City"
+       },
+       {
+        "name": "Bagong Silang Store",
+        "addr": "Talavera, Nueva Ecija"
+       },
+       {
+        "name": "Lucena Rice Mart",
+        "addr": "Lucena City"
+       },
+       {
+        "name": "Dalisay Wholesale",
+        "addr": "San Jose City"
+       },
+       {
+        "name": "Mercado Foods Inc.",
+        "addr": "Gapan City"
+       }
+      ]
+     },
+     {
+      "name": "amt",
+      "range": [
+       60000,
+       160000,
+       5000
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "or",
+      "range": [
+       2200,
+       2899,
+       1
+      ]
+     }
+    ],
+    "docs": [
+     {
+      "type": "Official receipt",
+      "fields": {
+       "OR no.": "OR-{{or}}",
+       "Received from": "{{cust.name}}",
+       "Amount": "{{amt}}",
+       "In payment of": "Invoice dated 2027-01-05",
+       "Issued by": "Cashier R. Dizon"
+      }
+     },
+     {
+      "type": "Bank deposit slip",
+      "fields": {
+       "Date": "2027-01-18",
+       "Deposited to": "Sinag operating account",
+       "Amount": "{{amt}}",
+       "Validated by bank": "Yes"
+      }
+     },
+     {
+      "type": "Customer ledger card",
+      "fields": {
+       "Customer": "{{cust.name}}",
+       "Balance before this payment": "{{amt}}",
+       "Payment applied": "{{amt}}"
+      }
+     }
+    ]
+   },
+   "key": {
+    "decision": "POST",
+    "journal": [
+     {
+      "acct": "1000",
+      "dr": "amt"
+     },
+     {
+      "acct": "1100",
+      "cr": "amt"
+     }
+    ],
+    "explanation": "The receipt, the validated deposit slip and the customer's ledger card all show {{amt}}. Debit cash in bank and credit accounts receivable."
+   }
+  },
+  {
+   "seq": 9,
+   "template": {
+    "title": "Sales return: {{rq}} sacks from {{cust.name}}",
+    "date": "2027-01-20",
+    "company": "Sinag Rice Trading Co.",
+    "vars": [
+     {
+      "name": "cust",
+      "pick": [
+       {
+        "name": "Mang Tomas Grocery",
+        "addr": "Cabanatuan City"
+       },
+       {
+        "name": "Bagong Silang Store",
+        "addr": "Talavera, Nueva Ecija"
+       },
+       {
+        "name": "Lucena Rice Mart",
+        "addr": "Lucena City"
+       },
+       {
+        "name": "Dalisay Wholesale",
+        "addr": "San Jose City"
+       },
+       {
+        "name": "Mercado Foods Inc.",
+        "addr": "Gapan City"
+       }
+      ]
+     },
+     {
+      "name": "prod",
+      "pick": [
+       {
+        "name": "Dinorado rice, 50 kg sack",
+        "price": 2250,
+        "cost": 1780
+       },
+       {
+        "name": "Jasmine rice, 50 kg sack",
+        "price": 2050,
+        "cost": 1610
+       },
+       {
+        "name": "Sinandomeng rice, 50 kg sack",
+        "price": 1950,
+        "cost": 1520
+       },
+       {
+        "name": "Premium Malagkit, 25 kg sack",
+        "price": 1450,
+        "cost": 1130
+       }
+      ]
+     },
+     {
+      "name": "unit",
+      "op": "add",
+      "terms": [
+       "prod.price",
+       0
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "rq",
+      "range": [
+       3,
+       12,
+       1
+      ]
+     },
+     {
+      "name": "net",
+      "op": "mul",
+      "a": "rq",
+      "b": "prod.price",
+      "fmt": "money"
+     },
+     {
+      "name": "vat",
+      "op": "pct",
+      "a": "net",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "net",
+       "vat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "cost",
+      "op": "mul",
+      "a": "rq",
+      "b": "prod.cost",
+      "fmt": "money"
+     },
+     {
+      "name": "cm",
+      "range": [
+       410,
+       899,
+       1
+      ]
+     },
+     {
+      "name": "rr",
+      "range": [
+       610,
+       999,
+       1
+      ]
+     }
+    ],
+    "docs": [
+     {
+      "type": "Receiving report",
+      "fields": {
+       "RR no.": "RR-{{rr}}",
+       "Returned by": "{{cust.name}}",
+       "Item": "{{prod.name}}",
+       "Quantity received back": "{{rq}}",
+       "Condition": "Damaged in transit; inspected by the warehouse head"
+      }
+     },
+     {
+      "type": "Credit memo",
+      "fields": {
+       "CM no.": "CM-{{cm}}",
+       "Customer": "{{cust.name}}",
+       "Quantity": "{{rq}}",
+       "Net": "{{net}}",
+       "VAT 12%": "{{vat}}",
+       "Credit total": "{{gross}}",
+       "Approved by": "Sales manager L. Reyes (signed)"
+      }
+     }
+    ]
+   },
+   "key": {
+    "decision": "POST",
+    "journal": [
+     {
+      "acct": "4010",
+      "dr": "net"
+     },
+     {
+      "acct": "2200",
+      "dr": "vat"
+     },
+     {
+      "acct": "1100",
+      "cr": "gross"
+     },
+     {
+      "acct": "1200",
+      "dr": "cost"
+     },
+     {
+      "acct": "5000",
+      "cr": "cost"
+     }
+    ],
+    "explanation": "The goods came back (receiving report) and an approved credit memo supports reducing the customer's balance by {{gross}}. Record the return and put the goods back into inventory at cost."
+   }
+  },
+  {
+   "seq": 10,
+   "template": {
+    "title": "Sales return: {{rq}} sacks from {{cust.name}}",
+    "date": "2027-01-21",
+    "company": "Sinag Rice Trading Co.",
+    "vars": [
+     {
+      "name": "cust",
+      "pick": [
+       {
+        "name": "Mang Tomas Grocery",
+        "addr": "Cabanatuan City"
+       },
+       {
+        "name": "Bagong Silang Store",
+        "addr": "Talavera, Nueva Ecija"
+       },
+       {
+        "name": "Lucena Rice Mart",
+        "addr": "Lucena City"
+       },
+       {
+        "name": "Dalisay Wholesale",
+        "addr": "San Jose City"
+       },
+       {
+        "name": "Mercado Foods Inc.",
+        "addr": "Gapan City"
+       }
+      ]
+     },
+     {
+      "name": "prod",
+      "pick": [
+       {
+        "name": "Dinorado rice, 50 kg sack",
+        "price": 2250,
+        "cost": 1780
+       },
+       {
+        "name": "Jasmine rice, 50 kg sack",
+        "price": 2050,
+        "cost": 1610
+       },
+       {
+        "name": "Sinandomeng rice, 50 kg sack",
+        "price": 1950,
+        "cost": 1520
+       },
+       {
+        "name": "Premium Malagkit, 25 kg sack",
+        "price": 1450,
+        "cost": 1130
+       }
+      ]
+     },
+     {
+      "name": "unit",
+      "op": "add",
+      "terms": [
+       "prod.price",
+       0
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "rq",
+      "range": [
+       5,
+       20,
+       1
+      ]
+     },
+     {
+      "name": "net",
+      "op": "mul",
+      "a": "rq",
+      "b": "prod.price",
+      "fmt": "money"
+     },
+     {
+      "name": "vat",
+      "op": "pct",
+      "a": "net",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "net",
+       "vat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "rr",
+      "range": [
+       610,
+       999,
+       1
+      ]
+     }
+    ],
+    "docs": [
+     {
+      "type": "Receiving report",
+      "fields": {
+       "RR no.": "RR-{{rr}}",
+       "Returned by": "{{cust.name}}",
+       "Item": "{{prod.name}}",
+       "Quantity received back": "{{rq}}"
+      }
+     },
+     {
+      "type": "Credit memo",
+      "fields": {
+       "CM no.": "—",
+       "Status": "NONE: the billing clerk prepared a journal entry to credit the customer {{gross}} directly"
+      }
+     }
+    ]
+   },
+   "key": {
+    "decision": "HOLD",
+    "failed_control": "NO_CREDIT_MEMO",
+    "explanation": "A return reduces what the customer owes, so it needs a credit memo approved by the sales manager. There is none, only a request to credit {{gross}} directly."
+   }
+  },
+  {
+   "seq": 11,
+   "template": {
+    "title": "Credit sale: {{qty}} sacks to {{cust.name}}",
+    "date": "2027-01-31",
+    "company": "Sinag Rice Trading Co.",
+    "docs": [
+     {
+      "type": "Sales order",
+      "fields": {
+       "Order no.": "SO-{{so}}",
+       "Date": "2027-01-28",
+       "Customer": "{{cust.name}} ({{cust.addr}})",
+       "Item": "{{prod.name}}",
+       "Quantity ordered": "{{qty}}",
+       "Unit price": "{{unit}}",
+       "Order total (incl. 12% VAT)": "{{gross}}",
+       "Customer credit limit": "{{limit}}",
+       "Balance owed before this order": "0.00",
+       "Credit approval": "Credit manager L. Reyes"
+      }
+     },
+     {
+      "type": "Delivery receipt",
+      "fields": {
+       "DR no.": "DR-{{dr}}",
+       "Date delivered": "2027-02-02",
+       "Item": "{{prod.name}}",
+       "Quantity delivered": "{{qty}}",
+       "Signed": "Received by: customer's storekeeper (signed)"
+      }
+     },
+     {
+      "type": "Sales invoice",
+      "fields": {
+       "Invoice no.": "INV-{{inv}}",
+       "Invoice date": "2027-01-31",
+       "Customer": "{{cust.name}}",
+       "Quantity billed": "{{qty}}",
+       "Unit price": "{{unit}}",
+       "Net sales": "{{net}}",
+       "VAT 12%": "{{vat}}",
+       "Total due": "{{gross}}",
+       "Prepared by": "A. Santos (billing clerk)",
+       "Approved by": "L. Reyes (sales manager)",
+       "Terms": "30 days"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "cust",
+      "pick": [
+       {
+        "name": "Mang Tomas Grocery",
+        "addr": "Cabanatuan City"
+       },
+       {
+        "name": "Bagong Silang Store",
+        "addr": "Talavera, Nueva Ecija"
+       },
+       {
+        "name": "Lucena Rice Mart",
+        "addr": "Lucena City"
+       },
+       {
+        "name": "Dalisay Wholesale",
+        "addr": "San Jose City"
+       },
+       {
+        "name": "Mercado Foods Inc.",
+        "addr": "Gapan City"
+       }
+      ]
+     },
+     {
+      "name": "prod",
+      "pick": [
+       {
+        "name": "Dinorado rice, 50 kg sack",
+        "price": 2250,
+        "cost": 1780
+       },
+       {
+        "name": "Jasmine rice, 50 kg sack",
+        "price": 2050,
+        "cost": 1610
+       },
+       {
+        "name": "Sinandomeng rice, 50 kg sack",
+        "price": 1950,
+        "cost": 1520
+       },
+       {
+        "name": "Premium Malagkit, 25 kg sack",
+        "price": 1450,
+        "cost": 1130
+       }
+      ]
+     },
+     {
+      "name": "unit",
+      "op": "add",
+      "terms": [
+       "prod.price",
+       0
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "qty",
+      "range": [
+       20,
+       60,
+       5
+      ]
+     },
+     {
+      "name": "net",
+      "op": "mul",
+      "a": "qty",
+      "b": "prod.price",
+      "fmt": "money"
+     },
+     {
+      "name": "vat",
+      "op": "pct",
+      "a": "net",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "net",
+       "vat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "cost",
+      "op": "mul",
+      "a": "qty",
+      "b": "prod.cost",
+      "fmt": "money"
+     },
+     {
+      "name": "limit",
+      "range": [
+       250000,
+       400000,
+       50000
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "so",
+      "range": [
+       3100,
+       3899,
+       1
+      ]
+     },
+     {
+      "name": "dr",
+      "range": [
+       5100,
+       5899,
+       1
+      ]
+     },
+     {
+      "name": "inv",
+      "range": [
+       7100,
+       7899,
+       1
+      ]
+     }
+    ]
+   },
+   "key": {
+    "decision": "HOLD",
+    "failed_control": "CUTOFF",
+    "explanation": "The goods were delivered on February 2, but the invoice is dated January 31 and would put the revenue in January. The sale belongs to the next period."
+   }
+  },
+  {
+   "seq": 12,
+   "template": {
+    "title": "Credit sale: {{qty}} sacks to {{cust.name}}",
+    "date": "2027-01-26",
+    "company": "Sinag Rice Trading Co.",
+    "docs": [
+     {
+      "type": "Sales order",
+      "fields": {
+       "Order no.": "SO-{{so}}",
+       "Date": "2027-01-25",
+       "Customer": "{{cust.name}} ({{cust.addr}})",
+       "Item": "{{prod.name}}",
+       "Quantity ordered": "{{qty}}",
+       "Unit price": "{{unit}}",
+       "Order total (incl. 12% VAT)": "{{gross}}",
+       "Customer credit limit": "{{limit}}",
+       "Balance owed before this order": "0.00",
+       "Credit approval": "Credit manager L. Reyes"
+      }
+     },
+     {
+      "type": "Delivery receipt",
+      "fields": {
+       "DR no.": "DR-{{dr}}",
+       "Date delivered": "2027-01-26",
+       "Item": "{{prod.name}}",
+       "Quantity delivered": "{{qty}}",
+       "Signed": "Received by: customer's storekeeper (signed)"
+      }
+     },
+     {
+      "type": "Sales invoice",
+      "fields": {
+       "Invoice no.": "INV-{{inv}}",
+       "Invoice date": "2027-01-26",
+       "Customer": "{{cust.name}}",
+       "Quantity billed": "{{qty}}",
+       "Unit price": "{{unit}}",
+       "Net sales": "{{net}}",
+       "VAT 12%": "{{vat}}",
+       "Total due": "{{gross}}",
+       "Prepared by": "M. Cruz (billing clerk)",
+       "Approved by": "M. Cruz (billing clerk)",
+       "Terms": "30 days"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "cust",
+      "pick": [
+       {
+        "name": "Mang Tomas Grocery",
+        "addr": "Cabanatuan City"
+       },
+       {
+        "name": "Bagong Silang Store",
+        "addr": "Talavera, Nueva Ecija"
+       },
+       {
+        "name": "Lucena Rice Mart",
+        "addr": "Lucena City"
+       },
+       {
+        "name": "Dalisay Wholesale",
+        "addr": "San Jose City"
+       },
+       {
+        "name": "Mercado Foods Inc.",
+        "addr": "Gapan City"
+       }
+      ]
+     },
+     {
+      "name": "prod",
+      "pick": [
+       {
+        "name": "Dinorado rice, 50 kg sack",
+        "price": 2250,
+        "cost": 1780
+       },
+       {
+        "name": "Jasmine rice, 50 kg sack",
+        "price": 2050,
+        "cost": 1610
+       },
+       {
+        "name": "Sinandomeng rice, 50 kg sack",
+        "price": 1950,
+        "cost": 1520
+       },
+       {
+        "name": "Premium Malagkit, 25 kg sack",
+        "price": 1450,
+        "cost": 1130
+       }
+      ]
+     },
+     {
+      "name": "unit",
+      "op": "add",
+      "terms": [
+       "prod.price",
+       0
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "qty",
+      "range": [
+       20,
+       60,
+       5
+      ]
+     },
+     {
+      "name": "net",
+      "op": "mul",
+      "a": "qty",
+      "b": "prod.price",
+      "fmt": "money"
+     },
+     {
+      "name": "vat",
+      "op": "pct",
+      "a": "net",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "net",
+       "vat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "cost",
+      "op": "mul",
+      "a": "qty",
+      "b": "prod.cost",
+      "fmt": "money"
+     },
+     {
+      "name": "limit",
+      "range": [
+       250000,
+       400000,
+       50000
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "so",
+      "range": [
+       3100,
+       3899,
+       1
+      ]
+     },
+     {
+      "name": "dr",
+      "range": [
+       5100,
+       5899,
+       1
+      ]
+     },
+     {
+      "name": "inv",
+      "range": [
+       7100,
+       7899,
+       1
+      ]
+     }
+    ]
+   },
+   "key": {
+    "decision": "HOLD",
+    "failed_control": "SOD",
+    "explanation": "M. Cruz both prepared and approved this invoice. One person should not be able to create and authorize the same sale."
+   }
+  },
+  {
+   "seq": 13,
+   "template": {
+    "title": "Credit sale: {{qty}} sacks to {{cust.name}}",
+    "date": "2027-01-27",
+    "company": "Sinag Rice Trading Co.",
+    "docs": [
+     {
+      "type": "Sales order",
+      "fields": {
+       "Order no.": "SO-{{so}}",
+       "Date": "2027-01-26",
+       "Customer": "{{cust.name}} ({{cust.addr}})",
+       "Item": "{{prod.name}}",
+       "Quantity ordered": "{{qty}}",
+       "Unit price": "{{unit}}",
+       "Order total (incl. 12% VAT)": "{{gross}}",
+       "Customer credit limit": "{{limit}}",
+       "Balance owed before this order": "0.00",
+       "Credit approval": "Credit manager L. Reyes"
+      }
+     },
+     {
+      "type": "Delivery receipt",
+      "fields": {
+       "DR no.": "DR-{{dr}}",
+       "Date delivered": "2027-01-27",
+       "Item": "{{prod.name}}",
+       "Quantity delivered": "{{qty}}",
+       "Signed": "Received by: customer's storekeeper (signed)"
+      }
+     },
+     {
+      "type": "Sales invoice",
+      "fields": {
+       "Invoice no.": "INV-{{inv}}",
+       "Invoice date": "2027-01-27",
+       "Customer": "{{cust.name}}",
+       "Quantity billed": "{{qty}}",
+       "Unit price": "{{unit}}",
+       "Net sales": "{{net}}",
+       "VAT 12%": "{{vat}}",
+       "Total due": "{{gross}}",
+       "Prepared by": "A. Santos (billing clerk)",
+       "Approved by": "L. Reyes (sales manager)",
+       "Terms": "30 days"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "cust",
+      "pick": [
+       {
+        "name": "Mang Tomas Grocery",
+        "addr": "Cabanatuan City"
+       },
+       {
+        "name": "Bagong Silang Store",
+        "addr": "Talavera, Nueva Ecija"
+       },
+       {
+        "name": "Lucena Rice Mart",
+        "addr": "Lucena City"
+       },
+       {
+        "name": "Dalisay Wholesale",
+        "addr": "San Jose City"
+       },
+       {
+        "name": "Mercado Foods Inc.",
+        "addr": "Gapan City"
+       }
+      ]
+     },
+     {
+      "name": "prod",
+      "pick": [
+       {
+        "name": "Dinorado rice, 50 kg sack",
+        "price": 2250,
+        "cost": 1780
+       },
+       {
+        "name": "Jasmine rice, 50 kg sack",
+        "price": 2050,
+        "cost": 1610
+       },
+       {
+        "name": "Sinandomeng rice, 50 kg sack",
+        "price": 1950,
+        "cost": 1520
+       },
+       {
+        "name": "Premium Malagkit, 25 kg sack",
+        "price": 1450,
+        "cost": 1130
+       }
+      ]
+     },
+     {
+      "name": "unit",
+      "op": "add",
+      "terms": [
+       "prod.price",
+       0
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "qty",
+      "range": [
+       30,
+       70,
+       5
+      ]
+     },
+     {
+      "name": "net",
+      "op": "mul",
+      "a": "qty",
+      "b": "prod.price",
+      "fmt": "money"
+     },
+     {
+      "name": "vat",
+      "op": "pct",
+      "a": "net",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "net",
+       "vat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "cost",
+      "op": "mul",
+      "a": "qty",
+      "b": "prod.cost",
+      "fmt": "money"
+     },
+     {
+      "name": "limit",
+      "op": "add",
+      "terms": [
+       "gross",
+       0
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "so",
+      "range": [
+       3100,
+       3899,
+       1
+      ]
+     },
+     {
+      "name": "dr",
+      "range": [
+       5100,
+       5899,
+       1
+      ]
+     },
+     {
+      "name": "inv",
+      "range": [
+       7100,
+       7899,
+       1
+      ]
+     }
+    ]
+   },
+   "key": {
+    "decision": "POST",
+    "journal": [
+     {
+      "acct": "1100",
+      "dr": "gross"
+     },
+     {
+      "acct": "4000",
+      "cr": "net"
+     },
+     {
+      "acct": "2200",
+      "cr": "vat"
+     },
+     {
+      "acct": "5000",
+      "dr": "cost"
+     },
+     {
+      "acct": "1200",
+      "cr": "cost"
+     }
+    ],
+    "explanation": "The order total of {{gross}} equals the credit limit exactly. It is within the limit, the credit manager approved it, and the delivery receipt and invoice match. This is a valid sale, so it should be posted, not held."
+   }
+  }
+ ]
+}

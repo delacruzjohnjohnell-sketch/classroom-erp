@@ -1,15 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { FileSearch, Inbox, Loader2, ShieldCheck, Users } from "lucide-react";
 import AppShell from "@/components/AppShell";
-import { Panel, Empty } from "@/components/ui";
+import { Panel, Empty, GoldBtn } from "@/components/ui";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { SEATS, seatAccess, seatsText } from "@/lib/aisSeats";
 
 type Settings = { fiscal_year_start: string; sod_mode: "ENFORCE" | "ALLOW_LOGGED" };
 type Member = { user_id: string; full_name: string | null; seats: string[] };
+type Instance = { title: string; topic: string | null; summary: string | null; mode: string; phase: string; total: number; pending: number; posted: number; held: number };
 
 export default function AisHomePage() {
   return <AppShell><AisHome /></AppShell>;
@@ -20,7 +22,9 @@ function AisHome() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [roster, setRoster] = useState<Member[]>([]);
   const [mySeats, setMySeats] = useState<string[]>([]);
+  const [inst, setInst] = useState<Instance | null>(null);
   const [ready, setReady] = useState(false);
+  const router = useRouter();
   const isTeacher = profile?.role === "teacher";
   const company = tenants.find((t) => t.id === effectiveTenantId)?.name ?? "—";
 
@@ -28,15 +32,17 @@ function AisHome() {
     if (!effectiveTenantId) return;
     let live = true;
     (async () => {
-      const [s, r, m] = await Promise.all([
+      const [s, r, m, i] = await Promise.all([
         supabase.from("ais_company_settings").select("fiscal_year_start, sod_mode").eq("tenant_id", effectiveTenantId).maybeSingle(),
         supabase.rpc("ais_roster", { p_tenant: effectiveTenantId }),
         isTeacher ? Promise.resolve({ data: [] as string[] }) : supabase.rpc("ais_my_seats"),
+        supabase.rpc("ais_my_instance"),
       ]);
       if (!live) return;
       setSettings((s.data as Settings | null) ?? null);
       setRoster((r.data as Member[] | null) ?? []);
       setMySeats((m.data as string[] | null) ?? []);
+      setInst((i.data as Instance | null) ?? null);
       setReady(true);
     })();
     return () => { live = false; };
@@ -73,7 +79,16 @@ function AisHome() {
       </div>
 
       <Panel title="Practice set">
-        <Empty>No practice set has been assigned to this company yet. When your teacher assigns one, its documents will appear in the Accounting seat&rsquo;s inbox.</Empty>
+        {!inst ? (
+          <Empty>No practice set has been assigned to this company yet. When your teacher assigns one, its documents will appear in the Accounting seat&rsquo;s inbox.</Empty>
+        ) : (
+          <div className="text-[12.5px]">
+            <div className="font-semibold text-[14px]">{inst.title}</div>
+            <div className="text-[#7F8EA0] mt-0.5">{inst.topic} · {inst.mode === "IMMEDIATE" ? "practice round" : "graded round"} · {inst.phase === "ACCOUNTING" ? "Accounting phase open" : "Accounting phase closed"}</div>
+            <div className="text-[#A3B1C2] mt-2">{inst.posted} posted · {inst.held} held · {inst.pending} waiting of {inst.total} documents.</div>
+            {(access.canAccount || isTeacher) && <div className="mt-3"><GoldBtn onClick={() => router.push("/ais/inbox")}>Open the document inbox</GoldBtn></div>}
+          </div>
+        )}
       </Panel>
 
       <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))" }}>
