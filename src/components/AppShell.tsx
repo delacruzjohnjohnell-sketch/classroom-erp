@@ -13,6 +13,7 @@ import { useEdition } from "@/lib/useEdition";
 import GlobalSearch from "./GlobalSearch";
 import CompanySwitcher from "./CompanySwitcher";
 import MfgShell, { MfgFrame } from "./mfg/MfgShell";
+import AisShell from "./ais/AisShell";
 
 // Students also get a menu item for their companies, so starting another one is never hidden.
 const COMPANIES_NAV = { href: "/companies", label: "My Companies", icon: Building2 };
@@ -67,6 +68,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   // A Manufacturing company adds its own role note and menu; the Standard ERP uses the same frame with its menu (below).
   if (isMfg) return <MfgShell otherViewers={otherViewers}>{children}</MfgShell>;
+  if (edition === "AIS") return <AisShell otherViewers={otherViewers}>{children}</AisShell>;
 
   const tenantName = tenants.find((t) => t.id === effectiveTenantId)?.name ?? "—";
   const navItems = profile.role === "student" ? [...NAV, MESSAGES_NAV, COMPANIES_NAV] : [...NAV, MESSAGES_NAV];

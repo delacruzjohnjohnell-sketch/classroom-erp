@@ -181,7 +181,7 @@ export default function TeacherPage() {
   const classHeadcount = visible.reduce((s, x) => s + (x.metrics?.headcount || 0), 0);
   const notStarted = visible.filter((x) => x.entryCount === 0).length;
   const mfgVisible = visible.filter((x) => editionOf(x.tenant.id) === "MANUFACTURING");
-  const stdVisible = visible.filter((x) => editionOf(x.tenant.id) !== "MANUFACTURING");
+  const stdVisible = visible.filter((x) => editionOf(x.tenant.id) === "STANDARD");   // AIS companies have their own screen (/ais/teams)
   const mfgComplete = mfgVisible.filter((x) => { const p = mfgProgress[x.tenant.id]; return !!p && p.passed === p.total; }).length;
   const monthsClosed = mfgVisible.reduce((n, x) => n + (mfgProgress[x.tenant.id]?.closed ?? 0), 0);
   const pct = (p: MfgProgress | null | undefined) => (p && p.total ? p.passed / p.total : -1);

@@ -22,7 +22,8 @@ export function useEdition(tenantId: string | null): { edition: Edition; ready: 
     (async () => {
       const { data, error } = await supabase.from("tenant_editions").select("edition").eq("tenant_id", tenantId).maybeSingle();
       if (cancelled) return;
-      known.set(tenantId, !error && (data as { edition?: string } | null)?.edition === "MANUFACTURING" ? "MANUFACTURING" : "STANDARD");
+      const found = (data as { edition?: string } | null)?.edition;
+      known.set(tenantId, !error && (found === "MANUFACTURING" || found === "AIS") ? found : "STANDARD");
       setTick((n) => n + 1);
     })();
     return () => { cancelled = true; };

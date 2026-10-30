@@ -2,14 +2,14 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Building2, Factory, Loader2, LogOut, Lock } from "lucide-react";
+import { ArrowRight, Building2, Factory, Loader2, LogOut, Lock, Scale } from "lucide-react";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
 import { toast } from "@/lib/toast";
 import { EDITION_LABEL, type Edition } from "@/lib/edition";
 
-const CYAN = "#22D3C5", AMBER = "#F2B13C";
+const CYAN = "#22D3C5", AMBER = "#F2B13C", VIOLET = "#9D7CFF";
 
 type EditionRow = { tenant_id: string; edition: Edition };
 type LastUsed = { edition: Edition; tenant_id: string; opened_at: string };
@@ -21,7 +21,7 @@ export default function ChoosePage() {
   const { loading, userId, profile, myCompanies, tenants, effectiveTenantId, switchCompany, signOut } = useSession();
   const [ready, setReady] = useState(false);
   const [editions, setEditions] = useState<Record<string, Edition>>({});
-  const [enabled, setEnabled] = useState<Record<Edition, boolean>>({ STANDARD: true, MANUFACTURING: false });
+  const [enabled, setEnabled] = useState<Record<Edition, boolean>>({ STANDARD: true, MANUFACTURING: false, AIS: false });
   const [lastUsed, setLastUsed] = useState<Partial<Record<Edition, LastUsed>>>({});
   const [busy, setBusy] = useState<Edition | null>(null);
   const isTeacher = profile?.role === "teacher";
@@ -33,7 +33,7 @@ export default function ChoosePage() {
       supabase.from("edition_last_used").select("edition, tenant_id, opened_at"),
     ]);
     setEditions(Object.fromEntries(((ed.data as EditionRow[]) ?? []).map((r) => [r.tenant_id, r.edition])));
-    const flags: Record<Edition, boolean> = { STANDARD: true, MANUFACTURING: false };
+    const flags: Record<Edition, boolean> = { STANDARD: true, MANUFACTURING: false, AIS: false };
     ((st.data as { edition: Edition; enabled: boolean }[]) ?? []).forEach((r) => { flags[r.edition] = r.enabled; });
     setEnabled(flags);
     const used: Partial<Record<Edition, LastUsed>> = {};
@@ -58,7 +58,16 @@ export default function ChoosePage() {
     if (ok(res)) load();
   };
 
+  const toggleAis = async () => {
+    const res = await mutate(supabase.rpc("set_edition_enabled", { target_edition: "AIS", is_enabled: !enabled.AIS }),
+      { successMessage: !enabled.AIS ? "Accounting Information Systems opened for students." : "Accounting Information Systems closed for students." });
+    if (ok(res)) load();
+  };
+
   // ---------- student ----------
+  // AIS companies are made by the teacher; a student belongs to the one(s) they were added to
+  const aisCompanies = myCompanies.filter((c) => editionOf(c.id) === "AIS");
+  const aisCompany = aisCompanies.find((c) => c.id === effectiveTenantId) ?? aisCompanies.find((c) => c.id === lastUsed.AIS?.tenant_id) ?? aisCompanies[0] ?? null;
   const standardCompanies = myCompanies.filter((c) => editionOf(c.id) === "STANDARD");
   // a student can hold their own (solo) Manufacturing company and also belong to a team company the teacher made
   const mfgCompanies = myCompanies.filter((c) => editionOf(c.id) === "MANUFACTURING");
@@ -77,6 +86,11 @@ export default function ChoosePage() {
         if (standardCompany.id !== effectiveTenantId && !(await switchCompany(standardCompany.id))) return;
         await supabase.rpc("record_edition_open", { target_edition: "STANDARD", target_tenant: standardCompany.id });
         router.push("/dashboard");
+      } else if (edition === "AIS") {
+        if (!aisCompany) { toast.error("Your teacher has not added you to an AIS company yet."); return; }
+        if (aisCompany.id !== effectiveTenantId && !(await switchCompany(aisCompany.id))) return;
+        await supabase.rpc("record_edition_open", { target_edition: "AIS", target_tenant: aisCompany.id });
+        router.push("/ais");
       } else {
         if (!mfgCompany) { router.push("/mfg-setup"); return; }
         if (mfgCompany.id !== effectiveTenantId && !(await switchCompany(mfgCompany.id))) return;
@@ -99,7 +113,7 @@ export default function ChoosePage() {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" size={20} color={CYAN} /></div>;
   }
 
-  const lastEdition = (["STANDARD", "MANUFACTURING"] as Edition[])
+  const lastEdition = (["STANDARD", "MANUFACTURING", "AIS"] as Edition[])
     .filter((e) => lastUsed[e])
     .sort((a, b) => (lastUsed[b]!.opened_at > lastUsed[a]!.opened_at ? 1 : -1))[0];
   const counts = (e: Edition) => tenants.filter((t) => editionOf(t.id) === e).length;
@@ -151,6 +165,20 @@ export default function ChoosePage() {
             busy={busy === "MANUFACTURING"}
             onClick={() => (isTeacher ? router.push("/teacher?edition=MANUFACTURING") : open("MANUFACTURING"))}
           />
+
+          {/* ---------------- Accounting Information Systems ---------------- */}
+          <EditionCard
+            accent={VIOLET} icon={<Scale size={22} />} title={EDITION_LABEL.AIS} subtitle="Controls, Documents, Audit"
+            text="Work as a firm's accounting and audit staff: review document packets, post or hold each one, then test the books for control failures and fraud."
+            lastOpened={!isTeacher && lastEdition === "AIS" ? lastUsed.AIS : undefined}
+            company={isTeacher ? `${counts("AIS")} compan${counts("AIS") === 1 ? "y" : "ies"}` : aisCompany?.name}
+            extra={!isTeacher && aisCompanies.length > 1 ? `${aisCompanies.length} companies — switch from the sidebar` : undefined}
+            locked={!isTeacher && (!enabled.AIS || !aisCompany)}
+            lockedText={enabled.AIS ? "Your teacher will add you to a company." : "Opens when your teacher turns it on."}
+            cta={isTeacher ? "Manage AIS companies" : "Open"}
+            busy={busy === "AIS"}
+            onClick={() => (isTeacher ? router.push("/ais/teams") : open("AIS"))}
+          />
         </div>
 
         {isTeacher && (
@@ -165,6 +193,21 @@ export default function ChoosePage() {
               className="rounded-lg px-4 py-2 text-[13px] font-semibold border"
               style={{ color: enabled.MANUFACTURING ? "#FF6B7A" : AMBER, borderColor: enabled.MANUFACTURING ? "rgba(255,107,122,0.55)" : "rgba(242,177,60,0.55)", background: enabled.MANUFACTURING ? "rgba(255,107,122,0.1)" : "rgba(242,177,60,0.1)" }}>
               {enabled.MANUFACTURING ? "Close it" : "Open it for students"}
+            </button>
+          </div>
+        )}
+        {isTeacher && (
+          <div className="mt-4 w-full max-w-3xl border border-hairline rounded-xl bg-panel p-5 flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <div className="font-semibold text-[14px]">Accounting Information Systems for students</div>
+              <div className="text-[12.5px] text-[#A3B1C2] mt-0.5">
+                {enabled.AIS ? "Open — students can enter the AIS companies you add them to." : "Closed — students see it greyed out, and you can't add them to a company yet."}
+              </div>
+            </div>
+            <button onClick={toggleAis}
+              className="rounded-lg px-4 py-2 text-[13px] font-semibold border"
+              style={{ color: enabled.AIS ? "#FF6B7A" : VIOLET, borderColor: enabled.AIS ? "rgba(255,107,122,0.55)" : "rgba(157,124,255,0.55)", background: enabled.AIS ? "rgba(255,107,122,0.1)" : "rgba(157,124,255,0.1)" }}>
+              {enabled.AIS ? "Close it" : "Open it for students"}
             </button>
           </div>
         )}

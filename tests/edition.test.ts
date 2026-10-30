@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { guardTarget, isMfgPath, mfgTwin, standardTwin, NEUTRAL_PATHS } from "../src/lib/edition.ts";
+import { guardTarget, isMfgPath, isAisPath, mfgTwin, standardTwin, NEUTRAL_PATHS, EDITION_LABEL } from "../src/lib/edition.ts";
 
 test("every reused Standard page has a Manufacturing twin and back again", () => {
   const pairs: [string, string][] = [
@@ -66,5 +66,57 @@ test("the Manufacturing master data and costing screens belong to the Manufactur
     assert.equal(isMfgPath(p), true, p);
     assert.equal(guardTarget("MANUFACTURING", p), null, p);
     assert.equal(guardTarget("STANDARD", p), "/dashboard", p);   // no Standard twin
+  }
+});
+
+// ---------- the third edition: Accounting Information Systems ----------
+
+test("AIS route detection does not confuse look-alike prefixes", () => {
+  assert.equal(isAisPath("/ais"), true);
+  assert.equal(isAisPath("/ais/inbox"), true);
+  assert.equal(isAisPath("/ais/teams"), true);
+  assert.equal(isAisPath("/aisle"), false);
+  assert.equal(isAisPath("/ais-setup"), false);
+  assert.equal(isAisPath("/mfg/ais"), false);
+});
+
+test("an AIS company is kept inside /ais and every other page sends it there", () => {
+  assert.equal(guardTarget("AIS", "/ais"), null);
+  assert.equal(guardTarget("AIS", "/ais/ledger"), null);
+  assert.equal(guardTarget("AIS", "/dashboard"), "/ais");
+  assert.equal(guardTarget("AIS", "/sales"), "/ais");
+  assert.equal(guardTarget("AIS", "/mfg"), "/ais");
+  assert.equal(guardTarget("AIS", "/mfg/finance"), "/ais");
+  assert.equal(guardTarget("AIS", "/teacher"), "/ais");
+});
+
+test("Standard and Manufacturing companies are sent out of /ais", () => {
+  assert.equal(guardTarget("STANDARD", "/ais"), "/dashboard");
+  assert.equal(guardTarget("STANDARD", "/ais/inbox"), "/dashboard");
+  assert.equal(guardTarget("MANUFACTURING", "/ais"), "/mfg");
+  assert.equal(guardTarget("MANUFACTURING", "/ais/ledger"), "/mfg");
+});
+
+test("managing companies and messages work in the AIS edition too", () => {
+  for (const p of NEUTRAL_PATHS) assert.equal(guardTarget("AIS", p), null);
+});
+
+test("adding the third edition changed nothing for Standard and Manufacturing", () => {
+  assert.equal(guardTarget("STANDARD", "/sales"), null);
+  assert.equal(guardTarget("MANUFACTURING", "/mfg/sales"), null);
+  assert.equal(guardTarget("MANUFACTURING", "/sales"), "/mfg/sales");
+  assert.equal(guardTarget("STANDARD", "/mfg/finance"), "/financials");
+  assert.equal(EDITION_LABEL.STANDARD, "JJ and Co. ERP");
+  assert.equal(EDITION_LABEL.MANUFACTURING, "JJ and Co. Manufacturing ERP");
+  assert.equal(EDITION_LABEL.AIS, "JJ and Co. Accounting Information Systems");
+});
+
+test("redirects never loop for any edition", () => {
+  const paths = ["/dashboard", "/financials", "/sales", "/hr", "/mfg", "/mfg/finance", "/mfg/teams", "/ais", "/ais/inbox", "/ais/teams", "/companies", "/teacher", "/choose"];
+  for (const edition of ["STANDARD", "MANUFACTURING", "AIS"] as const) {
+    for (const p of paths) {
+      const target = guardTarget(edition, p);
+      if (target) assert.equal(guardTarget(edition, target), null, `${edition} ${p} -> ${target} must be final`);
+    }
   }
 });

@@ -5,7 +5,7 @@
 // reused inside the Manufacturing workspace (they work on whichever company is active), so each has
 // a "twin" path under /mfg.
 
-export type Edition = "STANDARD" | "MANUFACTURING";
+export type Edition = "STANDARD" | "MANUFACTURING" | "AIS";
 
 // [Standard path, Manufacturing path] — only screens that exist in the Manufacturing workspace.
 const TWINS: [string, string][] = [
@@ -22,6 +22,8 @@ const TWINS: [string, string][] = [
 export const NEUTRAL_PATHS = ["/companies", "/messages"];
 
 export const isMfgPath = (pathname: string) => pathname === "/mfg" || pathname.startsWith("/mfg/");
+/** The Accounting Information Systems workspace (/ais/...). Has no Standard twin: it is its own workspace. */
+export const isAisPath = (pathname: string) => pathname === "/ais" || pathname.startsWith("/ais/");
 
 const matches = (pathname: string, base: string) => pathname === base || pathname.startsWith(base + "/");
 
@@ -44,6 +46,8 @@ export function standardTwin(pathname: string): string {
  */
 export function guardTarget(edition: Edition, pathname: string): string | null {
   if (NEUTRAL_PATHS.some((p) => matches(pathname, p))) return null;
+  if (edition === "AIS") return isAisPath(pathname) ? null : "/ais";
+  if (isAisPath(pathname)) return edition === "MANUFACTURING" ? "/mfg" : "/dashboard";
   if (edition === "MANUFACTURING" && !isMfgPath(pathname)) return mfgTwin(pathname);
   if (edition === "STANDARD" && isMfgPath(pathname)) return standardTwin(pathname);
   return null;
@@ -52,4 +56,5 @@ export function guardTarget(edition: Edition, pathname: string): string | null {
 export const EDITION_LABEL: Record<Edition, string> = {
   STANDARD: "JJ and Co. ERP",
   MANUFACTURING: "JJ and Co. Manufacturing ERP",
+  AIS: "JJ and Co. Accounting Information Systems",
 };
