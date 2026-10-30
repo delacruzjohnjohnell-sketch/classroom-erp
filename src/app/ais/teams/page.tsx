@@ -175,6 +175,7 @@ export default function AisTeamsPage() {
           <div className="text-xs text-[#7F8EA0]">Teacher · {profile.full_name}</div>
         </div>
         <div className="flex gap-2">
+          <button onClick={() => router.push("/ais/gradebook")} className="flex items-center gap-1.5 border border-hairline rounded-md px-3 py-1.5 text-xs text-[#A3B1C2]">Class gradebook</button>
           <button onClick={() => router.push("/choose")} className="flex items-center gap-1.5 border border-hairline rounded-md px-3 py-1.5 text-xs text-[#A3B1C2]"><ArrowLeft size={15} /> Choose ERP</button>
           <button onClick={() => signOut()} className="flex items-center gap-1.5 border border-hairline rounded-md px-3 py-1.5 text-xs text-[#A3B1C2]"><LogOut size={14} /> Sign out</button>
         </div>
