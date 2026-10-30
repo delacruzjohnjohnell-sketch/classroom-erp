@@ -16,6 +16,8 @@ type Member = { user_id: string; full_name: string | null; seats: Seat[] };
 type Student = { id: string; full_name: string | null };
 type SetRow = { id: string; title: string; topic: string | null; summary: string | null; txns: number; assigned: number };
 type Instance = { set_id: string; mode: "IMMEDIATE" | "AFTER_CLOSE"; phase: string; lock_date: string | null; seed: number };
+type AuditReview = { visible: boolean; points: number; max: number; planted: number; found: number; wrong_type: number; missed: number; false_positives: number;
+  details: { type: string; memo: string | null; status: "found" | "wrong_type" | "missed"; reversed: boolean }[]; false_positive_details: { type: string; memo: string | null; condition: string }[] };
 type ReviewRow = { seq: number; title: string; status: string; key: { decision: string; failed_control: string | null; explanation: string | null }; decision: string | null; failed_control: string | null; points: number | null; detail: string | null; wrong_attempts: number };
 
 const VIOLET = "#9D7CFF";
@@ -60,6 +62,7 @@ export default function AisTeamsPage() {
   const [aLock, setALock] = useState("");
   const [aSeed, setASeed] = useState("");
   const [review, setReview] = useState<ReviewRow[] | null>(null);
+  const [auditRev, setAuditRev] = useState<AuditReview | null>(null);
 
   useEffect(() => {
     if (loading) return;
@@ -150,6 +153,12 @@ export default function AisTeamsPage() {
     if (showQueryErrors(r)) return;
     setReview(((r.data as ReviewRow[]) ?? []).map((x) => ({ ...x, seq: Number(x.seq), points: x.points === null ? null : Number(x.points) })));
   };
+  const openAuditReview = async () => {
+    if (!manage) return;
+    const r = await supabase.rpc("ais_teacher_audit_score", { p_tenant: manage.tenant_id });
+    if (showQueryErrors(r)) return;
+    setAuditRev(r.data as AuditReview);
+  };
   const openBooks = (c: Company) => { setViewTenantId(c.tenant_id); router.push("/ais"); };
 
   if (loading || !profile) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" size={20} color={VIOLET} /></div>;
@@ -234,6 +243,18 @@ export default function AisTeamsPage() {
         </Modal>
       )}
 
+      {auditRev && manage && (
+        <Modal title={`${manage.name} — planted exceptions and audit results`} onClose={() => setAuditRev(null)} wide>
+          <div className="text-[12.5px] mb-3"><b>{auditRev.points} of {auditRev.max} points.</b> {auditRev.found} of {auditRev.planted} planted exceptions found with the right type, {auditRev.wrong_type} under the wrong type, {auditRev.missed} missed, {auditRev.false_positives} reported that were not planted. (This is the score as it stands now; the student sees it when they close the audit.)</div>
+          <table>
+            <thead><tr><th>Planted</th><th>Entry</th><th>Result</th></tr></thead>
+            <tbody>{auditRev.details.map((d, i) => <tr key={i}><td><b>{d.type.replace(/_/g, " ").toLowerCase()}</b></td><td style={{ fontSize: 12 }}>{d.memo}</td><td style={{ color: d.status === "found" ? "#22D3C5" : d.status === "wrong_type" ? "#F2B13C" : "#FF6B7A" }}>{d.status === "found" ? "Found" : d.status === "wrong_type" ? "Wrong type" : "Missed"}{d.reversed ? " · reversed" : ""}</td></tr>)}</tbody>
+          </table>
+          {auditRev.false_positive_details.length > 0 && <div className="mt-3 text-[12px]"><b>Reported, but not planted</b>{auditRev.false_positive_details.map((d, i) => <div key={i} className="text-[#A3B1C2]">{d.memo ?? "(no entry)"}: {d.condition}</div>)}</div>}
+          <div className="flex justify-end mt-4"><OutlineBtn type="button" onClick={() => setAuditRev(null)}>Close</OutlineBtn></div>
+        </Modal>
+      )}
+
       {review && manage && (
         <Modal title={`${manage.name} — answer key and results`} onClose={() => setReview(null)} wide>
           <table>
@@ -262,7 +283,7 @@ export default function AisTeamsPage() {
               <div className="text-[12.5px]">
                 <b>{sets.find((x) => x.id === inst.set_id)?.title ?? inst.set_id}</b>
                 <div className="text-[#7F8EA0]">{inst.mode === "IMMEDIATE" ? "Practice round" : "Graded round"} · {inst.phase === "ACCOUNTING" ? "Accounting phase open" : "Accounting phase closed"} · seed {inst.seed}{inst.lock_date ? ` · books lock on ${inst.lock_date}` : ""}</div>
-                <div className="mt-2"><TinyBtn type="button" onClick={openReview}>Answer key and results</TinyBtn></div>
+                <div className="mt-2"><TinyBtn type="button" onClick={openReview}>Accounting: answer key and results</TinyBtn>{" "}<TinyBtn type="button" onClick={openAuditReview}>Audit: planted exceptions and results</TinyBtn></div>
               </div>
             ) : (
               <div>

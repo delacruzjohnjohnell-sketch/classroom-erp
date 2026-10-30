@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { BookOpen, Building2, ClipboardCheck, FileSearch, Inbox, LayoutDashboard, MessageSquare, Users, Scale } from "lucide-react";
+import { BookOpen, Building2, FileSearch, Inbox, LayoutDashboard, MessageSquare, Users, Scale } from "lucide-react";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import GlobalSearch from "../GlobalSearch";
@@ -18,7 +18,6 @@ const ACCOUNTING_NAV = [
 ];
 const AUDIT_NAV = [
   { href: "/ais/audit", label: "Audit room", icon: FileSearch },
-  { href: "/ais/workpapers", label: "Workpapers", icon: ClipboardCheck },
 ];
 const SCORES_NAV = { href: "/ais/scores", label: "Scores", icon: Scale };
 const MESSAGES_NAV = { href: "/messages", label: "Messages", icon: MessageSquare };
@@ -28,7 +27,7 @@ const TEACHER_NAV = { href: "/ais/teams", label: "AIS companies", icon: Users };
 const SEAT_LABEL: Record<string, string> = { ACCOUNTING: "Accounting", AUDIT: "Audit" };
 
 /** Which of the optional menu groups exist yet. Flipped on as each phase adds its pages. */
-export const AIS_PAGES_LIVE = { accounting: true, audit: false, scores: false };
+export const AIS_PAGES_LIVE = { accounting: true, audit: true, scores: false };
 
 export default function AisShell({ children, otherViewers }: { children: React.ReactNode; otherViewers: { userId: string; name: string }[] }) {
   const { profile, tenants, effectiveTenantId, setViewTenantId, signOut } = useSession();
