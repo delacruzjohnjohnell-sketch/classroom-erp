@@ -12,6 +12,7 @@ import { showQueryErrors } from "@/lib/queryErrors";
 import {
   cleanLines, emptyLine, groupControls, lineTotals, money, nextPending, postProblem, STATUS_LABEL, STATUS_TONE,
   type Control, type DraftLine, type InboxRow, type Packet,
+  orderFields,
 } from "@/lib/aisDesk";
 
 type PacketResp = {
@@ -108,7 +109,7 @@ function Review() {
               <div className="px-4 py-2 text-[12px] font-semibold border-b border-hairline" style={{ background: "rgba(157,124,255,0.1)", color: "#C8B6FF" }}>{d.type}</div>
               <table style={{ margin: 0 }}>
                 <tbody>
-                  {Object.entries(d.fields).map(([k, v]) => (
+                  {orderFields(d.fields).map(([k, v]) => (
                     <tr key={k}><td style={{ width: "42%", color: "#7F8EA0", fontSize: 12 }}>{k}</td><td style={{ fontSize: 12.5 }}>{v}</td></tr>
                   ))}
                 </tbody>

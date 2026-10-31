@@ -68,3 +68,10 @@ test("a document nobody decided is not called held", async () => {
   assert.equal(statusText({ status: "HELD", was_decided: false }).label, "Not decided");
   assert.equal(statusText({ status: "HELD" }).label, "Held");                 // an older server that does not send the flag
 });
+
+test("packet fields read like a paper document whatever order the database returns them in", async () => {
+  const { orderFields } = await import("../src/lib/aisDesk.ts");
+  // jsonb returns short keys first, then alphabetical
+  const stored = { Date: "d", Item: "i", Amount: "5", "Invoice no.": "INV-1", Status: "ok", Customer: "c", Mystery: "x" };
+  assert.deepEqual(orderFields(stored).map((e) => e[0]), ["Invoice no.", "Date", "Customer", "Item", "Amount", "Status", "Mystery"]);
+});

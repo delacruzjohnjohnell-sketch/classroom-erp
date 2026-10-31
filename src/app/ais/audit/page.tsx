@@ -267,8 +267,9 @@ function SamplingTab({ open, samples, onChanged, onReport }: { open: boolean; sa
     setBusy(false);
     if (ok(r)) { await onChanged(); const id = r.data as unknown as string; setCur(id); await loadItems(id); }
   };
-  const mark = async (it: SampleItem, result: "PASS" | "EXCEPTION") => {
-    const note = result === "EXCEPTION" ? (prompt("What was wrong with this entry?") ?? "") : "";
+  const [exc, setExc] = useState<SampleItem | null>(null);
+  const [excNote, setExcNote] = useState("");
+  const mark = async (it: SampleItem, result: "PASS" | "EXCEPTION", note = "") => {
     const r = await mutate(supabase.rpc("ais_sample_mark", { p_item: it.item_id, p_result: result, p_note: note }));
     if (ok(r) && cur) await loadItems(cur);
   };
@@ -305,10 +306,18 @@ function SamplingTab({ open, samples, onChanged, onReport }: { open: boolean; sa
             <tbody>{items.map((it) => (
               <tr key={it.item_id}><td>{it.entry_date} · {it.memo}<div className="text-[11px] text-[#7F8EA0]">{it.selection_reason}</div></td><td style={{ textAlign: "right" }}>{money(it.amount)}</td>
                 <td>{it.result ? <b style={{ color: it.result === "PASS" ? "#22D3C5" : "#FF6B7A" }}>{it.result}</b> : "not tested"}{it.note ? <div className="text-[11px] text-[#7F8EA0]">{it.note}</div> : null}</td>
-                <td style={{ whiteSpace: "nowrap" }}>{open && <><TinyBtn type="button" onClick={() => mark(it, "PASS")}>Pass</TinyBtn>{" "}<TinyBtn type="button" onClick={() => mark(it, "EXCEPTION")}>Exception</TinyBtn>{" "}{it.result === "EXCEPTION" && <TinyBtn type="button" onClick={() => onReport(it.entry_id, it.memo)}>Report</TinyBtn>}</>}</td></tr>
+                <td style={{ whiteSpace: "nowrap" }}>{open && <><TinyBtn type="button" onClick={() => mark(it, "PASS")}>Pass</TinyBtn>{" "}<TinyBtn type="button" onClick={() => { setExc(it); setExcNote(""); }}>Exception</TinyBtn>{" "}{it.result === "EXCEPTION" && <TinyBtn type="button" onClick={() => onReport(it.entry_id, it.memo)}>Report</TinyBtn>}</>}</td></tr>
             ))}</tbody>
           </table>
         </Panel>
+      )}
+      {exc && (
+        <Modal title="Mark as an exception" onClose={() => setExc(null)}>
+          <div className="text-[12.5px] text-[#A3B1C2] mb-2">{exc.memo}</div>
+          <Label>What was wrong with this entry?</Label>
+          <textarea className="input" rows={3} value={excNote} onChange={(e) => setExcNote(e.target.value)} />
+          <div className="flex gap-2 justify-end mt-4"><OutlineBtn type="button" onClick={() => setExc(null)}>Cancel</OutlineBtn><GoldBtn type="button" onClick={async () => { const it = exc; setExc(null); await mark(it, "EXCEPTION", excNote.trim()); }}>Mark exception</GoldBtn></div>
+        </Modal>
       )}
     </div>
   );

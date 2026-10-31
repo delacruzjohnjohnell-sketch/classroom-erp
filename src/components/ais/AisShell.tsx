@@ -59,7 +59,7 @@ export default function AisShell({ children, otherViewers }: { children: React.R
     <MfgFrame pathname={pathname} fullName={profile.full_name ?? ""} role={profile.role} isTeacher={isTeacher}
       tenantName={tenants.find((t) => t.id === effectiveTenantId)?.name ?? "—"} otherViewers={otherViewers} roleNote={roleNote}
       items={items} product="Accounting Information Systems" logo={<Scale size={22} color="#fff" />}
-      searchSlot={<GlobalSearch />} companySlot={<CompanySwitcher />} onSignOut={() => signOut()}
+      searchSlot={<GlobalSearch />} companySlot={<CompanySwitcher edition="AIS" />} onSignOut={() => signOut()}
       onAllCompanies={() => { setViewTenantId(null); router.push("/teacher"); }}>
       {children}
     </MfgFrame>

@@ -4,22 +4,32 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, ChevronsUpDown, Plus } from "lucide-react";
 import { useSession } from "@/lib/session";
+import { supabase } from "@/lib/supabase";
 
 /**
  * Sidebar control for accounts that belong to more than one company: shows the
  * active company and lets the person switch. Every page reloads its data for the
  * company that becomes active; nothing is shared between companies.
  */
-export default function CompanySwitcher() {
+export default function CompanySwitcher({ edition }: { edition?: string } = {}) {
   const { myCompanies, tenants, effectiveTenantId, switchCompany } = useSession();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const box = useRef<HTMLDivElement>(null);
+  // Inside one edition only that edition's companies are listed (a company with no edition row is Standard).
+  const [editions, setEditions] = useState<Record<string, string> | null>(null);
+  useEffect(() => {
+    if (!edition) return;
+    supabase.from("tenant_editions").select("tenant_id, edition").then(({ data }) => {
+      setEditions(Object.fromEntries((data ?? []).map((r: { tenant_id: string; edition: string }) => [r.tenant_id, r.edition])));
+    });
+  }, [edition]);
 
   const current = tenants.find((t) => t.id === effectiveTenantId);
   // A company the person has just been added to may not be in the list yet; always show the active one.
-  const list = myCompanies.some((c) => c.id === effectiveTenantId) || !current ? myCompanies : [current, ...myCompanies];
+  const all = myCompanies.some((c) => c.id === effectiveTenantId) || !current ? myCompanies : [current, ...myCompanies];
+  const list = edition && editions ? all.filter((c) => c.id === effectiveTenantId || (editions[c.id] ?? "STANDARD") === edition) : all;
 
   useEffect(() => {
     if (!open) return;

@@ -20,6 +20,17 @@ export function statusText(r: Pick<InboxRow, "status" | "was_decided">): { label
   return { label: STATUS_LABEL[r.status], tone: STATUS_TONE[r.status] };
 }
 
+// The database keeps packet fields as jsonb, which does not remember the order a set author wrote them in. This is the reading order of a paper document
+// (numbers and dates, who, what, how much, who signed); a field not listed keeps its stored position after the listed ones.
+const FIELD_ORDER = ["Order no.", "DR no.", "Invoice no.", "OR no.", "RR no.", "CM no.", "Date", "Date delivered", "Invoice date", "Already posted on", "Effective", "Customer", "Received from", "Returned by",
+  "Item", "Quantity ordered", "Quantity delivered", "Quantity billed", "Quantity received back", "Quantity", "Unit price", "Approved unit price", "Net sales", "Net", "VAT 12%", "Order total (incl. 12% VAT)", "Total due", "Credit total", "Amount",
+  "Customer credit limit", "Balance owed before this order", "Balance before this payment", "Payment applied", "In payment of", "Deposited to", "Terms", "Condition", "Credit approval", "Signed", "Prepared by", "Approved by", "Issued by", "Validated by bank", "Status"];
+
+export function orderFields(fields: Record<string, string>): [string, string][] {
+  const rank = (k: string) => { const i = FIELD_ORDER.indexOf(k); return i < 0 ? FIELD_ORDER.length : i; };
+  return Object.entries(fields).map((e, pos) => ({ e, pos })).sort((a, b) => rank(a.e[0]) - rank(b.e[0]) || a.pos - b.pos).map((x) => x.e);
+}
+
 export const emptyLine = (): DraftLine => ({ acct: "", debit: "", credit: "" });
 
 const num = (s: string) => {
