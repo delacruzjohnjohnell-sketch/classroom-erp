@@ -97,3 +97,27 @@ test("sales desk: what comes next for an order, and which invoices can still be 
   assert.match(approvalNote({ entered_by_me: true }, true), /self-approval/);
   assert.match(approvalNote({ entered_by_me: false }, false), /credit manager/);
 });
+
+test("purchases desk: next step for a vendor invoice, payable invoices, and the three-way comparison", async () => {
+  const { pwNextStep, payableBills, matchRows } = await import("../src/lib/aisSales.ts");
+  assert.equal(pwNextStep("ENTERED"), "match");
+  assert.equal(pwNextStep("HELD"), "decide");
+  assert.equal(pwNextStep("MATCH_OK"), "post");
+  assert.equal(pwNextStep("APPROVED"), "post");
+  assert.equal(pwNextStep("POSTED"), "done");
+  assert.equal(pwNextStep("REJECTED"), "done");
+  const bills = [
+    { id: "a", vendor_id: "v1", status: "POSTED", gross: 100, paid: 100 },
+    { id: "b", vendor_id: "v1", status: "POSTED", gross: 100, paid: 0 },
+    { id: "c", vendor_id: "v1", status: "HELD", gross: 100, paid: 0 },
+    { id: "d", vendor_id: "v2", status: "POSTED", gross: 100, paid: 0 },
+  ] as Parameters<typeof payableBills>[0];
+  assert.deepEqual(payableBills(bills, "v1").map((b) => b.id), ["b"]);
+  const agree = matchRows({ po_qty: 200, po_price: 1640, rr_qty: 200, inv_qty: 200, inv_price: 1640 });
+  assert.equal(agree.some((r) => r.differs), false);
+  const short = matchRows({ po_qty: 150, po_price: 1480, rr_qty: 120, inv_qty: 150, inv_price: 1480 });
+  assert.equal(short[0].differs, true);
+  assert.equal(short[1].differs, false);
+  const noRr = matchRows({ po_qty: 80, po_price: 1640, rr_qty: null, inv_qty: 80, inv_price: 1640 });
+  assert.equal(noRr[0].differs, true);
+});

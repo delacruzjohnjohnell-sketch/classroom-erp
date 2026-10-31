@@ -57,3 +57,50 @@ export function approvalNote(o: Pick<WbOrder, "entered_by_me">, solo: boolean): 
     ? "You entered this order. This company allows solo work, so you can approve it yourself, but a self-approval is exactly what an auditor looks for."
     : "You entered this order, so a different person must approve it (segregation of duties).";
 }
+
+// ---------------------------------------------------------------- Purchases desk (the expenditure-cycle workbench)
+
+export type PwBillStatus = "ENTERED" | "MATCH_OK" | "HELD" | "APPROVED" | "REJECTED" | "POSTED";
+export type PwBill = {
+  id: string; seq: number; task_id: string; vendor_id: string; vendor: string; item: string; inv_no: string; inv_qty: number; inv_price: number; net: number; vat: number; gross: number;
+  inv_date: string; po_qty: number | null; po_price: number | null; rec_qty: number | null; status: PwBillStatus; hold_reason: string | null; entered_by_me: boolean;
+  self_approved: boolean; decision_note: string | null; paid: number;
+};
+export type PwTask = {
+  id: string; seq: number; kind: "PURCHASE" | "PAYMENT"; vendor_id: string; vendor: string; vendor_approved: boolean; item_id: string | null; item: string | null; ref_no: string;
+  po_qty: number | null; po_price: number | null; rr_no: string | null; rr_qty: number | null; rr_date: string | null; inv_no: string | null; inv_qty: number | null; inv_price: number | null;
+  doc_date: string; amount: number | null; note: string | null; status: "NEW" | "RECEIVED" | "INVOICED" | "REJECTED" | "DONE"; received: boolean;
+};
+
+export type PwStep = "match" | "decide" | "post" | "done";
+
+/** What comes next for an entered vendor invoice. */
+export function pwNextStep(status: PwBillStatus): PwStep {
+  switch (status) {
+    case "ENTERED": return "match";
+    case "HELD": return "decide";
+    case "MATCH_OK": case "APPROVED": return "post";
+    default: return "done";
+  }
+}
+
+export const PW_STEP_BUTTON: Record<Exclude<PwStep, "done" | "decide">, string> = { match: "Run the three-way match", post: "Post to payables" };
+
+export const PW_LABEL: Record<PwBillStatus, string> = {
+  ENTERED: "Entered: needs the three-way match", MATCH_OK: "Matched: ready to post", HELD: "Held by the match", APPROVED: "Approved: ready to post", REJECTED: "Rejected", POSTED: "Posted to payables",
+};
+export const PW_TONE: Record<PwBillStatus, string> = { ENTERED: "#F2B13C", MATCH_OK: "#22D3C5", HELD: "#FF6B7A", APPROVED: "#22D3C5", REJECTED: "#7F8EA0", POSTED: "#22D3C5" };
+
+/** Posted invoices a vendor can still be paid against. */
+export function payableBills<T extends Pick<PwBill, "id" | "vendor_id" | "status" | "gross" | "paid">>(bills: T[], vendorId: string): T[] {
+  return bills.filter((b) => b.vendor_id === vendorId && b.status === "POSTED" && b.gross - b.paid > 0.004);
+}
+
+/** The three documents side by side: where do quantity and price disagree? */
+export function matchRows(t: Pick<PwTask, "po_qty" | "po_price" | "rr_qty" | "inv_qty" | "inv_price">): { label: string; po: string; rr: string; inv: string; differs: boolean }[] {
+  const f = (n: number | null) => (n === null ? "none" : String(n));
+  return [
+    { label: "Quantity", po: f(t.po_qty), rr: f(t.rr_qty), inv: f(t.inv_qty), differs: [t.po_qty, t.rr_qty, t.inv_qty].some((v) => v === null) || !(t.po_qty === t.rr_qty && t.rr_qty === t.inv_qty) },
+    { label: "Unit price", po: f(t.po_price), rr: "n/a", inv: f(t.inv_price), differs: t.po_price === null || t.po_price !== t.inv_price },
+  ];
+}
