@@ -75,3 +75,25 @@ test("packet fields read like a paper document whatever order the database retur
   const stored = { Date: "d", Item: "i", Amount: "5", "Invoice no.": "INV-1", Status: "ok", Customer: "c", Mystery: "x" };
   assert.deepEqual(orderFields(stored).map((e) => e[0]), ["Invoice no.", "Date", "Customer", "Item", "Amount", "Status", "Mystery"]);
 });
+
+test("sales desk: what comes next for an order, and which invoices can still be paid", async () => {
+  const { nextStep, openInvoices, deskProgress, approvalNote } = await import("../src/lib/aisSales.ts");
+  assert.equal(nextStep("ENTERED"), "check");
+  assert.equal(nextStep("HELD"), "decide");
+  assert.equal(nextStep("CREDIT_OK"), "ship");
+  assert.equal(nextStep("APPROVED"), "ship");
+  assert.equal(nextStep("SHIPPED"), "bill");
+  assert.equal(nextStep("BILLED"), "done");
+  assert.equal(nextStep("REJECTED"), "done");
+  const orders = [
+    { id: "a", customer_id: "c1", status: "BILLED", gross: 100, paid: 100, invoice_no: "INV-1" },
+    { id: "b", customer_id: "c1", status: "BILLED", gross: 100, paid: 40, invoice_no: "INV-2" },
+    { id: "c", customer_id: "c1", status: "SHIPPED", gross: 50, paid: 0, invoice_no: null },
+    { id: "d", customer_id: "c2", status: "BILLED", gross: 70, paid: 0, invoice_no: "INV-3" },
+  ] as Parameters<typeof openInvoices>[0];
+  assert.deepEqual(openInvoices(orders, "c1").map((o) => o.id), ["b"]);
+  assert.deepEqual(deskProgress([{ status: "DONE" }, { status: "REJECTED" }, { status: "NEW" }, { status: "ORDERED" }]), { total: 4, done: 2, pct: 50 });
+  assert.match(approvalNote({ entered_by_me: true }, false), /different person/);
+  assert.match(approvalNote({ entered_by_me: true }, true), /self-approval/);
+  assert.match(approvalNote({ entered_by_me: false }, false), /credit manager/);
+});
