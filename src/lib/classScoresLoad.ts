@@ -37,20 +37,27 @@ const detailFrom = (edition: Edition, activity: string, c: { name: string; stude
   note: r.pass ? "" : `Expected ${r.expected}; found ${r.actual}${r.hint ? `. ${r.hint}` : ""}`,
 });
 
-export async function scoreStandard(c: ClassCompany, set: PracticeSet): Promise<ScoreRow> {
+/** One Standard company checked against every Standard practice set (the data is read once). One row per set. */
+export async function scoreStandardAll(c: ClassCompany, sets: PracticeSet[]): Promise<ScoreRow[]> {
   const data = await loadPracticeData(c.id);
-  const results = runPracticeChecks(data, set);
-  const s = summarize(results);
-  return { edition: "Standard", activity: set.name, company: c.name, students: c.students, points: s.passed, max: s.total, status: "Checked now", detail: results.map((r) => detailFrom("Standard", set.name, c, r)) };
+  return sets.map((set) => {
+    const results = runPracticeChecks(data, set);
+    const s = summarize(results);
+    return { edition: "Standard" as const, activity: set.name, company: c.name, students: c.students, points: s.passed, max: s.total, status: "Checked now", detail: results.map((r) => detailFrom("Standard", set.name, c, r)) };
+  });
 }
 
-export async function scoreMfg(c: ClassCompany, set: MfgPracticeSet): Promise<ScoreRow> {
+/** One Manufacturing company checked against every Manufacturing practice set. */
+export async function scoreMfgAll(c: ClassCompany, sets: MfgPracticeSet[]): Promise<ScoreRow[]> {
   let r = await supabase.rpc("mfg_practice_snapshot_a2", { p_tenant: c.id });
   if (r.error) r = await supabase.rpc("mfg_practice_snapshot", { p_tenant: c.id });
   if (r.error) throw new Error(r.error.message);
-  const results = runMfgPracticeChecks(r.data as MfgSnapshot, set);
-  const s = summarizeMfg(results);
-  return { edition: "Manufacturing", activity: set.name, company: c.name, students: c.students, points: s.passed, max: s.total, status: "Checked now", detail: results.map((x) => detailFrom("Manufacturing", set.name, c, x)) };
+  const snap = r.data as MfgSnapshot;
+  return sets.map((set) => {
+    const results = runMfgPracticeChecks(snap, set);
+    const s = summarizeMfg(results);
+    return { edition: "Manufacturing" as const, activity: set.name, company: c.name, students: c.students, points: s.passed, max: s.total, status: "Checked now", detail: results.map((x) => detailFrom("Manufacturing", set.name, c, x)) };
+  });
 }
 
 export async function loadMfgSets(): Promise<{ id: string; name: string; summary: string }[]> {

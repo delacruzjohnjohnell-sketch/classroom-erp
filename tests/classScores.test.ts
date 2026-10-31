@@ -61,3 +61,15 @@ test("answers can be left out of the Detail sheet", async () => {
   const note = wb.getWorksheet("Detail")!.getRow(3).getCell(10).value;
   assert.ok(note === null || note === "" || note === undefined);
 });
+
+test("each company's best-matching set is marked, and only those count towards the summary", async () => {
+  const { markBestMatch, counted, studentMatrix: matrix } = await import("../src/lib/classScores.ts");
+  const mk = (company: string, activity: string, points: number): ScoreRow => ({ edition: "Standard", activity, company, students: [company + " student"], points, max: 10, status: "x", detail: [] });
+  const rows = markBestMatch([mk("A", "Set one", 9), mk("A", "Set two", 2), mk("B", "Set one", 1), mk("B", "Set two", 8)]);
+  assert.deepEqual(rows.map((r) => r.bestMatch), [true, false, false, true]);
+  assert.deepEqual(rows.map((r) => r.status), ["Best match", "Another set", "Another set", "Best match"]);
+  assert.equal(counted(rows).length, 2);
+  const m = matrix(counted(rows));
+  assert.equal(m.students.find((s) => s.name === "A student")!.cells["Set one"], 90);
+  assert.equal(m.students.find((s) => s.name === "A student")!.cells["Set two"], undefined);
+});

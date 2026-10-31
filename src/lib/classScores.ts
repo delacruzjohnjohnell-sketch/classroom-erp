@@ -8,7 +8,23 @@ export type DetailRow = {
 };
 export type ScoreRow = {
   edition: Edition; activity: string; company: string; students: string[]; points: number | null; max: number | null; status: string; detail: DetailRow[];
+  /** Standard and Manufacturing companies are checked against every practice set; this marks the one each company most likely did. Absent means yes. */
+  bestMatch?: boolean;
 };
+
+/** The rows that count towards the summaries: each company's best-matching set, and everything that is not set-based (AIS). */
+export const counted = (rows: ScoreRow[]): ScoreRow[] => rows.filter((r) => r.bestMatch !== false);
+
+/** Marks, for each company, the set with the highest percentage as the best match (the first one on a tie). */
+export function markBestMatch(rows: ScoreRow[]): ScoreRow[] {
+  const best = new Map<string, ScoreRow>();
+  for (const r of rows) {
+    const key = `${r.edition}\u0000${r.company}`;
+    const cur = best.get(key);
+    if (!cur || (pctOf(r.points, r.max) ?? -1) > (pctOf(cur.points, cur.max) ?? -1)) best.set(key, r);
+  }
+  return rows.map((r) => ({ ...r, bestMatch: best.get(`${r.edition}\u0000${r.company}`) === r, status: best.get(`${r.edition}\u0000${r.company}`) === r ? "Best match" : "Another set" }));
+}
 
 /** A whole-number percentage, or null when there is nothing to divide by. */
 export function pctOf(points: number | null | undefined, max: number | null | undefined): number | null {
@@ -84,7 +100,7 @@ export async function buildClassWorkbook(rows: ScoreRow[], opts: { includeAnswer
   };
 
   // Summary
-  const m = studentMatrix(rows);
+  const m = studentMatrix(counted(rows));
   const sum = mk("Summary", [26, ...m.activities.map(() => 22), 12]);
   header(sum, ["Student", ...m.activities, "Average"]);
   for (const s of m.students) {
@@ -92,7 +108,7 @@ export async function buildClassWorkbook(rows: ScoreRow[], opts: { includeAnswer
     for (let c = 2; c <= m.activities.length + 2; c++) r.getCell(c).numFmt = "0%";
   }
   sum.addRow([]);
-  sum.addRow([`Percent of the maximum score, best attempt per activity. Generated ${opts.generated ?? new Date().toLocaleString("en-PH")}.`]);
+  sum.addRow([`Percent of the maximum score, best attempt per activity, using each company's best-matching practice set. Generated ${opts.generated ?? new Date().toLocaleString("en-PH")}.`]);
 
   // One sheet per edition
   for (const ed of ["Standard", "Manufacturing", "AIS"] as Edition[]) {
@@ -114,7 +130,7 @@ export async function buildClassWorkbook(rows: ScoreRow[], opts: { includeAnswer
   // Class insights
   const ins = mk("Class insights", [12, 34, 54, 10, 10, 10, 14, 10]);
   header(ins, ["Edition", "Activity", "Item", "Attempts", "Missed", "Miss rate", "Average points", "Maximum"]);
-  for (const x of mostMissed(rows.flatMap((r) => r.detail))) {
+  for (const x of mostMissed(counted(rows).flatMap((r) => r.detail))) {
     const row = ins.addRow([x.edition, x.activity, x.item, x.attempts, x.missed, x.missRate, Math.round(x.averagePoints * 100) / 100, x.max]);
     row.getCell(6).numFmt = "0%";
   }
