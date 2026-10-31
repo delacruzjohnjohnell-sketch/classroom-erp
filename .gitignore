@@ -5,3 +5,16 @@ node_modules
 .vercel
 .env*
 supabase/.temp
+
+# Teaching materials and generated files that live beside the code but are not part of the app
+/*.pdf
+/*.zip
+/combined_*.sql
+/agency-agents/
+/handbook-mfg/**/*.pdf
+/handbook-mfg/**/*.html
+/handbook-mfg/**/shots/
+/handbook-mfg/**/*.bak
+/handbook-mfg/put.sh
+test-results/
+playwright-report/

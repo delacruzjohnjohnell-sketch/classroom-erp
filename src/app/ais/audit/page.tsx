@@ -29,6 +29,8 @@ const TABS = ["Ledger", "Tests", "Sampling", "Workpapers", "Findings", "Close th
 type Tab = (typeof TABS)[number];
 const VIOLET = "#9D7CFF";
 
+type ProcessScore = { visible: boolean; points?: number; max?: number; rows?: { label: string; points: number; max: number; message: string }[] };
+
 export default function AisAuditPage() {
   return <AppShell><Audit /></AppShell>;
 }
@@ -43,22 +45,25 @@ function Audit() {
   const [wps, setWps] = useState<Workpaper[]>([]);
   const [finds, setFinds] = useState<Finding[]>([]);
   const [score, setScore] = useState<AuditScore | null>(null);
+  const [proc, setProc] = useState<ProcessScore | null>(null);
   const [finding, setFinding] = useState<FindingForm | null>(null);
 
   const load = useCallback(async () => {
     const o = await supabase.rpc("ais_audit_overview");
     if (o.error) { setLockedMsg(friendlyError(o.error.message)); setOv(null); return; }
     setOv(o.data as Overview);
-    const [ft, sm, wp, fd, sc] = await Promise.all([
+    const [ft, sm, wp, fd, sc, pr] = await Promise.all([
       supabase.from("ais_finding_types").select("tag, label, category"),
       supabase.from("ais_samples").select("id, method, params, seed, created_at").eq("tenant_id", effectiveTenantId ?? "").order("created_at", { ascending: false }),
       supabase.from("ais_workpapers").select("id, ref_no, title, objective, procedure_text, conclusion, sample_id, status").eq("tenant_id", effectiveTenantId ?? "").order("ref_no"),
       supabase.from("ais_findings").select("id, entry_id, exception_type, condition_text, severity, status, reversal_entry_id, workpaper_id").eq("tenant_id", effectiveTenantId ?? "").order("created_at"),
       supabase.rpc("ais_audit_score"),
+      supabase.rpc("ais_my_audit_process"),   // how you worked; shown once the audit is closed (needs migration 0082)
     ]);
     showQueryErrors(ft, sm, wp, fd);
     setTypes((ft.data as FType[]) ?? []); setSamples((sm.data as Sample[]) ?? []); setWps((wp.data as Workpaper[]) ?? []); setFinds((fd.data as Finding[]) ?? []);
     setScore((sc.data as AuditScore | null) ?? null);
+    setProc(pr.error ? null : ((pr.data as ProcessScore | null) ?? null));
   }, [effectiveTenantId]);
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { if (effectiveTenantId) load(); }, [effectiveTenantId, load]);
@@ -100,7 +105,7 @@ function Audit() {
       {tab === "Sampling" && <SamplingTab open={open} samples={samples} onChanged={load} onReport={(entryId, memo) => setFinding({ ...emptyFinding(), entryId, condition: `Sampled entry "${memo}": ` })} />}
       {tab === "Workpapers" && <WorkpapersTab open={open} wps={wps} samples={samples} onChanged={load} />}
       {tab === "Findings" && <FindingsTab open={open} finds={finds} lock={ov.lock_date} typeLabel={typeLabel} wps={wps} onNew={() => setFinding(emptyFinding())} onChanged={load} />}
-      {tab === "Close the audit" && <CloseTab open={open} ov={ov} score={score} onChanged={load} />}
+      {tab === "Close the audit" && <CloseTab open={open} ov={ov} score={score} proc={proc} onChanged={load} />}
 
       {finding && <FindingModal form={finding} types={types} wps={wps} onClose={() => setFinding(null)} onSaved={async () => { setFinding(null); setTab("Findings"); await load(); }} />}
       <FormStyles />
@@ -453,7 +458,7 @@ function FindingModal({ form, types, wps, onClose, onSaved }: { form: FindingFor
 }
 
 /* ---------------------------------------------------------------- close */
-function CloseTab({ open, ov, score, onChanged }: { open: boolean; ov: Overview; score: AuditScore | null; onChanged: () => Promise<void> }) {
+function CloseTab({ open, ov, score, proc, onChanged }: { open: boolean; ov: Overview; score: AuditScore | null; proc: ProcessScore | null; onChanged: () => Promise<void> }) {
   const [confirm, setConfirm] = useState(false); const [busy, setBusy] = useState(false);
   const close = async () => {
     setBusy(true);
@@ -483,6 +488,15 @@ function CloseTab({ open, ov, score, onChanged }: { open: boolean; ov: Overview;
             <div className="mt-3"><div className="text-[12px] font-semibold mb-1">Reported, but not planted</div>
               {(score.false_positive_details ?? []).map((d, i) => <div key={i} className="text-[12px] text-[#A3B1C2]">{d.memo ?? "(no entry)"}: {d.condition}</div>)}</div>
           )}
+        </Panel>
+      )}
+      {proc?.visible && proc.rows && (
+        <Panel title={`How you worked: ${proc.points} of ${proc.max}`}>
+          <div className="text-[12.5px] text-[#A3B1C2] mb-3">Finding the problems is only half of an audit. This is how well you did the work: the tests you chose, how carefully you sampled, whether your workpapers could be followed by someone else, and whether your findings were written out in full.</div>
+          <table>
+            <thead><tr><th>What</th><th>Points</th><th>What the system saw</th></tr></thead>
+            <tbody>{proc.rows.map((r) => (<tr key={r.label}><td><b>{r.label}</b></td><td>{r.points} / {r.max}</td><td style={{ fontSize: 12, color: "#A3B1C2" }}>{r.message}</td></tr>))}</tbody>
+          </table>
         </Panel>
       )}
       {confirm && <ConfirmDialog title="Close the audit?" confirmLabel="Close it" busy={busy} onConfirm={close} onCancel={() => setConfirm(false)} message="You will not be able to run tests, sign workpapers, report findings or reverse entries any more. Your score will be shown." />}

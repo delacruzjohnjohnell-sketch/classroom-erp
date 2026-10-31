@@ -13,6 +13,7 @@ import {
   approvalNote, deskProgress, nextStep, openInvoices, ORDER_LABEL, ORDER_TONE, STEP_BUTTON,
   type WbCustomer, type WbItem, type WbOrder, type WbTask,
 } from "@/lib/aisSales";
+import DeskPrimer from "@/components/ais/DeskPrimer";
 
 type State = { phase: "ACCOUNTING" | "AUDIT" | "CLOSED"; mode: string; as_of: string; solo: boolean; customers: WbCustomer[]; items: WbItem[]; tasks: WbTask[]; orders: WbOrder[]; receipts: { id: string; received_on: string; amount: number; customer: string; invoice_no: string }[] };
 type Score = { visible: boolean; points?: number; max?: number; rows?: { seq: number; ref_no: string; points: number; max: number; message: string; why: string }[] };
@@ -91,6 +92,7 @@ function Sales() {
         </div>
       </div>
 
+      <DeskPrimer desk="sales" />
       <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))" }}>
         <KpiCard icon={<CheckCircle2 size={14} />} label="Cards finished" value={`${p.done} of ${p.total}`} accent="#22D3C5" />
         <KpiCard icon={<Users size={14} />} label="Customers owe you" value={money(ar)} accent="#F2B13C" />

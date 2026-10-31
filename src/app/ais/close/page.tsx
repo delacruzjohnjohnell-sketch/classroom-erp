@@ -10,6 +10,7 @@ import { mutate } from "@/lib/mutate";
 import { showQueryErrors } from "@/lib/queryErrors";
 import { money } from "@/lib/aisDesk";
 import { clReady, type ClTask, type Statements } from "@/lib/aisSales";
+import DeskPrimer from "@/components/ais/DeskPrimer";
 
 type State = { phase: "ACCOUNTING" | "AUDIT" | "CLOSED"; receivable: number; tasks: ClTask[]; statements: Statements };
 type Score = { visible: boolean; points?: number; max?: number; rows?: { seq: number; ref_no: string; points: number; max: number; message: string; why: string }[] };
@@ -66,6 +67,7 @@ function Close() {
         </div>
       </div>
 
+      <DeskPrimer desk="close" />
       <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))" }}>
         <KpiCard icon={<CheckCircle2 size={14} />} label="Close steps done" value={`${done} of ${st.tasks.length}`} accent="#22D3C5" />
         <KpiCard icon={<FileText size={14} />} label="Net income" value={money(n(f.income.net_income))} accent="#F2B13C" />

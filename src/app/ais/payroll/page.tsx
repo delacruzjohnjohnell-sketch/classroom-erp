@@ -10,6 +10,7 @@ import { mutate, ok } from "@/lib/mutate";
 import { showQueryErrors } from "@/lib/queryErrors";
 import { money } from "@/lib/aisDesk";
 import { PR_LABEL, PR_TONE, prRunStep, prUndecided, type PrTask } from "@/lib/aisSales";
+import DeskPrimer from "@/components/ais/DeskPrimer";
 
 type Employee = { id: string; code: string; name: string; monthly_rate: number; active: boolean };
 type State = { phase: "ACCOUNTING" | "AUDIT" | "CLOSED"; solo: boolean; employees: Employee[]; tasks: PrTask[] };
@@ -80,6 +81,7 @@ function Payroll() {
         </div>
       </div>
 
+      <DeskPrimer desk="payroll" />
       <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))" }}>
         <KpiCard icon={<CheckCircle2 size={14} />} label="Cards decided" value={`${finished} of ${st.tasks.length}`} accent="#22D3C5" />
         <KpiCard icon={<Users size={14} />} label="Employees on file" value={st.employees.filter((e) => e.active).length} accent="#F2B13C" />

@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, LogOut, Plus, Trash2, Users } from "lucide-react";
-import { Empty, FormStyles, GoldBtn, Label, Modal, OutlineBtn, Panel, TinyBtn } from "@/components/ui";
+import { ConfirmDialog, Empty, FormStyles, GoldBtn, Label, Modal, OutlineBtn, Panel, TinyBtn } from "@/components/ui";
+import BulkCompanies from "@/components/ais/BulkCompanies";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
@@ -53,6 +54,8 @@ export default function AisTeamsPage() {
   const [adding, setAdding] = useState("");
   const [addSeats, setAddSeats] = useState<Seat[]>(["ACCOUNTING"]);
   const [busy, setBusy] = useState(false);
+  const [bulk, setBulk] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const [sets, setSets] = useState<SetRow[]>([]);
   const [importing, setImporting] = useState(false);
   const [jsonText, setJsonText] = useState("");
@@ -116,6 +119,13 @@ export default function AisTeamsPage() {
     await loadCompanies();
   };
 
+  const resetDesks = async () => {
+    if (!manage) return;
+    setBusy(true);
+    const res = await mutate(supabase.rpc("ais_reset_desks", { p_tenant: manage.tenant_id }), { successMessage: "The five desks were cleared. Students start them fresh the next time they open them." });
+    setBusy(false);
+    if (ok(res)) setResetting(false);
+  };
   const restart = async () => {
     if (!manage || busy) return;
     setBusy(true);
@@ -203,6 +213,8 @@ export default function AisTeamsPage() {
           <div className="text-xs text-[#7F8EA0]">Teacher · {profile.full_name}</div>
         </div>
         <div className="flex gap-2">
+          <button onClick={() => setBulk(true)} className="flex items-center gap-1.5 border border-hairline rounded-md px-3 py-1.5 text-xs text-[#A3B1C2]"><Plus size={15} /> Create companies from a list</button>
+          <button onClick={() => router.push("/teacher/scores")} className="flex items-center gap-1.5 border border-hairline rounded-md px-3 py-1.5 text-xs text-[#A3B1C2]">Class scores (Excel)</button>
           <button onClick={() => router.push("/ais/gradebook")} className="flex items-center gap-1.5 border border-hairline rounded-md px-3 py-1.5 text-xs text-[#A3B1C2]">Class gradebook</button>
           <button onClick={() => router.push("/choose")} className="flex items-center gap-1.5 border border-hairline rounded-md px-3 py-1.5 text-xs text-[#A3B1C2]"><ArrowLeft size={15} /> Choose ERP</button>
           <button onClick={() => signOut()} className="flex items-center gap-1.5 border border-hairline rounded-md px-3 py-1.5 text-xs text-[#A3B1C2]"><LogOut size={14} /> Sign out</button>
@@ -286,6 +298,11 @@ export default function AisTeamsPage() {
         </Modal>
       )}
 
+      {bulk && <BulkCompanies students={students.filter((x): x is { id: string; full_name: string } => !!x.full_name)} sets={sets.map((x) => ({ id: x.id, title: x.title }))} onClose={() => setBulk(false)} onDone={loadCompanies} />}
+      {resetting && manage && (
+        <ConfirmDialog title="Reset the desks?" confirmLabel="Reset the desks" danger busy={busy} onConfirm={resetDesks} onCancel={() => setResetting(false)}
+          message={<>This clears the Sales, Purchases, Payroll, Fixed assets and Close desks of <b>{manage.name}</b>: every card the students worked, and every ledger entry those desks posted. The 13 document packets and the sales population stay as they are. It only works while the Accounting phase is open.</>} />
+      )}
       {restarting && manage && (
         <Modal title="Start a new round" onClose={() => setRestarting(false)}>
           <div className="text-[12.5px] text-[#A3B1C2] mb-2">This makes a new company with the same members and seats, and assigns the practice set again with fresh numbers. The current company stays as the record of this round.</div>
@@ -340,7 +357,7 @@ export default function AisTeamsPage() {
               <div className="text-[12.5px]">
                 <b>{sets.find((x) => x.id === inst.set_id)?.title ?? inst.set_id}</b>
                 <div className="text-[#7F8EA0]">{inst.mode === "IMMEDIATE" ? "Practice round" : "Graded round"} · {inst.phase === "ACCOUNTING" ? "Accounting phase open" : "Accounting phase closed"} · seed {inst.seed}{inst.lock_date ? ` · books lock on ${inst.lock_date}` : ""}</div>
-                <div className="mt-2"><TinyBtn type="button" onClick={() => { setNewSet(inst.set_id); setNewMode(inst.mode); setRestarting(true); }}>Start a new round…</TinyBtn>{" "}<TinyBtn type="button" onClick={openReview}>Accounting: answer key and results</TinyBtn>{" "}<TinyBtn type="button" onClick={openAuditReview}>Audit: planted exceptions and results</TinyBtn></div>
+                <div className="mt-2"><TinyBtn type="button" onClick={() => { setNewSet(inst.set_id); setNewMode(inst.mode); setRestarting(true); }}>Start a new round…</TinyBtn>{" "}{inst.phase === "ACCOUNTING" && <><TinyBtn type="button" onClick={() => setResetting(true)}>Reset the desks…</TinyBtn>{" "}</>}<TinyBtn type="button" onClick={openReview}>Accounting: answer key and results</TinyBtn>{" "}<TinyBtn type="button" onClick={openAuditReview}>Audit: planted exceptions and results</TinyBtn></div>
               </div>
             ) : (
               <div>

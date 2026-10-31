@@ -10,6 +10,7 @@ import { mutate, ok } from "@/lib/mutate";
 import { showQueryErrors } from "@/lib/queryErrors";
 import { money } from "@/lib/aisDesk";
 import { matchRows, payableBills, pwNextStep, PW_LABEL, PW_STEP_BUTTON, PW_TONE, type PwBill, type PwTask } from "@/lib/aisSales";
+import DeskPrimer from "@/components/ais/DeskPrimer";
 
 type Vendor = { id: string; name: string; approved: boolean; owed: number };
 type State = { phase: "ACCOUNTING" | "AUDIT" | "CLOSED"; solo: boolean; vendors: Vendor[]; tasks: PwTask[]; bills: PwBill[]; items: { id: string; sku: string; name: string; on_hand: number }[] };
@@ -91,6 +92,7 @@ function Purchases() {
         </div>
       </div>
 
+      <DeskPrimer desk="purchases" />
       <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))" }}>
         <KpiCard icon={<CheckCircle2 size={14} />} label="Cards finished" value={`${finished} of ${st.tasks.length}`} accent="#22D3C5" />
         <KpiCard icon={<Users size={14} />} label="You owe vendors" value={money(owed)} accent="#F2B13C" />
