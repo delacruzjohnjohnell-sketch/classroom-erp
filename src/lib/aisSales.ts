@@ -104,3 +104,69 @@ export function matchRows(t: Pick<PwTask, "po_qty" | "po_price" | "rr_qty" | "in
     { label: "Unit price", po: f(t.po_price), rr: "n/a", inv: f(t.inv_price), differs: t.po_price === null || t.po_price !== t.inv_price },
   ];
 }
+
+// ---------------------------------------------------------------- Payroll desk
+
+export type PrState = "NEW" | "CLEAN" | "HELD" | "ACCEPTED" | "REJECTED" | "POSTED" | "PAID" | "DONE";
+export type PrTask = {
+  id: string; seq: number; kind: "TIME" | "RATE_CHANGE" | "RUN"; employee_id: string | null; emp_name: string; on_file: boolean; hours: number | null; ot_hours: number | null;
+  ot_approved: boolean | null; new_rate: number | null; form_attached: boolean | null; note: string | null; state: PrState; flag_text: string | null; checked_by_me: boolean;
+  self_approved: boolean; decision_note: string | null; gross: number | null; deductions: number | null; net: number | null; current_rate: number | null;
+};
+
+export const PR_LABEL: Record<PrState, string> = {
+  NEW: "Not checked yet", CLEAN: "Checked: clean", HELD: "Held by the check", ACCEPTED: "Approved", REJECTED: "Rejected", POSTED: "Posted to the ledger", PAID: "Paid", DONE: "Posted and paid",
+};
+export const PR_TONE: Record<PrState, string> = {
+  NEW: "#F2B13C", CLEAN: "#22D3C5", HELD: "#FF6B7A", ACCEPTED: "#22D3C5", REJECTED: "#7F8EA0", POSTED: "#22D3C5", PAID: "#22D3C5", DONE: "#22D3C5",
+};
+
+/** Cards still waiting for a decision: not checked, or held by the check. The payroll cannot be posted until this is zero. */
+export function prUndecided(tasks: Pick<PrTask, "kind" | "state">[]): number {
+  return tasks.filter((t) => t.kind !== "RUN" && (t.state === "NEW" || t.state === "HELD")).length;
+}
+
+/** What the run card offers next: post the vouchers, pay the net pay, or nothing. */
+export function prRunStep(tasks: Pick<PrTask, "kind" | "state">[]): "wait" | "post" | "pay" | "done" {
+  const run = tasks.find((t) => t.kind === "RUN");
+  if (!run) return "wait";
+  if (run.state === "DONE") return "done";
+  if (run.state === "POSTED") return "pay";
+  return prUndecided(tasks) === 0 ? "post" : "wait";
+}
+
+// ---------------------------------------------------------------- Fixed Assets desk
+
+export type FaTask = {
+  id: string; seq: number; kind: "INVOICE" | "DEPRECIATION" | "DISPOSAL"; title: string; vendor: string | null; inv_no: string | null; doc_date: string; net: number | null;
+  life_months: number | null; proceeds: number | null; note: string | null; state: "NEW" | "DONE"; decision: "CAPITALIZE" | "EXPENSE" | null;
+};
+export type FaAsset = { id: string; code: string; name: string; cost: number; life_months: number; in_service: string; acc_dep: number; nbv: number; status: "ACTIVE" | "DISPOSED" };
+
+/** What the Depreciation and Disposal cards may do now: depreciation needs every invoice decided; the sale needs depreciation first. */
+export function faReady(tasks: Pick<FaTask, "kind" | "state">[]): { depreciate: boolean; dispose: boolean } {
+  const invoicesOpen = tasks.some((t) => t.kind === "INVOICE" && t.state === "NEW");
+  const dep = tasks.find((t) => t.kind === "DEPRECIATION");
+  return { depreciate: !invoicesOpen && dep?.state === "NEW", dispose: dep?.state === "DONE" };
+}
+
+/** The monthly straight-line charge the register will show for an asset (full month if in service by the 15th). */
+export function monthlyDepreciation(cost: number, salvage: number, lifeMonths: number): number {
+  return Math.round(((cost - salvage) / lifeMonths) * 100) / 100;
+}
+
+// ---------------------------------------------------------------- Period-end close and statements
+
+export type ClTask = { id: string; seq: number; kind: "ALLOWANCE" | "ACCRUAL" | "CLOSING"; title: string; note: string | null; amount: number | null; state: "NEW" | "DONE"; decision: "ACCRUE" | "SKIP" | null };
+type FsLine = { code: string; name: string; amount: number | string };
+export type Statements = {
+  through: string; closed: boolean; td: number | string; tc: number | string; tb_ok: boolean;
+  trial_balance: { code: string; name: string; type: string; debit: number | string; credit: number | string }[];
+  income: { revenue: FsLine[]; expenses: FsLine[]; total_revenue: number | string; total_expenses: number | string; net_income: number | string };
+  balance: { assets: FsLine[]; liabilities: FsLine[]; equity_accounts: FsLine[]; current_earnings: number | string; total_assets: number | string; total_liabilities: number | string; total_equity: number | string; balanced: boolean };
+};
+
+/** The closing entries need both adjusting entries first. */
+export function clReady(tasks: Pick<ClTask, "kind" | "state">[]): { close: boolean } {
+  return { close: tasks.filter((t) => t.kind !== "CLOSING").every((t) => t.state === "DONE") && tasks.some((t) => t.kind === "CLOSING" && t.state === "NEW") };
+}

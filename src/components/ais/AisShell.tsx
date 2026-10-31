@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { BookOpen, Building2, FileSearch, Inbox, LayoutDashboard, MessageSquare, ShoppingBag, ShoppingCart, Users, Scale } from "lucide-react";
+import { BookOpen, Building2, FileSearch, Inbox, LayoutDashboard, MessageSquare, FileText, Landmark, ShoppingBag, ShoppingCart, Wallet, Users, Scale } from "lucide-react";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import GlobalSearch from "../GlobalSearch";
@@ -16,6 +16,9 @@ const ACCOUNTING_NAV = [
   { href: "/ais/inbox", label: "Document inbox", icon: Inbox },
   { href: "/ais/sales", label: "Sales desk", icon: ShoppingCart },
   { href: "/ais/purchases", label: "Purchases desk", icon: ShoppingBag },
+  { href: "/ais/payroll", label: "Payroll desk", icon: Wallet },
+  { href: "/ais/assets", label: "Fixed assets desk", icon: Landmark },
+  { href: "/ais/close", label: "Close and statements", icon: FileText },
   { href: "/ais/ledger", label: "General ledger", icon: BookOpen },
 ];
 const AUDIT_NAV = [

@@ -121,3 +121,32 @@ test("purchases desk: next step for a vendor invoice, payable invoices, and the 
   const noRr = matchRows({ po_qty: 80, po_price: 1640, rr_qty: null, inv_qty: 80, inv_price: 1640 });
   assert.equal(noRr[0].differs, true);
 });
+
+test("payroll desk: the run waits for every card to be decided, then posts, then pays", async () => {
+  const { prUndecided, prRunStep } = await import("../src/lib/aisSales.ts");
+  const t = (kind: string, state: string) => ({ kind, state }) as Parameters<typeof prUndecided>[0][number];
+  assert.equal(prUndecided([t("TIME", "NEW"), t("TIME", "HELD"), t("TIME", "CLEAN"), t("RATE_CHANGE", "REJECTED"), t("RUN", "NEW")]), 2);
+  assert.equal(prRunStep([t("TIME", "NEW"), t("RUN", "NEW")]), "wait");
+  assert.equal(prRunStep([t("TIME", "CLEAN"), t("TIME", "REJECTED"), t("RUN", "NEW")]), "post");
+  assert.equal(prRunStep([t("TIME", "POSTED"), t("RUN", "POSTED")]), "pay");
+  assert.equal(prRunStep([t("TIME", "PAID"), t("RUN", "DONE")]), "done");
+});
+
+test("fixed assets desk: depreciation waits for the invoices, the sale waits for depreciation", async () => {
+  const { faReady, monthlyDepreciation } = await import("../src/lib/aisSales.ts");
+  const t = (kind: string, state: string) => ({ kind, state }) as Parameters<typeof faReady>[0][number];
+  assert.deepEqual(faReady([t("INVOICE", "NEW"), t("DEPRECIATION", "NEW"), t("DISPOSAL", "NEW")]), { depreciate: false, dispose: false });
+  assert.deepEqual(faReady([t("INVOICE", "DONE"), t("DEPRECIATION", "NEW"), t("DISPOSAL", "NEW")]), { depreciate: true, dispose: false });
+  assert.deepEqual(faReady([t("INVOICE", "DONE"), t("DEPRECIATION", "DONE"), t("DISPOSAL", "NEW")]), { depreciate: false, dispose: true });
+  assert.equal(monthlyDepreciation(1250000, 0, 60), 20833.33);
+  assert.equal(monthlyDepreciation(135000, 0, 36), 3750);
+});
+
+test("close: the closing entries wait for both adjusting entries", async () => {
+  const { clReady } = await import("../src/lib/aisSales.ts");
+  const t = (kind: string, state: string) => ({ kind, state }) as Parameters<typeof clReady>[0][number];
+  assert.equal(clReady([t("ALLOWANCE", "NEW"), t("ACCRUAL", "NEW"), t("CLOSING", "NEW")]).close, false);
+  assert.equal(clReady([t("ALLOWANCE", "DONE"), t("ACCRUAL", "NEW"), t("CLOSING", "NEW")]).close, false);
+  assert.equal(clReady([t("ALLOWANCE", "DONE"), t("ACCRUAL", "DONE"), t("CLOSING", "NEW")]).close, true);
+  assert.equal(clReady([t("ALLOWANCE", "DONE"), t("ACCRUAL", "DONE"), t("CLOSING", "DONE")]).close, false);
+});
