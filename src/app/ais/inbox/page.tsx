@@ -9,7 +9,7 @@ import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
 import { showQueryErrors } from "@/lib/queryErrors";
-import { nextPending, progress, STATUS_LABEL, STATUS_TONE, type InboxRow } from "@/lib/aisDesk";
+import { nextPending, progress, statusText, type InboxRow } from "@/lib/aisDesk";
 
 type Instance = { title: string; topic: string | null; summary: string | null; mode: "IMMEDIATE" | "AFTER_CLOSE"; phase: "ACCOUNTING" | "AUDIT" | "CLOSED"; lock_date: string | null; total: number; pending: number; posted: number; held: number };
 type Score = { visible: boolean; points?: number; max?: number; message?: string };
@@ -85,7 +85,7 @@ function Inbox_() {
                 <td>{r.seq}</td>
                 <td><b>{r.title}</b>{r.wrong_attempts > 0 && r.status === "PENDING" && <span className="text-[11px] text-[#FF6B7A]"> · {r.wrong_attempts} refused {r.wrong_attempts === 1 ? "try" : "tries"}</span>}</td>
                 <td>{r.doc_date}</td>
-                <td><span className="text-[11.5px] font-semibold" style={{ color: STATUS_TONE[r.status] }}>● {STATUS_LABEL[r.status]}</span></td>
+                <td><span className="text-[11.5px] font-semibold" style={{ color: statusText(r).tone }}>● {statusText(r).label}</span></td>
                 {showPoints && <td style={{ textAlign: "right" }}>{r.points === null ? "" : `${r.points} / ${r.max_points}`}</td>}
               </tr>
             ))}

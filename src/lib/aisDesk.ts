@@ -5,7 +5,7 @@ export type PacketDoc = { type: string; fields: Record<string, string> };
 export type Packet = { title?: string; date?: string; company?: string; docs: PacketDoc[] };
 export type InboxRow = {
   id: string; seq: number; title: string; doc_date: string; status: "PENDING" | "POSTED" | "HELD";
-  wrong_attempts: number; points: number | null; max_points: number | null;
+  wrong_attempts: number; points: number | null; max_points: number | null; was_decided?: boolean;
 };
 export type DraftLine = { acct: string; debit: string; credit: string };
 export type PostLine = { acct: string; debit: number; credit: number };
@@ -13,6 +13,12 @@ export type Control = { tag: string; label: string; hall_category: string; descr
 
 export const STATUS_LABEL: Record<InboxRow["status"], string> = { PENDING: "Waiting for your decision", POSTED: "Posted", HELD: "Held" };
 export const STATUS_TONE: Record<InboxRow["status"], string> = { PENDING: "#F2B13C", POSTED: "#22D3C5", HELD: "#9D7CFF" };
+
+/** How a row of the inbox is worded: a document nobody decided before the phase closed reads "Not decided", not "Held". */
+export function statusText(r: Pick<InboxRow, "status" | "was_decided">): { label: string; tone: string } {
+  if (r.status === "HELD" && r.was_decided === false) return { label: "Not decided", tone: "#7F8EA0" };
+  return { label: STATUS_LABEL[r.status], tone: STATUS_TONE[r.status] };
+}
 
 export const emptyLine = (): DraftLine => ({ acct: "", debit: "", credit: "" });
 

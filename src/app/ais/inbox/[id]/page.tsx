@@ -132,7 +132,6 @@ function Review() {
               {result && result.points !== undefined && result.points !== null && (
                 <div className="mt-3 text-[12.5px] rounded-md border border-hairline p-3">
                   <b>{result.points} of {result.max_points} points.</b> {result.detail}
-                  {result.explanation && <div className="text-[#A3B1C2] mt-1.5">{result.explanation}</div>}
                 </div>
               )}
               {result && (result.points === undefined || result.points === null) && <div className="mt-3 text-[12px] text-[#7F8EA0]">Recorded. Your score appears when you close the Accounting phase.</div>}
@@ -142,7 +141,7 @@ function Review() {
                   <div className="mb-1.5">The right decision was <b>{review.key_decision === "POST" ? "to post it" : `to hold it: ${review.failed_label ?? review.failed_control}`}</b>.
                     {review.correct_decision === false && <span style={{ color: "#FF6B7A" }}> {review.key_decision === "HOLD" ? "A control had failed; the document should not have been posted." : "It was a valid document and should have been posted."}</span>}
                     {review.your_decision === "HOLD" && review.key_decision === "HOLD" && review.your_control_label && review.your_control_label !== review.failed_label && <span> You named “{review.your_control_label}”.</span>}</div>
-                  {review.explanation && <div className="text-[#C9D3E0] mb-2">{review.explanation}</div>}
+                  {review.explanation && <div className="text-[#3F4B5E] mb-2">{review.explanation}</div>}
                   {review.key_journal && review.key_journal.length > 0 && (
                     <table style={{ margin: "4px 0" }}>
                       <thead><tr><th>The right journal</th><th style={{ textAlign: "right" }}>Debit</th><th style={{ textAlign: "right" }}>Credit</th></tr></thead>

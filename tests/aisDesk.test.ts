@@ -59,3 +59,12 @@ test("controls are grouped by Hall's category, alphabetically", () => {
   assert.deepEqual(g.map((x) => x.category), ["Accuracy", "Timing"]);
   assert.deepEqual(g[1].items.map((x) => x.tag), ["Z", "B", "C"]);
 });
+
+test("a document nobody decided is not called held", async () => {
+  const { statusText } = await import("../src/lib/aisDesk.ts");
+  assert.equal(statusText({ status: "PENDING" }).label, "Waiting for your decision");
+  assert.equal(statusText({ status: "POSTED", was_decided: true }).label, "Posted");
+  assert.equal(statusText({ status: "HELD", was_decided: true }).label, "Held");
+  assert.equal(statusText({ status: "HELD", was_decided: false }).label, "Not decided");
+  assert.equal(statusText({ status: "HELD" }).label, "Held");                 // an older server that does not send the flag
+});
