@@ -34,8 +34,10 @@ function Sales() {
   const [checkNote, setCheckNote] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const [s, sc] = await Promise.all([supabase.rpc("ais_wb_state"), supabase.rpc("ais_wb_my_score")]);
+    // the state call creates the company's cards the first time, so the score must be asked for after it
+    const s = await supabase.rpc("ais_wb_state");
     if (showQueryErrors(s)) { setSt(null); return; }
+    const sc = await supabase.rpc("ais_wb_my_score");
     const raw = s.data as State;
     setSt({
       ...raw,
