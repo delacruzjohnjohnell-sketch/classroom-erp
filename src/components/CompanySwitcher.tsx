@@ -29,7 +29,7 @@ export default function CompanySwitcher({ edition }: { edition?: string } = {}) 
   const current = tenants.find((t) => t.id === effectiveTenantId);
   // A company the person has just been added to may not be in the list yet; always show the active one.
   const all = myCompanies.some((c) => c.id === effectiveTenantId) || !current ? myCompanies : [current, ...myCompanies];
-  const list = edition && editions ? all.filter((c) => c.id === effectiveTenantId || (editions[c.id] ?? "STANDARD") === edition) : all;
+  const list = !edition ? all : editions ? all.filter((c) => c.id === effectiveTenantId || (editions[c.id] ?? "STANDARD") === edition) : all.filter((c) => c.id === effectiveTenantId);
 
   useEffect(() => {
     if (!open) return;

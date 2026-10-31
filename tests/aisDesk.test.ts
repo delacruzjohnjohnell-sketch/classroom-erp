@@ -150,3 +150,11 @@ test("close: the closing entries wait for both adjusting entries", async () => {
   assert.equal(clReady([t("ALLOWANCE", "DONE"), t("ACCRUAL", "DONE"), t("CLOSING", "NEW")]).close, true);
   assert.equal(clReady([t("ALLOWANCE", "DONE"), t("ACCRUAL", "DONE"), t("CLOSING", "DONE")]).close, false);
 });
+
+test("purchases desk shows prices as money and quantities as plain numbers", async () => {
+  const { matchRows } = await import("../src/lib/aisSales.ts");
+  const r = matchRows({ po_qty: 200, po_price: 1640, rr_qty: 200, inv_qty: 200, inv_price: 1980 });
+  assert.equal(r[0].inv, "200");
+  assert.equal(r[1].po, "1,640.00");
+  assert.equal(r[1].inv, "1,980.00");
+});

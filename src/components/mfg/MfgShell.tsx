@@ -170,7 +170,7 @@ export default function MfgShell({ children, otherViewers }: { children: React.R
   return (
     <MfgFrame pathname={pathname} fullName={profile.full_name ?? ""} role={profile.role} isTeacher={profile.role === "teacher"}
       tenantName={tenants.find((t) => t.id === effectiveTenantId)?.name ?? "—"} otherViewers={otherViewers} roleNote={roleNote}
-      searchSlot={<GlobalSearch />} companySlot={<CompanySwitcher />} onSignOut={() => signOut()}
+      searchSlot={<GlobalSearch />} companySlot={<CompanySwitcher edition="MANUFACTURING" />} onSignOut={() => signOut()}
       onAllCompanies={() => { setViewTenantId(null); router.push("/teacher"); }}>
       {children}
     </MfgFrame>

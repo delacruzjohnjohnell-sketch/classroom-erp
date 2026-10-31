@@ -98,10 +98,11 @@ export function payableBills<T extends Pick<PwBill, "id" | "vendor_id" | "status
 
 /** The three documents side by side: where do quantity and price disagree? */
 export function matchRows(t: Pick<PwTask, "po_qty" | "po_price" | "rr_qty" | "inv_qty" | "inv_price">): { label: string; po: string; rr: string; inv: string; differs: boolean }[] {
-  const f = (n: number | null) => (n === null ? "none" : String(n));
+  const f = (n: number | null) => (n === null ? "none" : n.toLocaleString("en-PH", { minimumFractionDigits: 0, maximumFractionDigits: 2 }));
+  const price = (n: number | null) => (n === null ? "none" : n.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
   return [
     { label: "Quantity", po: f(t.po_qty), rr: f(t.rr_qty), inv: f(t.inv_qty), differs: [t.po_qty, t.rr_qty, t.inv_qty].some((v) => v === null) || !(t.po_qty === t.rr_qty && t.rr_qty === t.inv_qty) },
-    { label: "Unit price", po: f(t.po_price), rr: "n/a", inv: f(t.inv_price), differs: t.po_price === null || t.po_price !== t.inv_price },
+    { label: "Unit price", po: price(t.po_price), rr: "n/a", inv: price(t.inv_price), differs: t.po_price === null || t.po_price !== t.inv_price },
   ];
 }
 

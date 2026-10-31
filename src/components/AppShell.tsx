@@ -77,7 +77,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <MfgFrame pathname={pathname} fullName={profile.full_name ?? ""} role={profile.role} isTeacher={profile.role === "teacher"}
       tenantName={tenantName} otherViewers={otherViewers} items={navItems} product="Standard ERP" logo={<Building2 size={22} color="#fff" />}
-      searchSlot={<GlobalSearch />} companySlot={<CompanySwitcher />} onSignOut={() => signOut()}
+      searchSlot={<GlobalSearch />} companySlot={<CompanySwitcher edition="STANDARD" />} onSignOut={() => signOut()}
       onAllCompanies={() => { setViewTenantId(null); router.push("/teacher"); }}>
       {children}
     </MfgFrame>
