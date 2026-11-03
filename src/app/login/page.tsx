@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { GraduationCap, Users, ChevronRight } from "lucide-react";
+import { accessState } from "@/lib/access";
 import { supabase } from "@/lib/supabase";
 import { useSession } from "@/lib/session";
 
@@ -102,6 +103,7 @@ export default function LoginPage() {
   useEffect(() => {
     if (!loading && userId && profile) {
       if (profile.role === "teacher") { router.replace("/choose"); return; }
+      if (accessState(profile) !== "ok") { router.replace("/pending"); return; }
       if (profile.tenant_id) { router.replace("/choose"); }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -109,7 +111,7 @@ export default function LoginPage() {
 
   if (!loading && userId && profile) {
     // Redirecting via the effect above — render nothing while that happens.
-    if (profile.role === "teacher" || profile.tenant_id) return null;
+    if (profile.role === "teacher" || profile.tenant_id || accessState(profile) !== "ok") return null;
 
     return (
       <Shell>

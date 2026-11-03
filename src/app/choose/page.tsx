@@ -8,6 +8,8 @@ import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
 import { toast } from "@/lib/toast";
 import { EDITION_LABEL, type Edition } from "@/lib/edition";
+import { canUse } from "@/lib/access";
+import { useAccessGuard } from "@/lib/useAccess";
 
 const CYAN = "#22D3C5", AMBER = "#F2B13C", VIOLET = "#9D7CFF";
 
@@ -25,6 +27,12 @@ export default function ChoosePage() {
   const [lastUsed, setLastUsed] = useState<Partial<Record<Edition, LastUsed>>>({});
   const [busy, setBusy] = useState<Edition | null>(null);
   const isTeacher = profile?.role === "teacher";
+  const accessBlocked = useAccessGuard();
+  const [pendingCount, setPendingCount] = useState(0);
+  useEffect(() => {
+    if (!isTeacher) return;
+    supabase.rpc("pending_count").then(({ data, error }) => { if (!error && typeof data === "number") setPendingCount(data); });
+  }, [isTeacher]);
 
   const load = useCallback(async () => {
     const [ed, st, lu] = await Promise.all([
@@ -109,7 +117,7 @@ export default function ChoosePage() {
     if (ready && !isTeacher && userId && myCompanies.length === 0 && !profile?.tenant_id) router.replace("/login");
   }, [ready, isTeacher, userId, myCompanies.length, profile, router]);
 
-  if (loading || !ready || !profile) {
+  if (loading || !ready || !profile || accessBlocked) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" size={20} color={CYAN} /></div>;
   }
 
@@ -125,7 +133,15 @@ export default function ChoosePage() {
           <div className="font-mono text-[13px] font-bold text-teal border border-[rgba(34,211,197,0.55)] bg-tealsoft rounded-md w-8 h-8 flex items-center justify-center shadow-glow">&gt;_</div>
           <div className="font-mono text-[14px] font-bold">JJ and Co.</div>
         </div>
-        <button onClick={() => signOut()} className="flex items-center gap-1.5 border border-hairline rounded-md px-3 py-1.5 text-xs text-[#A3B1C2]"><LogOut size={14} /> Sign out</button>
+        <div className="flex items-center gap-2">
+          {isTeacher && (
+            <button onClick={() => router.push("/teacher/approvals")} className="flex items-center gap-1.5 border border-hairline rounded-md px-3 py-1.5 text-xs font-semibold" style={{ color: "#2F6BFF" }}>
+              Sign-up approvals
+              {pendingCount > 0 && <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-[#FF6B7A] text-white text-[10.5px] font-bold flex items-center justify-center">{pendingCount}</span>}
+            </button>
+          )}
+          <button onClick={() => signOut()} className="flex items-center gap-1.5 border border-hairline rounded-md px-3 py-1.5 text-xs text-[#A3B1C2]"><LogOut size={14} /> Sign out</button>
+        </div>
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center px-5 py-10">
@@ -147,6 +163,8 @@ export default function ChoosePage() {
             lastOpened={!isTeacher && lastEdition === "STANDARD" ? lastUsed.STANDARD : undefined}
             company={isTeacher ? `${counts("STANDARD")} student compan${counts("STANDARD") === 1 ? "y" : "ies"}` : standardCompany?.name}
             extra={!isTeacher && standardCompanies.length > 1 ? `${standardCompanies.length} companies — switch from the sidebar` : undefined}
+            locked={!isTeacher && !canUse(profile, "standard")}
+            lockedText="Your teacher has not given you this system."
             cta={isTeacher ? "View Standard companies" : standardCompany ? "Open" : "Create a company"}
             busy={busy === "STANDARD"}
             onClick={() => (isTeacher ? router.push("/teacher?edition=STANDARD") : open("STANDARD"))}
@@ -159,8 +177,8 @@ export default function ChoosePage() {
             lastOpened={!isTeacher && lastEdition === "MANUFACTURING" ? lastUsed.MANUFACTURING : undefined}
             company={isTeacher ? `${counts("MANUFACTURING")} compan${counts("MANUFACTURING") === 1 ? "y" : "ies"}` : mfgCompany?.name}
             extra={!isTeacher && mfgCompanies.length > 1 ? `${mfgCompanies.length} companies (yours and your team's) — switch from the sidebar` : undefined}
-            locked={!isTeacher && !enabled.MANUFACTURING && !mfgCompany}
-            lockedText="Opens when your teacher turns it on."
+            locked={!isTeacher && (!canUse(profile, "manufacturing") || (!enabled.MANUFACTURING && !mfgCompany))}
+            lockedText={canUse(profile, "manufacturing") ? "Opens when your teacher turns it on." : "Your teacher has not given you this system."}
             cta={isTeacher ? "View Manufacturing companies" : mfgCompany ? "Open" : "Set up my company"}
             busy={busy === "MANUFACTURING"}
             onClick={() => (isTeacher ? router.push("/teacher?edition=MANUFACTURING") : open("MANUFACTURING"))}
@@ -173,8 +191,8 @@ export default function ChoosePage() {
             lastOpened={!isTeacher && lastEdition === "AIS" ? lastUsed.AIS : undefined}
             company={isTeacher ? `${counts("AIS")} compan${counts("AIS") === 1 ? "y" : "ies"}` : aisCompany?.name}
             extra={!isTeacher && aisCompanies.length > 1 ? `${aisCompanies.length} companies — switch from the sidebar` : undefined}
-            locked={!isTeacher && (!enabled.AIS || !aisCompany)}
-            lockedText={enabled.AIS ? "Your teacher will add you to a company." : "Opens when your teacher turns it on."}
+            locked={!isTeacher && (!canUse(profile, "ais") || !enabled.AIS || !aisCompany)}
+            lockedText={!canUse(profile, "ais") ? "Your teacher has not given you this system." : enabled.AIS ? "Your teacher will add you to a company." : "Opens when your teacher turns it on."}
             cta={isTeacher ? "Manage AIS companies" : "Open"}
             busy={busy === "AIS"}
             onClick={() => (isTeacher ? router.push("/ais/teams") : open("AIS"))}
@@ -185,6 +203,8 @@ export default function ChoosePage() {
             accent="#34D399" icon={<BookOpen size={22} />} title="Basic Financial Accounting" subtitle="BFAR, practice sets"
             text="Journal, ledger, worksheet and financial statements for a sole proprietorship, with graded practice sets. Works on its own, with no company to set up."
             company={isTeacher ? "Students' practice sets" : undefined}
+            locked={!isTeacher && !canUse(profile, "bfar")}
+            lockedText="Your teacher has not given you this system."
             cta={isTeacher ? "Check student work" : "Open"}
             busy={false}
             onClick={() => router.push(isTeacher ? "/bfar/teacher" : "/bfar")}
@@ -194,6 +214,8 @@ export default function ChoosePage() {
           <EditionCard
             accent="#F472B6" icon={<FileText size={22} />} title="BIR eForms Lab" subtitle="Tax returns, lessons, cases"
             text="Practice filling out BIR tax returns on a screen that works like the Offline eBIRForms Package, with a lesson, tips and case problems for each form. A classroom simulation: nothing is sent to the BIR."
+            locked={!isTeacher && !canUse(profile, "bir")}
+            lockedText="Your teacher has not given you this system."
             cta="Open"
             busy={false}
             onClick={() => router.push("/bir-lab")}

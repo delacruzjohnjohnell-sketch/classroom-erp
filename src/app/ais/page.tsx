@@ -52,7 +52,7 @@ function AisHome() {
   const access = seatAccess(mySeats);
 
   return (
-    <div className="px-7 py-6 max-w-[1100px] flex flex-col gap-5">
+    <div className="px-1 py-2 sm:px-7 sm:py-6 max-w-[1100px] flex flex-col gap-5">
       <div>
         <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#7F8EA0]">Accounting Information Systems</div>
         <h1 className="text-[22px] font-bold mt-1">{company}</h1>

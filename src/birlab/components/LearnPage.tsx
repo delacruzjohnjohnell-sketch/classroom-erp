@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { CaseDef } from "../cases/types";
 import type { GuideRow, LectureSection, QuizItem } from "../content/f1701a";
+import { COMPLIANCE } from "../content/compliance";
 import { getForm } from "../forms/registry";
 import { useBirStore } from "../store/useBirStore";
 import { FormRenderer, pageOfId } from "./FormRenderer";
@@ -63,6 +64,15 @@ export function LearnPage({ formId, lesson }: { formId: string; lesson: Lesson }
       {tab === "lecture" && (
         <article className="max-w-3xl space-y-5 text-[15px] leading-relaxed text-gray-800">
           <div className="text-xs text-gray-500">{lesson.lecture.title} · {lesson.lecture.minutes}</div>
+          {COMPLIANCE[formId] && (
+            <aside aria-label="Compliance date" className="rounded-lg border-l-4 border-[#f2b705] bg-white p-4 text-sm shadow-sm">
+              <h2 className="text-base font-bold text-[#0b2a6f]">Compliance date</h2>
+              <p className="mt-1 font-semibold text-gray-900">{COMPLIANCE[formId].when}</p>
+              <p className="text-gray-700">{COMPLIANCE[formId].example}</p>
+              <p className="mt-1 text-xs text-gray-600">Source: {COMPLIANCE[formId].source} {COMPLIANCE[formId].verified ? "(checked against an official BIR document)" : <b className="text-amber-800">(taught: not printed in an official BIR document, so confirm with the latest BIR issuance)</b>}</p>
+              <p className="mt-1 text-xs text-gray-600">{COMPLIANCE[formId].late}</p>
+            </aside>
+          )}
           {lesson.lecture.sections.map((s) => (
             <section key={s.heading}>
               <h2 className="text-lg font-bold text-gray-900">{s.heading}</h2>

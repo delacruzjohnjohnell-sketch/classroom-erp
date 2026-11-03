@@ -92,7 +92,7 @@ function Review() {
   const codeName = (code: string) => accounts.find((a) => a.code === code)?.name ?? "";
 
   return (
-    <div className="px-7 py-6 max-w-[1250px] flex flex-col gap-4">
+    <div className="px-1 py-2 sm:px-7 sm:py-6 max-w-[1250px] flex flex-col gap-4">
       <button onClick={() => router.push("/ais/inbox")} className="flex items-center gap-1.5 text-[12.5px] text-[#A3B1C2] w-fit"><ArrowLeft size={14} /> Back to the inbox</button>
       <div>
         <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#7F8EA0]">Document {data.seq} · dated {data.doc_date}</div>

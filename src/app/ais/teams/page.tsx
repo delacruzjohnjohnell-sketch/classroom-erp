@@ -221,7 +221,7 @@ export default function AisTeamsPage() {
         </div>
       </div>
 
-      <div className="px-6 py-6 max-w-[1000px] w-full mx-auto flex flex-col gap-5">
+      <div className="px-1 py-2 sm:px-6 sm:py-6 max-w-[1000px] w-full mx-auto flex flex-col gap-5">
         <div className="text-[12.5px] text-[#A3B1C2] max-w-[780px]">
           An AIS company is a firm whose books students work on. You create it, add students and give each the <b>Accounting</b> seat, the <b>Audit</b> seat, or both.
           Open the AIS edition for students on the Choose ERP page first, or you cannot add anyone. You stay the final override and never hold a seat.

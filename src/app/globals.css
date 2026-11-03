@@ -152,3 +152,39 @@ button:focus-visible, a:focus-visible { outline: 2px solid #22D3C5; outline-offs
 .mfg-light .fixed .text-ink[style*="monospace"] { font-size: 16px !important; font-weight: 700 !important; }
 .mfg-light .hover\:bg-sidebarHover:hover { background-color: #EEF2F8; }
 .mfg-light .text-sidebarTextMuted { color: var(--m-muted); }
+
+/* =====================================================================================================
+   Phones and tablets. The page frame (MfgShell) turns its sidebar into a drawer below 1024px; these rules
+   cover everything inside the pages without editing each one.
+   ===================================================================================================== */
+html { -webkit-text-size-adjust: 100%; }
+img, svg, video, canvas { max-width: 100%; }
+body { overflow-x: hidden; }
+
+@media (max-width: 1023px) {
+  /* a wide table scrolls sideways inside its card instead of stretching the page */
+  table { display: block; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  pre, code { white-space: pre-wrap; word-break: break-word; }
+  /* dialogs fit the screen and scroll */
+  .fixed.inset-0 > div { max-width: calc(100vw - 1rem); max-height: calc(100dvh - 1rem); overflow-y: auto; }
+}
+
+@media (max-width: 767px) {
+  /* 16px stops iOS Safari zooming into a field; 40px is a comfortable thumb target */
+  input:not([type="checkbox"]):not([type="radio"]), select, textarea { font-size: 16px; min-height: 40px; }
+  button, [role="button"], a.primary-btn { min-height: 36px; }
+  /* long headings and values wrap instead of pushing the page wider */
+  h1, h2, h3, td, th { overflow-wrap: anywhere; }
+  td, th { white-space: normal; }
+}
+
+@media print {
+  table { display: table; overflow: visible; }
+  body { overflow: visible; }
+}
+
+/* BIR forms: every item takes the full width on a phone, so a box is never a sliver */
+@media (max-width: 639px) {
+  .bir-field { grid-column: 1 / -1 !important; }
+  .bir-form { padding: 0.375rem; }
+}

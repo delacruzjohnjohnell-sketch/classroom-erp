@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LogOut, ArrowLeft, LayoutDashboard, BookOpen, Truck, Package, ShoppingCart, Briefcase, FileBarChart, Landmark, Boxes, Building2,
-  ArrowLeftRight, Users, Settings, MessageSquare, Database, Calculator, Factory, Send, Plus, CalendarRange, ShieldCheck, Gauge, CalendarCheck, BarChart3,
+  Menu, X, ArrowLeftRight, Users, Settings, MessageSquare, Database, Calculator, Factory, Send, Plus, CalendarRange, ShieldCheck, Gauge, CalendarCheck, BarChart3,
 } from "lucide-react";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
@@ -73,16 +73,37 @@ export function MfgFrame({ children, pathname, fullName, role, tenantName, isTea
   const items = menu ?? (isTeacher ? [...NAV, TEACHER_NAV] : [...NAV, COMPANIES_NAV]).filter((i) => !(roleNote && (i.href === "/mfg/banking" || i.href === "/mfg/payroll")));
   const { userId: meId } = useSession();
   const unread = useUnreadMessages(meId);
+  // On a phone or tablet the menu is a drawer. It is open only for the page it was opened on, so choosing a page closes it; Escape closes it too.
+  const [openFor, setOpenFor] = useState<string | null>(null);
+  const open = openFor === pathname;
+  const setOpen = (v: boolean) => setOpenFor(v ? pathname : null);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
   const initials = fullName ? fullName.split(/\s+/).slice(0, 2).map((p: string) => p[0]?.toUpperCase()).join("") : "?";
 
   return (
     <div className="mfg-light min-h-screen flex">
-      <aside className="w-[236px] shrink-0 bg-[#0B1431] flex flex-col sticky top-0 h-screen">
+      {open && <div className="fixed inset-0 z-30 bg-black/50 lg:hidden" onClick={() => setOpen(false)} aria-hidden />}
+      <aside id="app-menu" className={`fixed inset-y-0 left-0 z-40 w-[260px] max-w-[85vw] shrink-0 bg-[#0B1431] flex flex-col h-[100dvh] transition-transform duration-200 lg:sticky lg:top-0 lg:z-auto lg:w-[236px] lg:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}>
+        <button type="button" onClick={() => setOpen(false)} className="absolute right-2 top-2 rounded-lg p-2 text-[#B4C0DC] hover:text-white lg:hidden" aria-label="Close menu"><X size={20} /></button>
         <div className="px-5 pt-6 pb-5 flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-[#2F6BFF] flex items-center justify-center shrink-0 shadow-[0_6px_16px_rgba(47,107,255,0.45)]">{logo ?? <Factory size={22} color="#fff" />}</div>
           <div className="leading-tight min-w-0">
             <div className="text-[18px] font-bold text-white truncate">JJ and Co.</div>
             <div className="text-[11.5px] text-[#93A3C6]">{product}</div>
+          </div>
+        </div>
+
+        <div className="px-4 pb-3 lg:hidden">
+          <div className="rounded-lg bg-white p-2 text-[13px]">
+            {isTeacher ? (
+              <div className="flex items-center gap-2"><button onClick={onAllCompanies} className="shrink-0 text-[12px] font-semibold text-[#2F6BFF]">All</button><span className="truncate font-semibold text-ink">{tenantName}</span></div>
+            ) : companySlot}
           </div>
         </div>
 
@@ -108,8 +129,9 @@ export function MfgFrame({ children, pathname, fullName, role, tenantName, isTea
       </aside>
 
       <div className="flex-1 min-w-0">
-        <header className="sticky top-0 z-20 px-7 py-3 bg-white border-b border-hairline flex items-center gap-4">
-          <div className="flex-1 min-w-[190px]">{searchSlot}</div>
+        <header className="sticky top-0 z-20 px-3 sm:px-7 py-2.5 sm:py-3 bg-white border-b border-hairline flex items-center gap-2 sm:gap-4">
+          <button type="button" onClick={() => setOpen(true)} className="shrink-0 rounded-lg border border-hairline p-2 text-[#17213B] lg:hidden" aria-label="Open menu" aria-controls="app-menu" aria-expanded={open}><Menu size={20} /></button>
+          <div className="flex-1 min-w-0 sm:min-w-[190px]">{searchSlot}</div>
           <div className="flex items-center gap-4 shrink-0">
             {otherViewers.length > 0 && (
               <div className="hidden xl:flex items-center gap-1.5" title={`Also here: ${otherViewers.map((v) => v.name).join(", ")}`}>
@@ -135,7 +157,7 @@ export function MfgFrame({ children, pathname, fullName, role, tenantName, isTea
               </div>
             </div>
             {!isTeacher && !menu && <Link href="/mfg-setup?new=1" className="hidden lg:flex items-center gap-1 text-[12.5px] font-semibold text-[#2F6BFF] hover:underline"><Plus size={13} /> New company</Link>}
-            <div className="flex items-center gap-2.5 pl-4 border-l border-hairline">
+            <div className="flex items-center gap-2.5 sm:pl-4 sm:border-l border-hairline">
               <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#2F6BFF] to-[#7C5CFC] text-white text-[12.5px] font-bold flex items-center justify-center shrink-0">{initials}</div>
               <div className="hidden sm:block leading-tight">
                 <div className="text-[13.5px] font-semibold text-ink truncate max-w-[150px]">{fullName}</div>
@@ -145,7 +167,7 @@ export function MfgFrame({ children, pathname, fullName, role, tenantName, isTea
             </div>
           </div>
         </header>
-        <main className="max-w-[1280px] px-7 py-6 flex flex-col gap-5">{children}</main>
+        <main className="max-w-[1280px] px-3 sm:px-7 py-4 sm:py-6 flex flex-col gap-4 sm:gap-5">{children}</main>
       </div>
     </div>
   );

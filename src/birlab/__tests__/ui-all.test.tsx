@@ -30,6 +30,10 @@ describe("every form opens", () => {
       const pages = f.def!.pages.length;
       for (let p = 2; p <= pages; p++) fireEvent.click(screen.getByRole("button", { name: `Page ${p}` }));
     });
+    it(`${f.id}: the lecture shows the compliance date`, () => {
+      render(<LearnPage formId={f.id} lesson={LESSONS[f.id]} />);
+      expect(screen.getByLabelText("Compliance date").textContent).toMatch(/\d|January|April|month|quarter|sale|gift/);
+    });
     it(`${f.id}: the lesson page renders`, () => {
       const lesson = LESSONS[f.id];
       expect(lesson, `lesson for ${f.id}`).toBeTruthy();

@@ -46,7 +46,7 @@ function Inbox_() {
 
   if (inst === undefined) return <div className="py-20 flex justify-center"><Loader2 className="animate-spin" size={20} color="#9D7CFF" /></div>;
   if (inst === null) return (
-    <div className="px-7 py-6 max-w-[900px]"><Panel title="Document inbox"><Empty>No practice set has been assigned to this company yet. Your teacher will assign one.</Empty></Panel></div>
+    <div className="px-1 py-2 sm:px-7 sm:py-6 max-w-[900px]"><Panel title="Document inbox"><Empty>No practice set has been assigned to this company yet. Your teacher will assign one.</Empty></Panel></div>
   );
 
   const p = progress(rows);
@@ -55,7 +55,7 @@ function Inbox_() {
   const showPoints = rows.some((r) => r.points !== null);
 
   return (
-    <div className="px-7 py-6 max-w-[1100px] flex flex-col gap-5">
+    <div className="px-1 py-2 sm:px-7 sm:py-6 max-w-[1100px] flex flex-col gap-5">
       <div>
         <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#7F8EA0]">Accounting seat · {inst.topic ?? "Practice set"}</div>
         <h1 className="text-[20px] font-bold mt-1">{inst.title}</h1>

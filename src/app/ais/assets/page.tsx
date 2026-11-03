@@ -44,7 +44,7 @@ function Assets() {
   useEffect(() => { if (effectiveTenantId) load(); }, [effectiveTenantId, load]);
 
   if (st === undefined) return <div className="py-20 flex justify-center"><Loader2 className="animate-spin" size={20} color="#9D7CFF" /></div>;
-  if (st === null) return <div className="px-7 py-6 max-w-[900px]"><Panel title="Fixed assets desk"><Empty>The Fixed assets desk opens once your teacher has assigned a practice set to this company and you hold the Accounting seat.</Empty></Panel></div>;
+  if (st === null) return <div className="px-1 py-2 sm:px-7 sm:py-6 max-w-[900px]"><Panel title="Fixed assets desk"><Empty>The Fixed assets desk opens once your teacher has assigned a practice set to this company and you hold the Accounting seat.</Empty></Panel></div>;
 
   const open = st.phase === "ACCOUNTING";
   const ready = faReady(st.tasks);
@@ -59,7 +59,7 @@ function Assets() {
   };
 
   return (
-    <div className="px-7 py-6 max-w-[1200px] flex flex-col gap-5">
+    <div className="px-1 py-2 sm:px-7 sm:py-6 max-w-[1200px] flex flex-col gap-5">
       <FormStyles />
       <div>
         <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#7F8EA0]">Accounting seat · Fixed assets workbench</div>

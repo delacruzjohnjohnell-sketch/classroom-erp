@@ -5,6 +5,10 @@ export type Profile = {
   full_name: string | null;
   role: Role;
   tenant_id: string | null;
+  /** Sign-up approval (migration 0085). Missing on an old row or before the migration: treated as approved. */
+  approval?: "pending" | "approved" | "rejected";
+  modules?: string[];
+  approval_note?: string | null;
 };
 
 export type Tenant = { id: string; name: string; owner_id: string | null; created_at: string };

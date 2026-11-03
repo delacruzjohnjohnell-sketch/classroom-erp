@@ -10,6 +10,8 @@ import { useSession } from "@/lib/session";
 import { usePagePresence } from "@/lib/presence";
 import { guardTarget } from "@/lib/edition";
 import { useEdition } from "@/lib/useEdition";
+import { moduleOfEdition } from "@/lib/access";
+import { useAccessGuard } from "@/lib/useAccess";
 import GlobalSearch from "./GlobalSearch";
 import CompanySwitcher from "./CompanySwitcher";
 import MfgShell, { MfgFrame } from "./mfg/MfgShell";
@@ -45,6 +47,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   // you to its twin (or the chooser) instead of showing the wrong screens.
   const { edition, ready: editionReady } = useEdition(effectiveTenantId);
   const isMfg = edition === "MANUFACTURING";
+  // A student who is waiting for approval, or was not given this edition, is sent away (the database refuses them as well).
+  const accessBlocked = useAccessGuard(editionReady ? moduleOfEdition(edition) : undefined);
   const wrongEdition = editionReady ? guardTarget(edition, pathname) : null;
   useEffect(() => {
     if (wrongEdition) router.replace(wrongEdition);
@@ -58,7 +62,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, userId, profile, viewTenantId]);
 
-  if (loading || !userId || !profile || !effectiveTenantId || !editionReady || wrongEdition) {
+  if (loading || !userId || !profile || !effectiveTenantId || !editionReady || wrongEdition || accessBlocked) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="animate-spin" size={20} color="#2F6BFF" />

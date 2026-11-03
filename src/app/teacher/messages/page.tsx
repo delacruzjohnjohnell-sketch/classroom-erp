@@ -23,7 +23,7 @@ export default function TeacherMessagesPage() {
 
   return (
     <div className="mfg-light min-h-screen">
-      <div className="max-w-[1200px] mx-auto px-6 py-6">
+      <div className="max-w-[1200px] mx-auto px-1 py-2 sm:px-6 sm:py-6">
         <button type="button" onClick={() => router.push("/teacher")} className="flex items-center gap-1.5 text-[13px] font-semibold mb-4" style={{ color: "#2F6BFF" }}>
           <ArrowLeft size={14} /> Back to the class overview
         </button>

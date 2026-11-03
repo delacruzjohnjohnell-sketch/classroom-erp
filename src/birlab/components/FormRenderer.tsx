@@ -82,7 +82,7 @@ function Field({ f, p }: { f: FieldDef; p: Props }) {
   }
   const hl = p.highlight === f.id;
   return (
-    <div style={{ gridColumn: `span ${f.span ?? 12} / span ${f.span ?? 12}` }} className={`rounded p-1 ${hl ? "bg-yellow-200 ring-2 ring-yellow-500" : ""}`}>
+    <div style={{ gridColumn: `span ${f.span ?? 12} / span ${f.span ?? 12}` }} className={`bir-field rounded p-1 ${hl ? "bg-yellow-200 ring-2 ring-yellow-500" : ""}`}>
       <div className="flex items-start gap-1.5 mb-0.5">
         {f.item && <span className="shrink-0 rounded-sm bg-gray-700 px-1 text-[10px] font-bold text-white leading-4">{f.item}</span>}
         <span className="text-[11.5px] leading-tight text-gray-700">{f.label}</span>
@@ -118,7 +118,7 @@ function RowView({ row, p }: { row: Row; p: Props }) {
   const twoCols = row.cols.length > 1 || row.cols.includes("B");
   const joint = p.def.spouseOn ? p.def.spouseOn(p.values) : p.values["18"] === "joint";
   return (
-    <div className={`grid items-center gap-2 px-2 py-0.5 ${twoCols ? "grid-cols-[1fr_9rem_9rem]" : "grid-cols-[1fr_9rem]"}`}>
+    <div className={`grid items-center gap-2 px-2 py-0.5 ${twoCols ? "grid-cols-[minmax(0,1fr)_6.25rem_6.25rem] sm:grid-cols-[1fr_9rem_9rem]" : "grid-cols-[minmax(0,1fr)_7rem] sm:grid-cols-[1fr_9rem]"}`}>
       <div className={`flex items-start gap-1.5 text-[12px] leading-tight ${pad} ${row.bold ? "font-semibold" : ""} ${p.highlight && row.cols.some((c) => `${row.id}${c}` === p.highlight) ? "bg-yellow-200 rounded px-1" : ""}`}>
         <span className="mt-0.5 shrink-0 rounded-sm bg-gray-700 px-1 text-[10px] font-bold text-white leading-4">{row.item}</span>
         <span>{row.label}{row.note ? <em className="block font-normal text-[11px] text-gray-500">{row.note}</em> : null}
@@ -151,7 +151,7 @@ function PageView({ page, p }: { page: Page; p: Props }) {
           <section key={s.id} className="rounded border border-gray-400 bg-[#eef1f6]">
             <div className="bg-gray-600 px-2 py-1 text-[12.5px] font-semibold text-white">{s.title}</div>
             {s.note && !p.compact && <div className="px-2 py-1 text-[11px] text-gray-600">{s.note}</div>}
-            {hasB && <div className="grid grid-cols-[1fr_9rem_9rem] gap-2 px-2 pt-1 text-[11px] font-semibold text-gray-600"><span>Particulars</span><span className="text-center">{p.def.colLabels?.[0] ?? "A) Taxpayer/Filer"}</span><span className="text-center">{p.def.colLabels?.[1] ?? "B) Spouse"}</span></div>}
+            {hasB && <div className="grid grid-cols-[minmax(0,1fr)_6.25rem_6.25rem] sm:grid-cols-[1fr_9rem_9rem] gap-2 px-2 pt-1 text-[11px] font-semibold text-gray-600"><span>Particulars</span><span className="text-center">{p.def.colLabels?.[0] ?? "A) Taxpayer/Filer"}</span><span className="text-center">{p.def.colLabels?.[1] ?? "B) Spouse"}</span></div>}
             <div className="pb-1">{s.rows.map((r, i) => <RowView key={i} row={r} p={p} />)}</div>
           </section>
         );

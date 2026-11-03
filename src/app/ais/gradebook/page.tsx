@@ -84,7 +84,7 @@ export default function AisGradebookPage() {
         </div>
       </div>
 
-      <div className="px-6 py-6 max-w-[1150px] w-full mx-auto flex flex-col gap-5">
+      <div className="px-1 py-2 sm:px-6 sm:py-6 max-w-[1150px] w-full mx-auto flex flex-col gap-5">
         <div className="grid gap-2 items-end" style={{ gridTemplateColumns: "minmax(240px, 1fr) auto auto" }}>
           <div><Label>Practice set</Label>
             <select className="input" value={setId} onChange={(e) => setSetId(e.target.value)}>

@@ -3,6 +3,7 @@ import { useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useSession } from "@/lib/session";
+import { useAccessGuard } from "@/lib/useAccess";
 import { BfarNav } from "@/bfar/components/BfarNav";
 import { useAccountingStore, useHydrated } from "@/bfar/store/useAccountingStore";
 
@@ -11,6 +12,7 @@ export default function BfarLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { loading, userId } = useSession();
   const hydrated = useHydrated();
+  const blocked = useAccessGuard("bfar");
   const setOwner = useAccountingStore((s) => s.setOwner);
 
   useEffect(() => {
@@ -21,7 +23,7 @@ export default function BfarLayout({ children }: { children: ReactNode }) {
     if (hydrated && userId) setOwner(userId);
   }, [hydrated, userId, setOwner]);
 
-  if (loading || !userId) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={20} /></div>;
+  if (loading || !userId || blocked) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={20} /></div>;
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
       <BfarNav />

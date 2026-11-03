@@ -49,7 +49,7 @@ function Ledger() {
   if (entries === null) return <div className="py-20 flex justify-center"><Loader2 className="animate-spin" size={20} color="#9D7CFF" /></div>;
 
   return (
-    <div className="px-7 py-6 max-w-[1100px] flex flex-col gap-5">
+    <div className="px-1 py-2 sm:px-7 sm:py-6 max-w-[1100px] flex flex-col gap-5">
       <div>
         <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#7F8EA0]">Accounting Information Systems</div>
         <h1 className="text-[20px] font-bold mt-1">General ledger</h1>

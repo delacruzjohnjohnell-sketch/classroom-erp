@@ -125,7 +125,7 @@ export default function TeamsPage() {
         </div>
       </div>
 
-      <div className="px-6 py-6 max-w-[1000px] w-full mx-auto flex flex-col gap-5">
+      <div className="px-1 py-2 sm:px-6 sm:py-6 max-w-[1000px] w-full mx-auto flex flex-col gap-5">
         <div className="text-[12.5px] text-[#A3B1C2] max-w-[780px]">
           Each student runs their own <b>solo company</b> first, and sets it up themselves. A <b>team company</b> is made here, by you: you add the students and give each one or more roles.
           Everyone in the team sees the whole set of books, but each role can post only in its own area, and nobody approves a voucher they prepared. You stay the final override.

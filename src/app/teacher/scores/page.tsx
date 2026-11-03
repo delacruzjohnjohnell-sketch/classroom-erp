@@ -72,7 +72,7 @@ export default function TeacherScoresPage() {
 
   return (
     <div className="mfg-light min-h-screen">
-      <div className="max-w-[1200px] mx-auto px-6 py-6 flex flex-col gap-5">
+      <div className="max-w-[1200px] mx-auto px-1 py-2 sm:px-6 sm:py-6 flex flex-col gap-5">
         <button type="button" onClick={() => router.push("/teacher")} className="flex items-center gap-1.5 text-[13px] font-semibold self-start" style={{ color: BLUE }}><ArrowLeft size={14} /> Back to the class overview</button>
         <div>
           <h1 className="text-[22px] font-bold">Class scores</h1>
