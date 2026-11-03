@@ -3,7 +3,7 @@
 import { useId, useState } from "react";
 import { getAccount, suggestAccounts } from "../core/chart-of-accounts";
 
-const input = "w-full rounded border border-slate-300 px-1.5 py-1 text-xs";
+const input = "w-full rounded border border-gray-300 px-1.5 py-1 text-xs";
 
 export function AccountSelect({ value, onChange, disabled, taken = [], className = input, label: ariaLabel = "Account" }: { value: string; onChange: (code: string) => void; disabled?: boolean; taken?: string[]; className?: string; label?: string }) {
   const listId = useId();
@@ -29,10 +29,10 @@ export function AccountSelect({ value, onChange, disabled, taken = [], className
         }}
       />
       {open && query.trim() !== "" && (
-        <ul id={listId} role="listbox" className="absolute z-20 mt-0.5 max-h-56 w-full min-w-[14rem] overflow-auto rounded border border-slate-300 bg-white py-1 text-xs shadow-lg">
-          {matches.length === 0 ? <li className="px-2 py-1 text-slate-500">No account matches &quot;{query}&quot;</li> : matches.map((a, i) => (
+        <ul id={listId} role="listbox" className="absolute z-20 mt-0.5 max-h-56 w-full min-w-[14rem] overflow-auto rounded border border-gray-300 bg-white py-1 text-xs shadow-lg">
+          {matches.length === 0 ? <li className="px-2 py-1 text-gray-500">No account matches &quot;{query}&quot;</li> : matches.map((a, i) => (
             <li key={a.code} role="option" aria-selected={i === active} onMouseDown={(e) => { e.preventDefault(); choose(a.code); }} onMouseEnter={() => setActive(i)}
-              className={`cursor-pointer px-2 py-1 ${i === active ? "bg-blue-600 text-white" : "hover:bg-slate-100"}`}><b>{a.code}</b> {a.name}</li>
+              className={`cursor-pointer px-2 py-1 ${i === active ? "bg-blue-600 text-white" : "hover:bg-gray-100"}`}><b>{a.code}</b> {a.name}</li>
           ))}
         </ul>
       )}

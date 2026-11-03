@@ -43,37 +43,37 @@ export default function BirLabHome() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">BIR eForms Lab</h1>
-        <p className="mt-1 max-w-3xl text-sm text-slate-600">Practice filling out BIR returns in a screen that works like the Offline eBIRForms Package. Each form has a lesson, a filling guide, tips, a quick check and three case problems. Nothing here is sent to the BIR.</p>
+        <p className="mt-1 max-w-3xl text-sm text-gray-600">Practice filling out BIR returns in a screen that works like the Offline eBIRForms Package. Each form has a lesson, a filling guide, tips, a quick check and three case problems. Nothing here is sent to the BIR.</p>
       </div>
 
-      <section className="rounded-lg border border-slate-200 bg-white p-4">
-        <h2 className="text-sm font-semibold text-slate-800">Taxpayer profile</h2>
-        <p className="mt-0.5 text-xs text-slate-500">Like the eBIRForms profile step, this prefills Part I of the form you open. Use made-up values such as 000-000-000-00000. Case problems bring their own taxpayer.</p>
+      <section className="rounded-lg border border-gray-200 bg-white p-4">
+        <h2 className="text-sm font-semibold text-gray-800">Taxpayer profile</h2>
+        <p className="mt-0.5 text-xs text-gray-500">Like the eBIRForms profile step, this prefills Part I of the form you open. Use made-up values such as 000-000-000-00000. Case problems bring their own taxpayer.</p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {FIELDS.map((f) => (
-            <label key={f.id} className={`flex flex-col gap-1 text-xs text-slate-600 ${f.span ?? ""}`}>{f.label}
-              <input value={profile[f.id]} placeholder={f.hint} onChange={(e) => setProfile({ [f.id]: e.target.value } as Partial<Profile>)} className="rounded border border-slate-300 px-2 py-1.5 text-sm text-slate-900" aria-invalid={(f.id === "tin" && tinBad) || (f.id === "rdo" && rdoBad)} />
+            <label key={f.id} className={`flex flex-col gap-1 text-xs text-gray-600 ${f.span ?? ""}`}>{f.label}
+              <input value={profile[f.id]} placeholder={f.hint} onChange={(e) => setProfile({ [f.id]: e.target.value } as Partial<Profile>)} className="rounded border border-gray-300 px-2 py-1.5 text-sm text-gray-900" aria-invalid={(f.id === "tin" && tinBad) || (f.id === "rdo" && rdoBad)} />
               {f.id === "tin" && tinBad && <span className="text-rose-700">TIN must be 3-3-3-5 digits.</span>}
               {f.id === "rdo" && rdoBad && <span className="text-rose-700">RDO code must be 3 digits.</span>}
             </label>
           ))}
         </div>
         {myCompanies.length > 0 && (
-          <div className="mt-3 flex flex-wrap items-end gap-2 border-t border-slate-100 pt-3">
-            <label className="flex flex-col gap-1 text-xs text-slate-600">Optional: use the name of one of your ERP companies
-              <select value={company} onChange={(e) => setCompany(e.target.value)} className="rounded border border-slate-300 px-2 py-1.5 text-sm text-slate-900"><option value="">Choose a company</option>{myCompanies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
+          <div className="mt-3 flex flex-wrap items-end gap-2 border-t border-gray-100 pt-3">
+            <label className="flex flex-col gap-1 text-xs text-gray-600">Optional: use the name of one of your ERP companies
+              <select value={company} onChange={(e) => setCompany(e.target.value)} className="rounded border border-gray-300 px-2 py-1.5 text-sm text-gray-900"><option value="">Choose a company</option>{myCompanies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
             </label>
-            <button type="button" disabled={!company} onClick={loadCompany} className="rounded border border-slate-300 px-3 py-1.5 text-sm font-semibold disabled:opacity-50">Load taxpayer profile from ERP company</button>
-            <span className="text-xs text-slate-500">ERP companies hold only a name, so TIN, RDO and address stay as you typed them.</span>
+            <button type="button" disabled={!company} onClick={loadCompany} className="rounded border border-gray-300 px-3 py-1.5 text-sm font-semibold disabled:opacity-50">Load taxpayer profile from ERP company</button>
+            <span className="text-xs text-gray-500">ERP companies hold only a name, so TIN, RDO and address stay as you typed them.</span>
           </div>
         )}
       </section>
 
-      <section className="rounded-lg border border-slate-200 bg-white p-4">
-        <h2 className="text-sm font-semibold text-slate-800">Form</h2>
+      <section className="rounded-lg border border-gray-200 bg-white p-4">
+        <h2 className="text-sm font-semibold text-gray-800">Form</h2>
         <div className="mt-2 flex flex-wrap items-end gap-3">
-          <label className="flex flex-col gap-1 text-xs text-slate-600">Form type
-            <select value={formId} onChange={(e) => setFormId(e.target.value)} className="min-w-[20rem] rounded border border-slate-300 px-2 py-1.5 text-sm text-slate-900">
+          <label className="flex flex-col gap-1 text-xs text-gray-600">Form type
+            <select value={formId} onChange={(e) => setFormId(e.target.value)} className="min-w-[20rem] rounded border border-gray-300 px-2 py-1.5 text-sm text-gray-900">
               {(Object.keys(TRACKS) as Track[]).map((t) => (
                 <optgroup key={t} label={`Track ${t}: ${TRACKS[t]}`}>
                   {FORMS.filter((f) => f.track === t).map((f) => <option key={f.id} value={f.id}>{f.number}: {f.name}{f.def ? "" : " (coming in a later phase)"}</option>)}
@@ -83,28 +83,28 @@ export default function BirLabHome() {
           </label>
           <button type="button" onClick={() => router.push(`/bir-lab/${formId}`)} className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white">Fill-Up</button>
         </div>
-        {chosen && <p className="mt-2 text-xs text-slate-600">{chosen.whoFiles}. Due: {chosen.due}.{chosen.def ? "" : " This form is built in a later phase."}</p>}
+        {chosen && <p className="mt-2 text-xs text-gray-600">{chosen.whoFiles}. Due: {chosen.due}.{chosen.def ? "" : " This form is built in a later phase."}</p>}
 
-        <h3 className="mt-5 text-sm font-semibold text-slate-800">Open (saved drafts)</h3>
-        {savedDrafts.length === 0 ? <p className="mt-1 text-xs text-slate-500">No saved drafts yet.</p> : (
-          <ul className="mt-1 divide-y divide-slate-100 text-sm">
+        <h3 className="mt-5 text-sm font-semibold text-gray-800">Open (saved drafts)</h3>
+        {savedDrafts.length === 0 ? <p className="mt-1 text-xs text-gray-500">No saved drafts yet.</p> : (
+          <ul className="mt-1 divide-y divide-gray-100 text-sm">
             {savedDrafts.map(([k, d]) => (
               <li key={k} className="flex flex-wrap items-center justify-between gap-2 py-1.5">
-                <span>Form {d.formId} · {d.caseId ? `${d.caseId} (${d.mode})` : "free fill-up"} · <em className="text-slate-500">{d.status}</em> · {d.updatedAt ? isoToUs(d.updatedAt.slice(0, 10)) : ""}</span>
-                <Link href={`/bir-lab/${d.formId}/fill${d.caseId ? `?case=${d.caseId}&mode=${d.mode}` : ""}`} className="rounded border border-slate-300 px-2.5 py-1 text-xs font-semibold hover:bg-slate-50">Open</Link>
+                <span>Form {d.formId} · {d.caseId ? `${d.caseId} (${d.mode})` : "free fill-up"} · <em className="text-gray-500">{d.status}</em> · {d.updatedAt ? isoToUs(d.updatedAt.slice(0, 10)) : ""}</span>
+                <Link href={`/bir-lab/${d.formId}/fill${d.caseId ? `?case=${d.caseId}&mode=${d.mode}` : ""}`} className="rounded border border-gray-300 px-2.5 py-1 text-xs font-semibold hover:bg-gray-50">Open</Link>
               </li>
             ))}
           </ul>
         )}
       </section>
 
-      <section className="rounded-lg border border-slate-200 bg-white p-4">
-        <h2 className="text-sm font-semibold text-slate-800">All forms and due dates</h2>
-        <p className="text-xs text-slate-500">Due dates are as taught; each form&apos;s lesson says whether it was verified against the form&apos;s own instructions.</p>
+      <section className="rounded-lg border border-gray-200 bg-white p-4">
+        <h2 className="text-sm font-semibold text-gray-800">All forms and due dates</h2>
+        <p className="text-xs text-gray-500">Due dates are as taught; each form&apos;s lesson says whether it was verified against the form&apos;s own instructions.</p>
         <div className="mt-2 overflow-x-auto"><table className="w-full text-xs">
-          <thead className="text-left text-slate-500"><tr><th className="p-1.5">Form</th><th className="p-1.5">Who files</th><th className="p-1.5">Due</th><th className="p-1.5">Status</th></tr></thead>
+          <thead className="text-left text-gray-500"><tr><th className="p-1.5">Form</th><th className="p-1.5">Who files</th><th className="p-1.5">Due</th><th className="p-1.5">Status</th></tr></thead>
           <tbody>{FORMS.map((f) => (
-            <tr key={f.id} className="border-t border-slate-100"><td className="p-1.5 font-semibold">{f.number}</td><td className="p-1.5">{f.whoFiles}</td><td className="p-1.5">{f.due}</td><td className="p-1.5">{f.def ? <Link className="text-blue-700 underline" href={`/bir-lab/${f.id}`}>Open</Link> : <span className="text-slate-400">later phase</span>}</td></tr>
+            <tr key={f.id} className="border-t border-gray-100"><td className="p-1.5 font-semibold">{f.number}</td><td className="p-1.5">{f.whoFiles}</td><td className="p-1.5">{f.due}</td><td className="p-1.5">{f.def ? <Link className="text-blue-700 underline" href={`/bir-lab/${f.id}`}>Open</Link> : <span className="text-gray-400">later phase</span>}</td></tr>
           ))}</tbody>
         </table></div>
       </section>

@@ -39,9 +39,9 @@ export function EntryLinesEditor({ draft, onChange, disabled = false }: { draft:
   return (
     <div>
       <div className="grid grid-cols-[1fr_8rem_8rem_2rem] gap-x-2 gap-y-1.5 items-center text-sm">
-        <div className="text-xs font-semibold text-slate-500">Account title (type a code or the first letters)</div>
-        <div className="text-xs font-semibold text-slate-500 text-right">Debit</div>
-        <div className="text-xs font-semibold text-slate-500 text-right">Credit</div>
+        <div className="text-xs font-semibold text-gray-500">Account title (type a code or the first letters)</div>
+        <div className="text-xs font-semibold text-gray-500 text-right">Debit</div>
+        <div className="text-xs font-semibold text-gray-500 text-right">Credit</div>
         <div />
         {draft.map((row, i) => {
           const code = codeOf(row.code);
@@ -50,12 +50,12 @@ export function EntryLinesEditor({ draft, onChange, disabled = false }: { draft:
           return (
             <div key={i} className="contents">
               <div className={credit ? "pl-8" : ""}>
-                <AccountSelect value={known} disabled={disabled} label={`Account ${i + 1}`} className="w-full rounded border border-slate-300 px-2 py-1.5"
+                <AccountSelect value={known} disabled={disabled} label={`Account ${i + 1}`} className="w-full rounded border border-gray-300 px-2 py-1.5"
                   onChange={(c) => set(i, { code: c ? `${c} ${getAccount(c)?.name ?? ""}` : "" })} />
               </div>
-              <input value={row.debit} disabled={disabled} inputMode="decimal" aria-label={`Debit ${i + 1}`} onChange={(e) => set(i, { debit: e.target.value })} className="rounded border border-slate-300 px-2 py-1.5 text-right tabular-nums" placeholder="0.00" />
-              <input value={row.credit} disabled={disabled} inputMode="decimal" aria-label={`Credit ${i + 1}`} onChange={(e) => set(i, { credit: e.target.value })} className="rounded border border-slate-300 px-2 py-1.5 text-right tabular-nums" placeholder="0.00" />
-              <button type="button" disabled={disabled || draft.length <= 2} onClick={() => onChange(draft.filter((_, j) => j !== i))} aria-label={`Remove line ${i + 1}`} className="text-slate-400 hover:text-rose-600 disabled:opacity-30"><Trash2 size={15} /></button>
+              <input value={row.debit} disabled={disabled} inputMode="decimal" aria-label={`Debit ${i + 1}`} onChange={(e) => set(i, { debit: e.target.value })} className="rounded border border-gray-300 px-2 py-1.5 text-right tabular-nums" placeholder="0.00" />
+              <input value={row.credit} disabled={disabled} inputMode="decimal" aria-label={`Credit ${i + 1}`} onChange={(e) => set(i, { credit: e.target.value })} className="rounded border border-gray-300 px-2 py-1.5 text-right tabular-nums" placeholder="0.00" />
+              <button type="button" disabled={disabled || draft.length <= 2} onClick={() => onChange(draft.filter((_, j) => j !== i))} aria-label={`Remove line ${i + 1}`} className="text-gray-400 hover:text-rose-600 disabled:opacity-30"><Trash2 size={15} /></button>
             </div>
           );
         })}

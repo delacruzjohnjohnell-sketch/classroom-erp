@@ -30,17 +30,17 @@ export default function BfarHome() {
             <Card className="h-full hover:border-blue-400 transition-colors">
               <t.icon size={20} className="text-blue-600 mb-2" />
               <div className="font-semibold">{t.title}</div>
-              <p className="text-sm text-slate-600 mt-1">{t.text}</p>
+              <p className="text-sm text-gray-600 mt-1">{t.text}</p>
             </Card>
           </Link>
         ))}
       </div>
       <Card title="Your books right now" className="mt-6">
-        {!hydrated ? <p className="text-sm text-slate-500">Loading…</p> : (
+        {!hydrated ? <p className="text-sm text-gray-500">Loading…</p> : (
           <div className="grid gap-2 text-sm sm:grid-cols-2">
             {[...PRACTICE_SETS.map((p) => ({ id: p.id, label: p.title })), { id: FREE_BOOK, label: "My own practice journal" }].map((b) => (
-              <div key={b.id} className="flex items-center justify-between rounded border border-slate-200 px-3 py-2">
-                <span>{b.label}</span><span className="text-slate-500">{entriesOfBook(entries, b.id).length} journal {entriesOfBook(entries, b.id).length === 1 ? "entry" : "entries"}</span>
+              <div key={b.id} className="flex items-center justify-between rounded border border-gray-200 px-3 py-2">
+                <span>{b.label}</span><span className="text-gray-500">{entriesOfBook(entries, b.id).length} journal {entriesOfBook(entries, b.id).length === 1 ? "entry" : "entries"}</span>
               </div>
             ))}
           </div>

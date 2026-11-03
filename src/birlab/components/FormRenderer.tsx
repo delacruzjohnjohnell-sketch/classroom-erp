@@ -22,8 +22,8 @@ interface Props {
   compact?: boolean;
 }
 
-const BOX = "rounded border bg-white px-1.5 py-1 text-[13px] text-slate-900 w-full focus:outline-none focus:ring-2 focus:ring-blue-400";
-const markClass = (m?: Mark) => (m === "correct" ? "border-emerald-500 ring-1 ring-emerald-400" : m === "wrong" ? "border-rose-500 ring-1 ring-rose-400" : m === "not-required" ? "border-slate-300 bg-slate-50" : "border-slate-400");
+const BOX = "rounded border bg-white px-1.5 py-1 text-[13px] text-gray-900 w-full focus:outline-none focus:ring-2 focus:ring-blue-400";
+const markClass = (m?: Mark) => (m === "correct" ? "border-emerald-500 ring-1 ring-emerald-400" : m === "wrong" ? "border-rose-500 ring-1 ring-rose-400" : m === "not-required" ? "border-gray-300 bg-gray-50" : "border-gray-400");
 
 function tinFormat(raw: string): string {
   const d = raw.replace(/\D/g, "").slice(0, 14);
@@ -38,7 +38,7 @@ function AmountInput({ id, value, onChange, disabled, mark, error }: { id: strin
       id={`f-${id}`} inputMode="decimal" aria-label={`Item ${id}`} aria-invalid={!!error} title={error} disabled={disabled}
       value={shown} onFocus={() => setFocus(true)} onBlur={() => setFocus(false)}
       onChange={(e) => onChange(e.target.value.replace(/[^\d.,-]/g, ""))}
-      className={`${BOX} text-right tabular-nums ${markClass(error ? "wrong" : mark)} ${disabled ? "bg-slate-100 cursor-not-allowed" : ""}`}
+      className={`${BOX} text-right tabular-nums ${markClass(error ? "wrong" : mark)} ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
       placeholder="0.00"
     />
   );
@@ -46,7 +46,7 @@ function AmountInput({ id, value, onChange, disabled, mark, error }: { id: strin
 
 function Computed({ id, value, mark }: { id: string; value?: string; mark?: Mark }) {
   return (
-    <div id={`f-${id}`} aria-label={`Item ${id}, computed`} className={`rounded border px-1.5 py-1 text-[13px] text-right tabular-nums min-h-[1.9rem] bg-slate-200/70 text-slate-900 ${markClass(mark)}`}>
+    <div id={`f-${id}`} aria-label={`Item ${id}, computed`} className={`rounded border px-1.5 py-1 text-[13px] text-right tabular-nums min-h-[1.9rem] bg-gray-200/70 text-gray-900 ${markClass(mark)}`}>
       {value === undefined || value === "" ? "" : money(amt(value))}
     </div>
   );
@@ -57,7 +57,7 @@ function Field({ f, p }: { f: FieldDef; p: Props }) {
   const set = (x: string) => p.onChange?.(f.id, x);
   const ro = !p.onChange;
   const err = p.errors?.[f.id];
-  const cls = `${BOX} ${markClass(err ? "wrong" : p.marks?.[f.id])} ${ro ? "bg-slate-100" : ""}`;
+  const cls = `${BOX} ${markClass(err ? "wrong" : p.marks?.[f.id])} ${ro ? "bg-gray-100" : ""}`;
   let control: ReactNode;
   switch (f.kind) {
     case "tin": control = <input id={`f-${f.id}`} disabled={ro} value={v} onChange={(e) => set(tinFormat(e.target.value))} placeholder="000-000-000-00000" className={`${cls} tracking-wider tabular-nums`} aria-label={`Item ${f.item}`} />; break;
@@ -82,8 +82,8 @@ function Field({ f, p }: { f: FieldDef; p: Props }) {
   return (
     <div style={{ gridColumn: `span ${f.span ?? 12} / span ${f.span ?? 12}` }} className={`rounded p-1 ${hl ? "bg-yellow-200 ring-2 ring-yellow-500" : ""}`}>
       <div className="flex items-start gap-1.5 mb-0.5">
-        {f.item && <span className="shrink-0 rounded-sm bg-slate-700 px-1 text-[10px] font-bold text-white leading-4">{f.item}</span>}
-        <span className="text-[11.5px] leading-tight text-slate-700">{f.label}</span>
+        {f.item && <span className="shrink-0 rounded-sm bg-gray-700 px-1 text-[10px] font-bold text-white leading-4">{f.item}</span>}
+        <span className="text-[11.5px] leading-tight text-gray-700">{f.label}</span>
       </div>
       {control}
       {err && <div className="mt-0.5 text-[11px] text-rose-700">{err}</div>}
@@ -92,7 +92,7 @@ function Field({ f, p }: { f: FieldDef; p: Props }) {
 }
 
 function RowView({ row, p }: { row: Row; p: Props }) {
-  if (row.type === "heading") return <div className="px-2 pt-2 text-[12px] font-semibold text-slate-700">{row.text}</div>;
+  if (row.type === "heading") return <div className="px-2 pt-2 text-[12px] font-semibold text-gray-700">{row.text}</div>;
   if (row.type === "fields") {
     const fields = row.fields.filter((f) => !f.when || f.when(p.values));
     return fields.length === 0 ? null : <div className="grid grid-cols-12 gap-x-2 gap-y-1 px-1.5 py-1">{fields.map((f) => <Field key={f.id} f={f} p={p} />)}</div>;
@@ -103,11 +103,11 @@ function RowView({ row, p }: { row: Row; p: Props }) {
     const val = (k: string) => p.values[`${row.id}${k}`] ?? "";
     return (
       <div className="grid grid-cols-12 gap-2 px-2 py-1 items-center">
-        <div className="col-span-12 sm:col-span-3 flex items-center gap-1.5 text-[12px]"><span className="rounded-sm bg-slate-700 px-1 text-[10px] font-bold text-white">{row.item}</span>{row.label}</div>
-        <input aria-label={`Item ${row.item} drawee bank/agency`} disabled={ro} value={val("bank")} onChange={set("bank")} placeholder="Drawee Bank/Agency" className={`${BOX} border-slate-400 col-span-6 sm:col-span-3`} />
-        <input aria-label={`Item ${row.item} number`} disabled={ro} value={val("num")} onChange={set("num")} placeholder="Number" className={`${BOX} border-slate-400 col-span-6 sm:col-span-2`} />
-        <input aria-label={`Item ${row.item} date`} disabled={ro} type="date" value={usToIso(val("date"))} onChange={(e) => p.onChange?.(`${row.id}date`, e.target.value ? isoToUs(e.target.value) : "")} className={`${BOX} border-slate-400 col-span-6 sm:col-span-2`} />
-        <input aria-label={`Item ${row.item} amount`} disabled={ro} inputMode="decimal" value={val("amt")} onChange={(e) => p.onChange?.(`${row.id}amt`, e.target.value.replace(/[^\d.,-]/g, ""))} placeholder="0.00" className={`${BOX} border-slate-400 col-span-6 sm:col-span-2 text-right tabular-nums`} />
+        <div className="col-span-12 sm:col-span-3 flex items-center gap-1.5 text-[12px]"><span className="rounded-sm bg-gray-700 px-1 text-[10px] font-bold text-white">{row.item}</span>{row.label}</div>
+        <input aria-label={`Item ${row.item} drawee bank/agency`} disabled={ro} value={val("bank")} onChange={set("bank")} placeholder="Drawee Bank/Agency" className={`${BOX} border-gray-400 col-span-6 sm:col-span-3`} />
+        <input aria-label={`Item ${row.item} number`} disabled={ro} value={val("num")} onChange={set("num")} placeholder="Number" className={`${BOX} border-gray-400 col-span-6 sm:col-span-2`} />
+        <input aria-label={`Item ${row.item} date`} disabled={ro} type="date" value={usToIso(val("date"))} onChange={(e) => p.onChange?.(`${row.id}date`, e.target.value ? isoToUs(e.target.value) : "")} className={`${BOX} border-gray-400 col-span-6 sm:col-span-2`} />
+        <input aria-label={`Item ${row.item} amount`} disabled={ro} inputMode="decimal" value={val("amt")} onChange={(e) => p.onChange?.(`${row.id}amt`, e.target.value.replace(/[^\d.,-]/g, ""))} placeholder="0.00" className={`${BOX} border-gray-400 col-span-6 sm:col-span-2 text-right tabular-nums`} />
       </div>
     );
   }
@@ -118,9 +118,9 @@ function RowView({ row, p }: { row: Row; p: Props }) {
   return (
     <div className={`grid items-center gap-2 px-2 py-0.5 ${twoCols ? "grid-cols-[1fr_9rem_9rem]" : "grid-cols-[1fr_9rem]"}`}>
       <div className={`flex items-start gap-1.5 text-[12px] leading-tight ${pad} ${row.bold ? "font-semibold" : ""} ${p.highlight && row.cols.some((c) => `${row.id}${c}` === p.highlight) ? "bg-yellow-200 rounded px-1" : ""}`}>
-        <span className="mt-0.5 shrink-0 rounded-sm bg-slate-700 px-1 text-[10px] font-bold text-white leading-4">{row.item}</span>
-        <span>{row.label}{row.note ? <em className="block font-normal text-[11px] text-slate-500">{row.note}</em> : null}
-          {row.specify && <input aria-label={`Item ${row.item} specify`} id={`f-${row.id}S`} disabled={!p.onChange} value={p.values[`${row.id}S`] ?? ""} onChange={(e) => p.onChange?.(`${row.id}S`, e.target.value.toUpperCase())} placeholder="specify" className={`${BOX} border-slate-400 mt-0.5 !w-56 ${p.errors?.[`${row.id}S`] ? "border-rose-500" : ""}`} />}
+        <span className="mt-0.5 shrink-0 rounded-sm bg-gray-700 px-1 text-[10px] font-bold text-white leading-4">{row.item}</span>
+        <span>{row.label}{row.note ? <em className="block font-normal text-[11px] text-gray-500">{row.note}</em> : null}
+          {row.specify && <input aria-label={`Item ${row.item} specify`} id={`f-${row.id}S`} disabled={!p.onChange} value={p.values[`${row.id}S`] ?? ""} onChange={(e) => p.onChange?.(`${row.id}S`, e.target.value.toUpperCase())} placeholder="specify" className={`${BOX} border-gray-400 mt-0.5 !w-56 ${p.errors?.[`${row.id}S`] ? "border-rose-500" : ""}`} />}
         </span>
       </div>
       {row.cols.map((c) => {
@@ -145,10 +145,10 @@ function PageView({ page, p }: { page: Page; p: Props }) {
       {page.sections.map((s) => {
         const hasB = s.rows.some((r) => r.type === "amounts" && r.cols.length > 1);
         return (
-          <section key={s.id} className="rounded border border-slate-400 bg-[#eef1f6]">
-            <div className="bg-slate-600 px-2 py-1 text-[12.5px] font-semibold text-white">{s.title}</div>
-            {s.note && !p.compact && <div className="px-2 py-1 text-[11px] text-slate-600">{s.note}</div>}
-            {hasB && <div className="grid grid-cols-[1fr_9rem_9rem] gap-2 px-2 pt-1 text-[11px] font-semibold text-slate-600"><span>Particulars</span><span className="text-center">A) Taxpayer/Filer</span><span className="text-center">B) Spouse</span></div>}
+          <section key={s.id} className="rounded border border-gray-400 bg-[#eef1f6]">
+            <div className="bg-gray-600 px-2 py-1 text-[12.5px] font-semibold text-white">{s.title}</div>
+            {s.note && !p.compact && <div className="px-2 py-1 text-[11px] text-gray-600">{s.note}</div>}
+            {hasB && <div className="grid grid-cols-[1fr_9rem_9rem] gap-2 px-2 pt-1 text-[11px] font-semibold text-gray-600"><span>Particulars</span><span className="text-center">A) Taxpayer/Filer</span><span className="text-center">B) Spouse</span></div>}
             <div className="pb-1">{s.rows.map((r, i) => <RowView key={i} row={r} p={p} />)}</div>
           </section>
         );
@@ -168,22 +168,22 @@ export function FormRenderer(props: Props) {
   const { def, page, allPages } = props;
   const pages = allPages ? def.pages : [def.pages[Math.min(page, def.pages.length - 1)]];
   return (
-    <div className={`bir-form rounded border-2 border-slate-500 bg-[#dfe4ec] p-2 ${props.compact ? "text-[11px]" : ""}`}>
-      <div className="mb-2 flex flex-wrap items-start justify-between gap-2 rounded border border-slate-500 bg-white px-3 py-2">
+    <div className={`bir-form rounded border-2 border-gray-500 bg-[#dfe4ec] p-2 ${props.compact ? "text-[11px]" : ""}`}>
+      <div className="mb-2 flex flex-wrap items-start justify-between gap-2 rounded border border-gray-500 bg-white px-3 py-2">
         <div>
-          <div className="text-[11px] uppercase tracking-wide text-slate-500">BIR Form No.</div>
-          <div className="text-2xl font-extrabold leading-none text-slate-900">{def.number}</div>
-          <div className="text-[11px] text-slate-600">{def.version}</div>
+          <div className="text-[11px] uppercase tracking-wide text-gray-500">BIR Form No.</div>
+          <div className="text-2xl font-extrabold leading-none text-gray-900">{def.number}</div>
+          <div className="text-[11px] text-gray-600">{def.version}</div>
         </div>
         <div className="min-w-[14rem] flex-1 text-center">
-          <div className="text-base font-bold text-slate-900">{def.title}</div>
-          <div className="text-[11.5px] text-slate-700">{def.subtitle}</div>
+          <div className="text-base font-bold text-gray-900">{def.title}</div>
+          <div className="text-[11.5px] text-gray-700">{def.subtitle}</div>
         </div>
-        <div className="text-right text-[10.5px] text-slate-500">Enter all required information in CAPITAL LETTERS.<br />Two copies must be filed with the BIR and one held by the Tax Filer.</div>
+        <div className="text-right text-[10.5px] text-gray-500">Enter all required information in CAPITAL LETTERS.<br />Two copies must be filed with the BIR and one held by the Tax Filer.</div>
       </div>
       {pages.map((pg) => (
         <div key={pg.id} className={allPages ? "mb-3 break-after-page" : ""}>
-          {allPages && <div className="mb-1 text-[11px] font-semibold text-slate-600">{def.number} {def.version} — {pg.title}</div>}
+          {allPages && <div className="mb-1 text-[11px] font-semibold text-gray-600">{def.number} {def.version} — {pg.title}</div>}
           <PageView page={pg} p={props} />
         </div>
       ))}

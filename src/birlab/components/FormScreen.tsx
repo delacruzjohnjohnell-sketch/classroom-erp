@@ -59,7 +59,7 @@ export function FormScreen({ formId, caseDef, mode }: Props) {
   const locked = status === "final" || status === "submitted";
   const key0 = useMemo(() => (def && caseDef ? keyValues(def, { ...caseDef.profile, ...caseDef.facts }, { filingDate: caseDef.filingDate }) : null), [def, caseDef]);
 
-  if (!entry || !def) return <p className="text-sm text-slate-600">This form is coming in a later phase.</p>;
+  if (!entry || !def) return <p className="text-sm text-gray-600">This form is coming in a later phase.</p>;
 
   const errors = Object.fromEntries((issues ?? []).map((i) => [i.id, i.message]));
   const marks: Record<string, Mark> | undefined = result?.items.length ? Object.fromEntries(result.items.map((i) => [i.id, i.status])) : undefined;
@@ -119,19 +119,19 @@ export function FormScreen({ formId, caseDef, mode }: Props) {
   if (caseDef && stage === "story") {
     return (
       <div className="max-w-3xl space-y-4">
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
+        <div className="rounded-lg border border-gray-200 bg-white p-4">
           <div className="text-xs font-semibold uppercase tracking-wide text-blue-700">{caseDef.level} case · taxable year {caseDef.year} · {mode} mode</div>
           <h2 className="text-lg font-bold mt-1">{caseDef.title}</h2>
-          <div className="mt-2 space-y-2 text-sm text-slate-800">{caseDef.story.map((p, i) => <p key={i}>{p}</p>)}</div>
+          <div className="mt-2 space-y-2 text-sm text-gray-800">{caseDef.story.map((p, i) => <p key={i}>{p}</p>)}</div>
         </div>
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
+        <div className="rounded-lg border border-gray-200 bg-white p-4">
           <label className="block text-sm font-semibold">Which BIR form will you use for this taxpayer?
-            <select value={chosen} onChange={(e) => setChosen(e.target.value)} className="mt-1 block w-full max-w-md rounded border border-slate-300 px-2 py-1.5 text-sm font-normal">
+            <select value={chosen} onChange={(e) => setChosen(e.target.value)} className="mt-1 block w-full max-w-md rounded border border-gray-300 px-2 py-1.5 text-sm font-normal">
               <option value="">Choose a form</option>
               {FORMS.map((f) => <option key={f.id} value={f.id}>{f.number}: {f.name}</option>)}
             </select>
           </label>
-          <p className="mt-2 text-xs text-slate-500">Choosing the wrong form scores zero, with an explanation.</p>
+          <p className="mt-2 text-xs text-gray-500">Choosing the wrong form scores zero, with an explanation.</p>
           <button type="button" disabled={!chosen} onClick={chooseForm} className="mt-3 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">Open this form</button>
           {result?.wrongForm && (
             <div role="alert" className="mt-3 rounded-md border border-rose-300 bg-rose-50 p-3 text-sm text-rose-900">
@@ -145,19 +145,19 @@ export function FormScreen({ formId, caseDef, mode }: Props) {
   }
 
   const pageTabs = def.pages.map((pg, i) => (
-    <button key={pg.id} type="button" onClick={() => setPage(i)} className={`px-3 py-1.5 text-xs font-semibold border border-b-0 rounded-t ${page === i ? "bg-white text-slate-900" : "bg-slate-200 text-slate-600"}`}>{pg.title}</button>
+    <button key={pg.id} type="button" onClick={() => setPage(i)} className={`px-3 py-1.5 text-xs font-semibold border border-b-0 rounded-t ${page === i ? "bg-white text-gray-900" : "bg-gray-200 text-gray-600"}`}>{pg.title}</button>
   ));
 
   return (
     <div className="space-y-3">
       <div role="note" className="rounded border border-amber-300 bg-amber-100 px-3 py-1.5 text-xs sm:text-sm text-amber-900">Educational simulation only — not connected to the BIR. Do not enter real TINs or personal data.</div>
-      <p className="lg:hidden text-xs text-slate-600">Filling a return is easier on a tablet or laptop. You can read the case here, but the form needs a wider screen.</p>
+      <p className="lg:hidden text-xs text-gray-600">Filling a return is easier on a tablet or laptop. You can read the case here, but the form needs a wider screen.</p>
 
-      <div className="flex flex-wrap items-center gap-3 text-xs text-slate-700">
+      <div className="flex flex-wrap items-center gap-3 text-xs text-gray-700">
         <span className="font-semibold">Form {def.number} · version {def.version}</span>
         <span>Due {dueIso ? isoToUs(dueIso) : "(enter the year)"}</span>
         <label className="flex items-center gap-1.5">Date of filing (simulation)
-          <input type="date" disabled={locked || !!caseDef} value={filingDate} onChange={(e) => { setFilingDate(e.target.value); setResult(null); }} className="rounded border border-slate-300 px-1.5 py-0.5" />
+          <input type="date" disabled={locked || !!caseDef} value={filingDate} onChange={(e) => { setFilingDate(e.target.value); setResult(null); }} className="rounded border border-gray-300 px-1.5 py-0.5" />
         </label>
         {late && <span className="rounded bg-rose-100 px-2 py-0.5 font-semibold text-rose-800">Filed late: surcharge and interest apply</span>}
         {mode === "assessment" && <label className="flex items-center gap-1"><input type="checkbox" checked={showTimer} onChange={(e) => setShowTimer(e.target.checked)} /> Timer {showTimer && <b className="tabular-nums">{mmss}</b>}</label>}
@@ -165,7 +165,7 @@ export function FormScreen({ formId, caseDef, mode }: Props) {
       </div>
 
       {caseDef && (
-        <details className="rounded border border-slate-200 bg-white p-3 text-sm" open={!saved}>
+        <details className="rounded border border-gray-200 bg-white p-3 text-sm" open={!saved}>
           <summary className="cursor-pointer font-semibold">{caseDef.title}: the story</summary>
           <div className="mt-2 space-y-2">{caseDef.story.map((p, i) => <p key={i}>{p}</p>)}</div>
         </details>
@@ -175,24 +175,24 @@ export function FormScreen({ formId, caseDef, mode }: Props) {
         <div className="flex gap-1">{pageTabs}</div>
         <FormRenderer def={def} page={page} values={values} computed={computed} onChange={locked ? undefined : set} marks={marks} errors={errors} />
       </div>
-      <div className="lg:hidden rounded border border-slate-300 bg-white p-4 text-sm text-slate-700">This screen is too narrow to fill the form. Open it on a tablet or a laptop, or rotate your device.</div>
+      <div className="lg:hidden rounded border border-gray-300 bg-white p-4 text-sm text-gray-700">This screen is too narrow to fill the form. Open it on a tablet or a laptop, or rotate your device.</div>
 
       {/* The bottom buttons, in the order and with the names of eBIRForms. */}
-      <div className="sticky bottom-0 z-10 flex flex-wrap items-center gap-2 border border-slate-300 bg-white/95 p-2 shadow print:hidden">
-        <button type="button" onClick={validate} className="rounded border border-slate-400 bg-slate-100 px-3 py-1.5 text-sm font-semibold hover:bg-slate-200">Validate</button>
-        <button type="button" onClick={edit} className="rounded border border-slate-400 bg-slate-100 px-3 py-1.5 text-sm font-semibold hover:bg-slate-200">Edit</button>
-        <button type="button" onClick={save} className="rounded border border-slate-400 bg-slate-100 px-3 py-1.5 text-sm font-semibold hover:bg-slate-200">Save</button>
-        <button type="button" onClick={() => setPrinting(true)} className="rounded border border-slate-400 bg-slate-100 px-3 py-1.5 text-sm font-semibold hover:bg-slate-200">Print</button>
-        <button type="button" onClick={finalCopy} className="rounded border border-slate-400 bg-slate-100 px-3 py-1.5 text-sm font-semibold hover:bg-slate-200">Final Copy</button>
+      <div className="sticky bottom-0 z-10 flex flex-wrap items-center gap-2 border border-gray-300 bg-white/95 p-2 shadow print:hidden">
+        <button type="button" onClick={validate} className="rounded border border-gray-400 bg-gray-100 px-3 py-1.5 text-sm font-semibold hover:bg-gray-200">Validate</button>
+        <button type="button" onClick={edit} className="rounded border border-gray-400 bg-gray-100 px-3 py-1.5 text-sm font-semibold hover:bg-gray-200">Edit</button>
+        <button type="button" onClick={save} className="rounded border border-gray-400 bg-gray-100 px-3 py-1.5 text-sm font-semibold hover:bg-gray-200">Save</button>
+        <button type="button" onClick={() => setPrinting(true)} className="rounded border border-gray-400 bg-gray-100 px-3 py-1.5 text-sm font-semibold hover:bg-gray-200">Print</button>
+        <button type="button" onClick={finalCopy} className="rounded border border-gray-400 bg-gray-100 px-3 py-1.5 text-sm font-semibold hover:bg-gray-200">Final Copy</button>
         <button type="button" onClick={submit} className="rounded bg-blue-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-blue-800">Submit/File Final</button>
         {caseDef && mode === "practice" && (
           <>
-            <span className="mx-1 h-5 border-l border-slate-300" />
+            <span className="mx-1 h-5 border-l border-gray-300" />
             <button type="button" onClick={checkMine} className="rounded bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-700">Check my return</button>
-            <button type="button" disabled={hintsUsed >= caseDef.hints.length} onClick={() => { setHintsUsed((n) => n + 1); }} className="rounded border border-slate-400 bg-white px-3 py-1.5 text-sm font-semibold disabled:opacity-40">Hint ({hintsUsed}/{caseDef.hints.length})</button>
+            <button type="button" disabled={hintsUsed >= caseDef.hints.length} onClick={() => { setHintsUsed((n) => n + 1); }} className="rounded border border-gray-400 bg-white px-3 py-1.5 text-sm font-semibold disabled:opacity-40">Hint ({hintsUsed}/{caseDef.hints.length})</button>
           </>
         )}
-        {msg && <span role="status" className="text-sm text-slate-700">{msg}</span>}
+        {msg && <span role="status" className="text-sm text-gray-700">{msg}</span>}
       </div>
 
       {caseDef && mode === "practice" && hintsUsed > 0 && (
@@ -209,12 +209,12 @@ export function FormScreen({ formId, caseDef, mode }: Props) {
       )}
 
       {result && !result.wrongForm && (
-        <div className="rounded border border-slate-300 bg-white p-3 text-sm">
+        <div className="rounded border border-gray-300 bg-white p-3 text-sm">
           <div className="font-semibold">{revealed ? "Result" : "Check my return"}: {result.score} of {result.max} points ({result.percent}%)</div>
-          <p className="text-xs text-slate-500">Green is correct, red is wrong, grey is not required for this case.{revealed ? "" : " The expected values appear after you file the final return."}</p>
+          <p className="text-xs text-gray-500">Green is correct, red is wrong, grey is not required for this case.{revealed ? "" : " The expected values appear after you file the final return."}</p>
           <table className="mt-2 w-full text-xs"><tbody>
             {result.items.filter((i) => i.status === "wrong").map((i) => (
-              <tr key={i.id} className="border-t border-slate-100"><td className="py-1">Item {i.item}{i.id.endsWith("B") ? " (spouse)" : ""}</td><td className="text-rose-700">wrong</td>{revealed && <td className="text-right tabular-nums">expected {/^[A-Za-z]/.test(i.expected ?? "") ? i.expected : money(amt(i.expected))}, you have {/^[A-Za-z]/.test(i.got ?? "") ? i.got || "(blank)" : money(amt(i.got))}</td>}</tr>
+              <tr key={i.id} className="border-t border-gray-100"><td className="py-1">Item {i.item}{i.id.endsWith("B") ? " (spouse)" : ""}</td><td className="text-rose-700">wrong</td>{revealed && <td className="text-right tabular-nums">expected {/^[A-Za-z]/.test(i.expected ?? "") ? i.expected : money(amt(i.expected))}, you have {/^[A-Za-z]/.test(i.got ?? "") ? i.got || "(blank)" : money(amt(i.got))}</td>}</tr>
             ))}
             {result.items.every((i) => i.status !== "wrong") && <tr><td className="py-1 text-emerald-700">Every required item is correct.</td></tr>}
           </tbody></table>
@@ -229,7 +229,7 @@ export function FormScreen({ formId, caseDef, mode }: Props) {
       {status === "submitted" && <Confirmation def={def} values={values} computed={computed} />}
 
       {printing && (
-        <div className="fixed inset-0 z-50 overflow-auto bg-slate-700/80 p-4 print:static print:bg-white print:p-0">
+        <div className="fixed inset-0 z-50 overflow-auto bg-gray-700/80 p-4 print:static print:bg-white print:p-0">
           <style>{`@page { size: 8.5in 13in; margin: 0.3in } @media print { body * { visibility: hidden } .bir-print, .bir-print * { visibility: visible } .bir-print { position: absolute; left: 0; top: 0; width: 100% } }`}</style>
           <div className="mx-auto mb-2 flex max-w-[8.5in] items-center justify-between gap-2 print:hidden">
             <span className="text-sm font-semibold text-white">Print preview: long bond paper, 8.5 x 13 in</span>
@@ -237,7 +237,7 @@ export function FormScreen({ formId, caseDef, mode }: Props) {
           </div>
           <div className="bir-print mx-auto w-[8.5in] max-w-full bg-white p-2 shadow-lg">
             <FormRenderer def={def} page={0} allPages values={values} computed={computed} />
-            <p className="mt-2 text-center text-[10px] text-slate-500">Educational simulation only — not a BIR document.</p>
+            <p className="mt-2 text-center text-[10px] text-gray-500">Educational simulation only — not a BIR document.</p>
           </div>
         </div>
       )}
@@ -256,13 +256,13 @@ function Confirmation({ def, values, computed }: { def: NonNullable<ReturnType<t
         <h3 className="text-lg font-bold">Your return has been filed (simulated)</h3>
         <p className="text-sm">Form {def.number} · Reference number <b>{ref}</b>. Nothing was sent to the BIR.</p>
       </div>
-      <div className="rounded border border-slate-300 bg-white p-4 text-sm">
+      <div className="rounded border border-gray-300 bg-white p-4 text-sm">
         <div className="text-xs font-bold uppercase tracking-widest text-amber-700">Simulation: mock email</div>
-        <div className="mt-1 text-slate-500">From: no-reply@simulation.invalid · To: {values["11"] || "(your email)"}</div>
+        <div className="mt-1 text-gray-500">From: no-reply@simulation.invalid · To: {values["11"] || "(your email)"}</div>
         <div className="font-semibold">Subject: Tax Return Receipt Confirmation</div>
         <p className="mt-2">Dear Taxpayer, this is a classroom simulation of the confirmation e-mail. Your return {def.number} with reference <b>{ref}</b> was recorded in the lab. Total amount payable shown on the return: <b>₱{money(payable)}</b>.</p>
       </div>
-      <div className="rounded border border-slate-300 bg-white p-4 text-sm">
+      <div className="rounded border border-gray-300 bg-white p-4 text-sm">
         <div className="text-xs font-bold uppercase tracking-widest text-amber-700">Simulation: payment step</div>
         <p className="mt-1">In real life you would pay through one of the channels the BIR allows, for example an authorized agent bank, or the BIR&apos;s e-payment channels (online banking, e-wallets, credit/debit card). Keep the proof of payment and report it in Part III of the return. This lab does not process any payment.</p>
       </div>

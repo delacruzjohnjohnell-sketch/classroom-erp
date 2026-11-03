@@ -6,12 +6,12 @@ import { useSession } from "@/lib/session";
 export function BirNav() {
   const { profile } = useSession();
   return (
-    <header className="bg-white border-b border-slate-200 print:hidden">
+    <header className="bg-white border-b border-gray-200 print:hidden">
       <div className="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-5 gap-y-2">
-        <Link href="/bir-lab" className="font-bold text-slate-900">BIR eForms Lab <span className="font-normal text-slate-500 text-sm">— JJ and Co.</span></Link>
+        <Link href="/bir-lab" className="font-bold text-gray-900">BIR eForms Lab <span className="font-normal text-gray-500 text-sm">— JJ and Co.</span></Link>
         <div className="ml-auto flex items-center gap-4 text-sm">
-          {profile?.full_name && <span className="text-slate-500">{profile.full_name}</span>}
-          <Link href="/choose" className="text-slate-500 hover:underline">Back to Classroom ERP</Link>
+          {profile?.full_name && <span className="text-gray-500">{profile.full_name}</span>}
+          <Link href="/choose" className="text-gray-500 hover:underline">Back to Classroom ERP</Link>
         </div>
       </div>
     </header>

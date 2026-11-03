@@ -19,7 +19,7 @@ export function WorkResult({ marking: m }: { marking: WorkMarking }) {
   const colName: Record<string, string> = { isDr: "column 7 (Income Statement Dr)", isCr: "column 8 (Income Statement Cr)", bsDr: "column 9 (Balance Sheet Dr)", bsCr: "column 10 (Balance Sheet Cr)" };
   const f = m.footings;
   return (
-    <div className="mt-3 rounded-md border border-slate-200 bg-white p-3">
+    <div className="mt-3 rounded-md border border-gray-200 bg-white p-3">
       <Section title="Posting (journal lines dropped on the right account and side)" ok={m.posting.length - pw.length} total={m.posting.length}>
         {pw.map((c, i) => <li key={i}>{name(c.accountCode)} {c.side === "Dr" ? "debit" : "credit"} {formatAmount(c.amount)}: {c.status === "not-posted" ? "not posted" : c.status === "no-line" ? "not in your journal" : c.status === "wrong-account" ? `posted to ${name(c.postedTo ?? "")}` : `posted on the ${c.postedSide === "Dr" ? "debit" : "credit"} side`}</li>)}
       </Section>

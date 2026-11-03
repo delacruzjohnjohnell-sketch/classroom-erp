@@ -8,8 +8,8 @@ export function PageHeader({ title, subtitle, actions }: { title: string; subtit
   return (
     <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">{title}</h1>
-        {subtitle && <p className="text-sm text-slate-600 mt-1 max-w-3xl">{subtitle}</p>}
+        <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+        {subtitle && <p className="text-sm text-gray-600 mt-1 max-w-3xl">{subtitle}</p>}
       </div>
       {actions && <div className="flex items-center gap-2 print:hidden">{actions}</div>}
     </div>
@@ -18,8 +18,8 @@ export function PageHeader({ title, subtitle, actions }: { title: string; subtit
 
 export function Card({ title, children, className = "" }: { title?: string; children: ReactNode; className?: string }) {
   return (
-    <section className={`bg-white border border-slate-200 rounded-lg p-4 ${className}`}>
-      {title && <h2 className="text-sm font-semibold text-slate-800 mb-3">{title}</h2>}
+    <section className={`bg-white border border-gray-200 rounded-lg p-4 ${className}`}>
+      {title && <h2 className="text-sm font-semibold text-gray-800 mb-3">{title}</h2>}
       {children}
     </section>
   );
@@ -35,25 +35,25 @@ export function Pill({ ok, children }: { ok: boolean; children: ReactNode }) {
 }
 
 export function Empty({ children }: { children: ReactNode }) {
-  return <div className="text-sm text-slate-500 border border-dashed border-slate-300 rounded-lg p-6 text-center">{children}</div>;
+  return <div className="text-sm text-gray-500 border border-dashed border-gray-300 rounded-lg p-6 text-center">{children}</div>;
 }
 
 const INDENT = ["pl-0", "pl-5", "pl-10"] as const;
 
 function amountClass(kind: StatementLine["kind"]): string {
-  if (kind === "subtotal") return "border-b border-slate-800";
-  if (kind === "total") return "border-b-4 border-double border-slate-900 font-bold";
+  if (kind === "subtotal") return "border-b border-gray-800";
+  if (kind === "total") return "border-b-4 border-double border-gray-900 font-bold";
   return "";
 }
 
 /** A statement in accounting format: subtotals get a single underline, totals a double underline. */
 export function StatementView({ statement, entity }: { statement: Statement; entity: string }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-lg p-6 max-w-3xl mx-auto print:border-0">
+    <div className="bg-white border border-gray-200 rounded-lg p-6 max-w-3xl mx-auto print:border-0">
       <div className="text-center mb-5">
-        <div className="font-bold uppercase tracking-wide text-slate-900">{entity}</div>
-        <div className="font-bold text-slate-900">{statement.title}</div>
-        <div className="text-sm text-slate-600">{statement.subtitle}</div>
+        <div className="font-bold uppercase tracking-wide text-gray-900">{entity}</div>
+        <div className="font-bold text-gray-900">{statement.title}</div>
+        <div className="text-sm text-gray-600">{statement.subtitle}</div>
       </div>
       <table className="w-full text-sm">
         <tbody>

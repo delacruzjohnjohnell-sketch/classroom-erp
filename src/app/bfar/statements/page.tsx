@@ -21,14 +21,14 @@ const TABS: { id: Tab; label: string }[] = [
 ];
 
 function EntryTable({ entries, empty }: { entries: JournalEntry[]; empty: string }) {
-  if (entries.length === 0) return <p className="text-sm text-slate-500">{empty}</p>;
+  if (entries.length === 0) return <p className="text-sm text-gray-500">{empty}</p>;
   return (
     <table className="w-full text-sm">
       <tbody>
         {entries.map((e) => (
-          <tr key={e.id} className="border-t border-slate-100 align-top">
+          <tr key={e.id} className="border-t border-gray-100 align-top">
             <td className="p-1.5 w-24 whitespace-nowrap">{e.date}</td>
-            <td className="p-1.5">{e.lines.map((l, i) => <div key={i} className={l.credit > 0 ? "pl-8" : ""}>{getAccount(l.accountCode)?.name}</div>)}<div className="italic text-slate-500">({e.explanation})</div></td>
+            <td className="p-1.5">{e.lines.map((l, i) => <div key={i} className={l.credit > 0 ? "pl-8" : ""}>{getAccount(l.accountCode)?.name}</div>)}<div className="italic text-gray-500">({e.explanation})</div></td>
             <td className="p-1.5 text-right w-32">{e.lines.map((l, i) => <div key={i}><Money value={l.debit} />&nbsp;</div>)}</td>
             <td className="p-1.5 text-right w-32">{e.lines.map((l, i) => <div key={i}><Money value={l.credit} />&nbsp;</div>)}</td>
           </tr>
@@ -76,47 +76,47 @@ function StatementsInner({ book }: { book: string }) {
   return (
     <>
       <PageHeader title="Financial statements" subtitle="Prepared under PAS 1 from the journal entries of the chosen book. Single underline for subtotals, double underline for totals."
-        actions={<button type="button" onClick={() => window.print()} className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm"><Printer size={14} /> Print / Save as PDF</button>} />
+        actions={<button type="button" onClick={() => window.print()} className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm"><Printer size={14} /> Print / Save as PDF</button>} />
       <BookPicker />
       <Card className="mb-4 print:hidden">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-sm">
           <label className="flex flex-col gap-1">Use the settings of
-            <select defaultValue="" onChange={(e) => applySet(e.target.value)} className="rounded border border-slate-300 px-2 py-1.5"><option value="" disabled>Choose a practice set</option>{PRACTICE_SETS.map((s) => <option key={s.id} value={s.id}>{s.title}</option>)}</select></label>
+            <select defaultValue="" onChange={(e) => applySet(e.target.value)} className="rounded border border-gray-300 px-2 py-1.5"><option value="" disabled>Choose a practice set</option>{PRACTICE_SETS.map((s) => <option key={s.id} value={s.id}>{s.title}</option>)}</select></label>
           <label className="flex flex-col gap-1">Type of business
-            <select value={business} onChange={(e) => setBusiness(e.target.value as BusinessType)} className="rounded border border-slate-300 px-2 py-1.5"><option value="service">Service</option><option value="merchandising">Merchandising</option></select></label>
+            <select value={business} onChange={(e) => setBusiness(e.target.value as BusinessType)} className="rounded border border-gray-300 px-2 py-1.5"><option value="service">Service</option><option value="merchandising">Merchandising</option></select></label>
           {business === "merchandising" && (
             <>
               <label className="flex flex-col gap-1">Inventory system
-                <select value={inventory} onChange={(e) => setInventory(e.target.value as InventorySystem)} className="rounded border border-slate-300 px-2 py-1.5"><option value="periodic">Periodic</option><option value="perpetual">Perpetual</option></select></label>
+                <select value={inventory} onChange={(e) => setInventory(e.target.value as InventorySystem)} className="rounded border border-gray-300 px-2 py-1.5"><option value="periodic">Periodic</option><option value="perpetual">Perpetual</option></select></label>
               {inventory === "periodic" && <label className="flex flex-col gap-1">Ending inventory (physical count)
-                <input value={ending} onChange={(e) => setEnding(e.target.value)} inputMode="decimal" className="rounded border border-slate-300 px-2 py-1.5 text-right tabular-nums" /></label>}
+                <input value={ending} onChange={(e) => setEnding(e.target.value)} inputMode="decimal" className="rounded border border-gray-300 px-2 py-1.5 text-right tabular-nums" /></label>}
             </>
           )}
-          <label className="flex flex-col gap-1">Business name<input value={entity} onChange={(e) => setEntity(e.target.value)} className="rounded border border-slate-300 px-2 py-1.5" /></label>
-          <label className="flex flex-col gap-1">Period heading<input value={period} onChange={(e) => setPeriod(e.target.value)} className="rounded border border-slate-300 px-2 py-1.5" /></label>
-          <label className="flex flex-col gap-1">Position date<input value={asOf} onChange={(e) => setAsOf(e.target.value)} className="rounded border border-slate-300 px-2 py-1.5" /></label>
+          <label className="flex flex-col gap-1">Business name<input value={entity} onChange={(e) => setEntity(e.target.value)} className="rounded border border-gray-300 px-2 py-1.5" /></label>
+          <label className="flex flex-col gap-1">Period heading<input value={period} onChange={(e) => setPeriod(e.target.value)} className="rounded border border-gray-300 px-2 py-1.5" /></label>
+          <label className="flex flex-col gap-1">Position date<input value={asOf} onChange={(e) => setAsOf(e.target.value)} className="rounded border border-gray-300 px-2 py-1.5" /></label>
         </div>
       </Card>
 
       <div className="flex flex-wrap gap-1 mb-4 print:hidden">
-        {TABS.map((t) => <button key={t.id} type="button" onClick={() => setTab(t.id)} className={`rounded-full px-3 py-1 text-xs font-semibold border ${tab === t.id ? "bg-blue-600 border-blue-600 text-white" : "border-slate-300 text-slate-700"}`}>{t.label}</button>)}
+        {TABS.map((t) => <button key={t.id} type="button" onClick={() => setTab(t.id)} className={`rounded-full px-3 py-1 text-xs font-semibold border ${tab === t.id ? "bg-blue-600 border-blue-600 text-white" : "border-gray-300 text-gray-700"}`}>{t.label}</button>)}
       </div>
 
       {!hydrated ? null : books.length === 0 ? <Empty>No books yet. Record entries in the journal or load a practice set solution.</Empty> : tab === "period" ? (
         <div className="grid gap-4">
           <Card title="Closing entries (revenue, expenses, income summary, drawing)">
-            <label className="text-sm flex items-center gap-2 mb-2 print:hidden">Date<input type="date" value={closingDate} onChange={(e) => setClosingDate(e.target.value)} className="rounded border border-slate-300 px-2 py-1" /></label>
+            <label className="text-sm flex items-center gap-2 mb-2 print:hidden">Date<input type="date" value={closingDate} onChange={(e) => setClosingDate(e.target.value)} className="rounded border border-gray-300 px-2 py-1" /></label>
             <EntryTable entries={closing.entries} empty="There is nothing to close yet." />
           </Card>
           <Card title="Post-closing trial balance">
             <table className="w-full text-sm max-w-2xl">
-              <tbody>{postClosing.rows.map((r) => <tr key={r.code} className="border-t border-slate-100"><td className="p-1.5 w-16">{r.code}</td><td className="p-1.5">{r.name}</td><td className="p-1.5 text-right w-36"><Money value={r.debit} /></td><td className="p-1.5 text-right w-36"><Money value={r.credit} /></td></tr>)}</tbody>
-              <tfoot><tr className="font-bold border-t-2 border-slate-800"><td colSpan={2} className="p-1.5">Total</td><td className="p-1.5 text-right"><Money value={postClosing.totalDebit} peso blankZero={false} /></td><td className="p-1.5 text-right"><Money value={postClosing.totalCredit} peso blankZero={false} /></td></tr></tfoot>
+              <tbody>{postClosing.rows.map((r) => <tr key={r.code} className="border-t border-gray-100"><td className="p-1.5 w-16">{r.code}</td><td className="p-1.5">{r.name}</td><td className="p-1.5 text-right w-36"><Money value={r.debit} /></td><td className="p-1.5 text-right w-36"><Money value={r.credit} /></td></tr>)}</tbody>
+              <tfoot><tr className="font-bold border-t-2 border-gray-800"><td colSpan={2} className="p-1.5">Total</td><td className="p-1.5 text-right"><Money value={postClosing.totalDebit} peso blankZero={false} /></td><td className="p-1.5 text-right"><Money value={postClosing.totalCredit} peso blankZero={false} /></td></tr></tfoot>
             </table>
             <div className="flex gap-2 mt-2"><Pill ok={postClosing.balanced}>{postClosing.balanced ? "Balanced" : "Not balanced"}</Pill><Pill ok={postClosing.onlyPermanentAccounts}>{postClosing.onlyPermanentAccounts ? "Only permanent accounts remain" : "A temporary account still has a balance"}</Pill></div>
           </Card>
           <Card title="Reversing entries (accruals, expense-method prepaids, income-method unearned)">
-            <label className="text-sm flex items-center gap-2 mb-2 print:hidden">Date<input type="date" value={reversingDate} onChange={(e) => setReversingDate(e.target.value)} className="rounded border border-slate-300 px-2 py-1" /></label>
+            <label className="text-sm flex items-center gap-2 mb-2 print:hidden">Date<input type="date" value={reversingDate} onChange={(e) => setReversingDate(e.target.value)} className="rounded border border-gray-300 px-2 py-1" /></label>
             <EntryTable entries={reversing} empty="No adjustment in these books needs reversing." />
           </Card>
         </div>

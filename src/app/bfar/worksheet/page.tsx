@@ -26,7 +26,7 @@ export default function WorksheetPage() {
       <BookPicker />
       {!hydrated ? null : (
         <>
-          {set?.periodEndDocuments?.length ? <p className="text-xs text-slate-600 mb-3">This set has an inventory count sheet under Practice sets, in &quot;Papers for the end of the period&quot;. Type the ending inventory in the Income Statement credit (8) and Balance Sheet debit (9) cells of the Merchandise Inventory row, and click its beginning balance into the Income Statement debit (7).</p> : null}
+          {set?.periodEndDocuments?.length ? <p className="text-xs text-gray-600 mb-3">This set has an inventory count sheet under Practice sets, in &quot;Papers for the end of the period&quot;. Type the ending inventory in the Income Statement credit (8) and Balance Sheet debit (9) cells of the Merchandise Inventory row, and click its beginning balance into the Income Statement debit (7).</p> : null}
           <WorksheetWorkspace ws={work.worksheet} tb={tb} adjEntries={bookEntries.filter((e) => e.stage === "adjusting")} periodic={set?.inventory === "periodic"} disabled={locked} onChange={(worksheet) => saveWork(book, { ...work, worksheet })} />
           <SaveBar book={book} />
         </>

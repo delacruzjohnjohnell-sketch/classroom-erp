@@ -66,17 +66,17 @@ function SetWork({ set }: { set: PracticeSet }) {
   return (
     <>
       <Card className="mb-4">
-        <p className="text-sm text-slate-700">{set.summary}</p>
+        <p className="text-sm text-gray-700">{set.summary}</p>
         <div className="flex flex-wrap items-center gap-3 mt-3 text-sm">
           <Pill ok={entered === items.length}>{entered} of {items.length} entered</Pill>
           {status === "submitted" && <Pill ok>Submitted, waiting for your teacher</Pill>}
           {status === "released" && released && <Pill ok={released.score === released.max}>Checked: {released.score} of {released.max}</Pill>}
-          {!locked && <button type="button" onClick={() => { resetSet(set.id); setDrafts({}); setMessage(null); }} className="text-slate-600 hover:underline">Start over</button>}
+          {!locked && <button type="button" onClick={() => { resetSet(set.id); setDrafts({}); setMessage(null); }} className="text-gray-600 hover:underline">Start over</button>}
           {entered > 0 && <><Link href="/bfar/ledger" className="text-blue-700 hover:underline">Ledger</Link><Link href="/bfar/worksheet" className="text-blue-700 hover:underline">Worksheet</Link><Link href="/bfar/statements" className="text-blue-700 hover:underline">Statements</Link></>}
         </div>
         {released?.work && <WorkResult marking={released.work} />}
         {released?.comment && <p className="mt-3 rounded-md bg-blue-50 border border-blue-200 p-2 text-sm"><b>Your teacher says:</b> {released.comment}</p>}
-        <p className="mt-3 text-xs text-slate-500">You will not be told whether an entry is right. Journalize each document here, then post to your ledger and fill your worksheet on their pages, and submit. Your teacher checks all of it and releases the result.</p>
+        <p className="mt-3 text-xs text-gray-500">You will not be told whether an entry is right. Journalize each document here, then post to your ledger and fill your worksheet on their pages, and submit. Your teacher checks all of it and releases the result.</p>
       </Card>
 
       {set.periodEndDocuments && set.periodEndDocuments.length > 0 && (
@@ -91,10 +91,10 @@ function SetWork({ set }: { set: PracticeSet }) {
           return (
             <Card key={item.id} className={result ? (result.status === "correct" ? "border-emerald-300" : "border-rose-300") : ""}>
               <div className="flex items-start gap-3">
-                <div className="text-xs font-semibold text-slate-500 w-20 shrink-0">{item.type === "adjustment" ? `Adjustment (${item.tag})` : `No. ${n + 1}`}<div className="font-normal">{item.date}</div></div>
+                <div className="text-xs font-semibold text-gray-500 w-20 shrink-0">{item.type === "adjustment" ? `Adjustment (${item.tag})` : `No. ${n + 1}`}<div className="font-normal">{item.date}</div></div>
                 <div className="flex-1 min-w-0">
-                  {item.document ? <SourceDocumentCard document={item.document} entity={set.entity} /> : <p className="text-sm font-medium text-slate-900">{item.description}</p>}
-                  {item.type === "adjustment" && <p className="text-xs text-slate-600 mt-2">Prepare the adjusting entry as of {item.date}.</p>}
+                  {item.document ? <SourceDocumentCard document={item.document} entity={set.entity} /> : <p className="text-sm font-medium text-gray-900">{item.description}</p>}
+                  {item.type === "adjustment" && <p className="text-xs text-gray-600 mt-2">Prepare the adjusting entry as of {item.date}.</p>}
                   <div className="mt-3">
                     <EntryLinesEditor draft={draftOf(item.id)} onChange={(d) => change(item.id, d)} disabled={locked} />
                     <div className="mt-2"><BalanceBadge lines={draftToLines(draftOf(item.id))} /></div>
@@ -105,7 +105,7 @@ function SetWork({ set }: { set: PracticeSet }) {
                       {result.status !== "correct" && (
                         <>
                           <ul className="list-disc pl-5 mt-1 text-rose-800">{result.messages.map((m) => <li key={m}>{m}</li>)}</ul>
-                          {result.hints.length > 0 && <p className="mt-1 text-slate-700"><b>Hint:</b> {result.hints.join(" ")}</p>}
+                          {result.hints.length > 0 && <p className="mt-1 text-gray-700"><b>Hint:</b> {result.hints.join(" ")}</p>}
                           <div className="mt-2 text-xs"><div className="font-semibold">Correct entry</div>
                             {result.key.map((l, i) => <div key={i} className={`flex justify-between max-w-md ${l.credit > 0 ? "pl-6" : ""}`}><span>{getAccount(l.accountCode)?.name}</span><span className="tabular-nums">{formatAmount(l.debit || l.credit)}</span></div>)}
                           </div>
@@ -121,8 +121,8 @@ function SetWork({ set }: { set: PracticeSet }) {
       </div>
 
       {!locked && (
-        <div className="sticky bottom-0 mt-4 bg-white/95 border border-slate-200 rounded-lg p-3 flex flex-wrap items-center gap-3 shadow">
-          <button type="button" disabled={busy} onClick={() => void send(false)} className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold disabled:opacity-50">Save my work</button>
+        <div className="sticky bottom-0 mt-4 bg-white/95 border border-gray-200 rounded-lg p-3 flex flex-wrap items-center gap-3 shadow">
+          <button type="button" disabled={busy} onClick={() => void send(false)} className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold disabled:opacity-50">Save my work</button>
           <button type="button" disabled={busy || entered === 0} onClick={() => void send(true)} className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{status === "submitted" ? "Submit again" : "Submit to my teacher"}</button>
           {message && <span role="status" className={`text-sm ${message.ok ? "text-emerald-700" : "text-rose-700"}`}>{message.text}</span>}
         </div>
@@ -146,8 +146,8 @@ export default function PracticeSetsPage() {
               <Card className="h-full hover:border-blue-400 transition-colors">
                 <div className="text-xs font-semibold uppercase tracking-wide text-blue-700">{s.business === "service" ? "Service business" : `Merchandising, ${s.inventory} system`}</div>
                 <div className="font-semibold mt-1">{s.title}</div>
-                <p className="text-sm text-slate-600 mt-1">{s.summary}</p>
-                <p className="text-xs text-slate-500 mt-2">{s.transactions.length} source documents, {s.adjustments.length} {s.adjustments.length === 1 ? "adjustment" : "adjustments"}</p>
+                <p className="text-sm text-gray-600 mt-1">{s.summary}</p>
+                <p className="text-xs text-gray-500 mt-2">{s.transactions.length} source documents, {s.adjustments.length} {s.adjustments.length === 1 ? "adjustment" : "adjustments"}</p>
               </Card>
             </button>
           ))}
