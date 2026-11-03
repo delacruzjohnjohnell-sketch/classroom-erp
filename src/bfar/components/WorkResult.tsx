@@ -14,10 +14,14 @@ const Section = ({ title, ok, total, children }: { title: string; ok: number; to
 );
 
 export function WorkResult({ marking: m }: { marking: WorkMarking }) {
+  const pw = m.posting.filter((c) => c.status !== "ok");
   const lw = m.ledger.filter((c) => !c.ok), tw = m.tb.filter((c) => !c.ok), ww = m.worksheet.filter((c) => !c.ok);
   return (
     <div className="mt-3 rounded-md border border-slate-200 bg-white p-3">
       <div className="text-sm font-semibold">Ledger, trial balance and worksheet</div>
+      <Section title="Posting (journal lines dropped on the right account and side)" ok={m.posting.length - pw.length} total={m.posting.length}>
+        {pw.map((c, i) => <li key={i}>{name(c.accountCode)} {c.side === "Dr" ? "debit" : "credit"} {formatAmount(c.amount)}: {c.status === "not-posted" ? "not posted" : c.status === "no-line" ? "not in your journal" : c.status === "wrong-account" ? `posted to ${name(c.postedTo ?? "")}` : `posted on the ${c.postedSide === "Dr" ? "debit" : "credit"} side`}</li>)}
+      </Section>
       <Section title="Ledger accounts" ok={m.ledger.length - lw.length} total={m.ledger.length}>
         {lw.map((c) => <li key={c.code}>{name(c.code)}: {c.opened ? `expected footings ${formatAmount(c.expected.debitFooting)} / ${formatAmount(c.expected.creditFooting)} and balance ${formatAmount(c.expected.balance)} ${c.expected.side}; you had ${formatAmount(c.got.debitFooting)} / ${formatAmount(c.got.creditFooting)} and ${formatAmount(c.got.balance)} ${c.got.side}` : "not opened in your ledger"}</li>)}
         {m.extra.ledger.map((c) => <li key={`x${c}`}>{name(c)}: not needed in this ledger</li>)}

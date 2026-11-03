@@ -12,7 +12,7 @@ import { reversingEntries } from "../core/reversing-engine";
 import { generateStatements } from "../core/statements-generator";
 import { evaluateEntry, gradeAnswers } from "../core/evaluator";
 import { PRACTICE_SETS, practiceItems } from "../practice-sets";
-import { expectedOf, gradeSubmission, gradeWork, keyOf, perfectWork, solutionEntries } from "../practice-sets/solution";
+import { expectedOf, gradeSubmission, gradeWork, keyJournal, keyOf, perfectWork, solutionEntries } from "../practice-sets/solution";
 import { emptyWork, entriesOfBook, FREE_BOOK } from "../core/student-work";
 import { BAYANIHAN } from "../practice-sets/bayanihan";
 import { readFileSync, readdirSync, statSync } from "node:fs";
@@ -413,14 +413,14 @@ describe("separate books and hand-built ledger, trial balance and worksheet", ()
   });
   it("gives full marks to correct hand-built books in every set", () => {
     for (const set of PRACTICE_SETS) {
-      const g = gradeWork(set, perfectWork(set));
+      const g = gradeWork(set, perfectWork(set), keyJournal(set));
       expect(g.score, set.id).toBe(g.max);
       expect(g.marking.worksheetTotalsOk).toBe(true);
       expect(g.marking.tbTotalsOk).toBe(true);
     }
   });
   it("gives nothing for books that were not built", () => {
-    const g = gradeWork(CLEANPRO, emptyWork());
+    const g = gradeWork(CLEANPRO, emptyWork(), keyJournal(CLEANPRO));
     expect(g.score).toBe(0);
     expect(g.max).toBeGreaterThan(20);
   });
@@ -429,7 +429,7 @@ describe("separate books and hand-built ledger, trial balance and worksheet", ()
     w.ledger.find((a) => a.code === "101")!.balance = "1.00";
     w.tb.rows = w.tb.rows.filter((r) => r.code !== "150");
     w.worksheet.rows.find((r) => r.code === "140")!.adj = "b";
-    const g = gradeWork(CLEANPRO, w);
+    const g = gradeWork(CLEANPRO, w, keyJournal(CLEANPRO));
     expect(g.marking.ledger.find((c) => c.code === "101")!.ok).toBe(false);
     expect(g.marking.tb.find((c) => c.code === "150")).toMatchObject({ listed: false, ok: false });
     expect(g.marking.worksheet.find((c) => c.code === "140")!.ok).toBe(false);
@@ -437,7 +437,32 @@ describe("separate books and hand-built ledger, trial balance and worksheet", ()
   });
   it("flags accounts the student added that the key does not have", () => {
     const w = perfectWork(CLEANPRO);
-    w.ledger.push({ code: "130", rows: [], debitFooting: "", creditFooting: "", balance: "", side: "" });
-    expect(gradeWork(CLEANPRO, w).marking.extra.ledger).toEqual(["130"]);
+    w.ledger.push({ code: "130", posted: [], runBalances: {}, debitFooting: "", creditFooting: "", balance: "", side: "" });
+    expect(gradeWork(CLEANPRO, w, keyJournal(CLEANPRO)).marking.extra.ledger).toEqual(["130"]);
+  });
+  it("marks a journal line dropped on the wrong account, on the wrong side, or never posted", () => {
+    const base = perfectWork(CLEANPRO);
+    // wrong account: move the first line of the first entry (Dr 101) into the 301 account
+    const w1 = structuredClone(base);
+    const cash = w1.ledger.find((a) => a.code === "101")!;
+    const moved = cash.posted.shift()!;
+    w1.ledger.find((a) => a.code === "301")!.posted.push(moved);
+    const g1 = gradeWork(CLEANPRO, w1, keyJournal(CLEANPRO)).marking.posting.filter((p) => p.status !== "ok");
+    expect(g1).toHaveLength(1);
+    expect(g1[0]).toMatchObject({ status: "wrong-account", accountCode: "101", postedTo: "301" });
+    // wrong side: the same line dropped on the credit half of its own account
+    const w2 = structuredClone(base);
+    w2.ledger.find((a) => a.code === "101")!.posted[0].side = "Cr";
+    expect(gradeWork(CLEANPRO, w2, keyJournal(CLEANPRO)).marking.posting.filter((p) => p.status === "wrong-side")).toHaveLength(1);
+    // not posted
+    const w3 = structuredClone(base);
+    w3.ledger.find((a) => a.code === "101")!.posted.pop();
+    expect(gradeWork(CLEANPRO, w3, keyJournal(CLEANPRO)).marking.posting.filter((p) => p.status === "not-posted")).toHaveLength(1);
+  });
+  it("counts a line as missing when the student's journal never had it", () => {
+    const j = keyJournal(CLEANPRO);
+    delete j["t05"];
+    const g = gradeWork(CLEANPRO, perfectWork(CLEANPRO), j).marking.posting;
+    expect(g.filter((p) => p.status === "no-line")).toHaveLength(2);
   });
 });

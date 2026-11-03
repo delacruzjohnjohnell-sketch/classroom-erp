@@ -2,7 +2,7 @@
 // Never import this from a student-facing page, or the keys end up in the students' download.
 import { evaluateEntry, type EvalStatus } from "../core/evaluator";
 import { postToLedger } from "../core/ledger-posting";
-import { amt, type LedgerAccountIn, type LedgerCheck, type StudentWork, type TbCheck, type WorkMarking, type WsCheck } from "../core/student-work";
+import { amt, lineRef, type LedgerAccountIn, type LedgerCheck, type PostingCheck, type StudentWork, type TbCheck, type WorkMarking, type WsCheck } from "../core/student-work";
 import { trialBalance } from "../core/trial-balance";
 import type { JournalEntry, JournalLine } from "../core/types";
 import { buildWorksheet, COLUMN_KEYS, type ColumnKey } from "../core/worksheet-engine";
@@ -26,8 +26,29 @@ export function expectedBooks(set: PracticeSet) {
 const norm = (letters: string) => letters.toLowerCase().split(/[^a-z]+/).filter(Boolean).sort().join(",");
 
 /** Grades the ledger, trial balance and worksheet a student built by hand. One point per ledger account, trial balance row, worksheet row, plus one each for the two totals. */
-export function gradeWork(set: PracticeSet, work: StudentWork): { marking: WorkMarking; score: number; max: number } {
-  const { ledger, tb, ws } = expectedBooks(set);
+export function gradeWork(set: PracticeSet, work: StudentWork, journal: Record<string, JournalLine[] | undefined>): { marking: WorkMarking; score: number; max: number } {
+  const { entries, ledger, tb, ws } = expectedBooks(set);
+
+  // Posting: each line of the key's transaction entries must exist in the student's journal and be dropped on its own account, on the right side.
+  const posting: PostingCheck[] = [];
+  for (const e of entries.filter((x) => x.stage === "transaction")) {
+    const mine = journal[e.id.slice(set.id.length + 1)] ?? [];
+    const used = new Set<number>();
+    for (const L of e.lines) {
+      const side = L.debit > 0 ? "Dr" : "Cr", amount = L.debit || L.credit;
+      const j = mine.findIndex((m, idx) => !used.has(idx) && m.accountCode === L.accountCode && (m.debit > 0 ? "Dr" : "Cr") === side && (m.debit || m.credit) === amount);
+      const base = { entryId: e.id, accountCode: L.accountCode, side, amount } as const;
+      if (j < 0) { posting.push({ ...base, status: "no-line" }); continue; }
+      used.add(j);
+      const ref = lineRef(e.id, j);
+      const home = work.ledger.find((a) => a.posted.some((p) => p.ref === ref));
+      const where = home?.posted.find((p) => p.ref === ref);
+      if (!home || !where) posting.push({ ...base, status: "not-posted" });
+      else if (home.code !== L.accountCode) posting.push({ ...base, status: "wrong-account", postedTo: home.code, postedSide: where.side });
+      else if (where.side !== side) posting.push({ ...base, status: "wrong-side", postedTo: home.code, postedSide: where.side });
+      else posting.push({ ...base, status: "ok" });
+    }
+  }
 
   const ledgerChecks: LedgerCheck[] = ledger.map((l) => {
     const mine: LedgerAccountIn | undefined = work.ledger.find((a) => a.code === l.account.code);
@@ -63,11 +84,11 @@ export function gradeWork(set: PracticeSet, work: StudentWork): { marking: WorkM
   };
 
   const marking: WorkMarking = {
-    ledger: ledgerChecks, tb: tbChecks, tbTotalsOk, worksheet: wsChecks, worksheetTotalsOk, extra,
+    posting, ledger: ledgerChecks, tb: tbChecks, tbTotalsOk, worksheet: wsChecks, worksheetTotalsOk, extra,
     expectedTotals: { tbDebit: tb.totalDebit, tbCredit: tb.totalCredit, worksheet: ws.totals },
   };
-  const score = ledgerChecks.filter((c) => c.ok).length + tbChecks.filter((c) => c.ok).length + (tbTotalsOk ? 1 : 0) + wsChecks.filter((c) => c.ok).length + (worksheetTotalsOk ? 1 : 0);
-  const max = ledgerChecks.length + tbChecks.length + 1 + wsChecks.length + 1;
+  const score = posting.filter((p) => p.status === "ok").length + ledgerChecks.filter((c) => c.ok).length + tbChecks.filter((c) => c.ok).length + (tbTotalsOk ? 1 : 0) + wsChecks.filter((c) => c.ok).length + (worksheetTotalsOk ? 1 : 0);
+  const max = posting.length + ledgerChecks.length + tbChecks.length + 1 + wsChecks.length + 1;
   return { marking, score, max };
 }
 
@@ -83,20 +104,25 @@ export function gradeSubmission(set: PracticeSet, journal: Record<string, Journa
     return { id: it.id, status: r.status, messages: r.messages, hints: r.hints, key: k.key, answer };
   });
   const journalScore = items.filter((i) => i.status === "correct").length;
-  const w = gradeWork(set, work);
+  const w = gradeWork(set, work, journal);
   return { items, work: w.marking, journalScore, journalMax: items.length, workScore: w.score, workMax: w.max, score: journalScore + w.score, max: items.length + w.max };
 }
+
+/** The student's journal answers when every entry equals the key (for tests and demonstrations). */
+export const keyJournal = (set: PracticeSet): Record<string, JournalLine[]> =>
+  Object.fromEntries(practiceItems(set).map((it) => [it.id, KEYS[set.id].items[it.id].key]));
 
 const pesos = (c: number) => (c ? (c / 100).toFixed(2) : "");
 
 /** A fully correct set of hand-built books, in the form a student types them. For tests and for the teacher's demonstration. */
 export function perfectWork(set: PracticeSet): StudentWork {
-  const { ledger, tb, ws } = expectedBooks(set);
+  const { entries, ledger, tb, ws } = expectedBooks(set);
   const cell = (n: number) => pesos(n);
   return {
     ledger: ledger.map((l) => ({
       code: l.account.code,
-      rows: l.rows.map((r) => ({ date: r.date.slice(5), particulars: r.explanation, pr: r.ref, debit: pesos(r.debit), credit: pesos(r.credit), balance: pesos(r.balance) })),
+      posted: entries.filter((e) => e.stage === "transaction").flatMap((e) => e.lines.flatMap((x, i) => (x.accountCode === l.account.code ? [{ ref: lineRef(e.id, i), side: (x.debit > 0 ? "Dr" : "Cr") as "Dr" | "Cr" }] : []))),
+      runBalances: {},
       debitFooting: pesos(l.debitTotal), creditFooting: pesos(l.creditTotal), balance: pesos(l.balance), side: l.balanceSide === "debit" ? "Dr" : "Cr",
     })),
     tb: { rows: tb.rows.map((r) => ({ code: r.code, debit: pesos(r.debit), credit: pesos(r.credit) })), totalDebit: pesos(tb.totalDebit), totalCredit: pesos(tb.totalCredit) },
