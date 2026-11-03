@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { createEntry, validateEntry, type EntryInput, type Validation } from "../core/journalizer";
-import { emptyWork, FREE_BOOK, type StudentWork, type WorkMarking } from "../core/student-work";
+import { emptyWork, FREE_BOOK, normalizeWork, type StudentWork, type WorkMarking } from "../core/student-work";
 import type { JournalEntry, JournalLine } from "../core/types";
 import { entryForItem, getPracticeSet, practiceItems } from "../practice-sets";
 
@@ -92,13 +92,21 @@ export const useAccountingStore = create<AccountingState>()(
         answers: { ...s.answers, [setId]: answers },
         status: { ...s.status, [setId]: status },
         released: { ...s.released, [setId]: released },
-        work: { ...s.work, [setId]: work ?? s.work[setId] },
+        work: { ...s.work, [setId]: work ? normalizeWork(work) : s.work[setId] },
       })),
       setStatus: (setId, status) => set((s) => ({ status: { ...s.status, [setId]: status } })),
       resetSet: (setId) => set((s) => ({ entries: s.entries.filter((e) => !e.id.startsWith(`${setId}-`)), answers: { ...s.answers, [setId]: {} }, work: { ...s.work, [setId]: emptyWork() } })),
       resetBooks: () => set({ entries: [], answers: {}, status: {}, released: {}, work: {} }),
     }),
-    { name: "bfar-accounting-v1", version: 3, storage: createJSONStorage(() => localStorage), skipHydration: true },
+    {
+      name: "bfar-accounting-v1", version: 3, storage: createJSONStorage(() => localStorage), skipHydration: true,
+      // Whatever an older version saved in this browser is repaired on load, so an old shape can never crash a page.
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<AccountingState>;
+        const work = Object.fromEntries(Object.entries(p.work ?? {}).map(([book, w]) => [book, normalizeWork(w)]));
+        return { ...current, ...p, work };
+      },
+    },
   ),
 );
 

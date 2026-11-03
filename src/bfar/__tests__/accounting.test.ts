@@ -13,7 +13,7 @@ import { generateStatements } from "../core/statements-generator";
 import { evaluateEntry, gradeAnswers } from "../core/evaluator";
 import { PRACTICE_SETS, practiceItems } from "../practice-sets";
 import { expectedOf, gradeSubmission, gradeWork, keyJournal, keyOf, perfectWork, solutionEntries } from "../practice-sets/solution";
-import { computeWorksheet, emptyWork, entriesOfBook, FREE_BOOK, generateTrialBalance, worksheetFootings } from "../core/student-work";
+import { computeWorksheet, normalizeWork, emptyWork, entriesOfBook, FREE_BOOK, generateTrialBalance, worksheetFootings } from "../core/student-work";
 import { BAYANIHAN } from "../practice-sets/bayanihan";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
@@ -575,5 +575,37 @@ describe("the trial balance is generated from the student's ledger", () => {
     w.ledger.find((a) => a.code === "101")!.posted.pop();
     expect(generateTrialBalance(w.ledger, journalEntries).unpostedLines).toBe(1);
     expect(generateTrialBalance([], journalEntries).rows).toEqual([]);
+  });
+});
+
+describe("saved work in an older shape never crashes anything", () => {
+  const set = CLEANPRO;
+  const tx = solutionEntries(set);
+  const use = (raw: unknown) => {
+    const w = normalizeWork(raw);
+    // everything the pages and the grading read must work on it
+    const tb = generateTrialBalance(w.ledger, tx.filter((e) => e.stage === "transaction"));
+    expect(() => computeWorksheet(tb, tx, w.worksheet)).not.toThrow();
+    expect(() => gradeWork(set, w, keyJournal(set))).not.toThrow();
+    return w;
+  };
+  it("accepts the typed-ledger shape, the typed-worksheet shape and the trial-balance field", () => {
+    const old = {
+      ledger: [{ code: "101", rows: [{ date: "12-01", debit: "1", credit: "", balance: "1" }], debitFooting: "1", creditFooting: "", balance: "1", side: "Dr" }],
+      tb: { rows: [], totalDebit: "", totalCredit: "" },
+      worksheet: { rows: [{ code: "101", adj: "", cells: {} }], subtotals: {}, net: {}, totals: {} },
+    };
+    const w = use(old);
+    expect(w.ledger[0]).toMatchObject({ code: "101", posted: [], debitFooting: "1" });
+    expect(w.worksheet).toMatchObject({ extraCodes: [], adjustments: [], placements: [], ending: { isCr: "", bsDr: "" } });
+  });
+  it("accepts nothing, junk and partial objects", () => {
+    for (const raw of [undefined, null, 5, "x", [], {}, { ledger: "no" }, { ledger: [null, { code: 1 }], worksheet: 7 }]) use(raw);
+  });
+  it("keeps valid parts and drops invalid ones", () => {
+    const w = use({ ledger: [{ code: "101", posted: [{ ref: "a#0", side: "Dr" }, { ref: 5, side: "Dr" }, { ref: "b#0", side: "X" }] }], worksheet: { extraCodes: ["602", 4], placements: [{ code: "140", to: "bsDr" }, { code: "140", to: "nope" }] } });
+    expect(w.ledger[0].posted).toEqual([{ ref: "a#0", side: "Dr" }]);
+    expect(w.worksheet.extraCodes).toEqual(["602"]);
+    expect(w.worksheet.placements).toEqual([{ code: "140", to: "bsDr" }]);
   });
 });

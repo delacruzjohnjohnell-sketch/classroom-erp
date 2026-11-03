@@ -118,3 +118,31 @@ export function worksheetFootings(rows: WsComputedRow[]): { subtotals: Record<Co
   for (const k of ["isDr", "isCr", "bsDr", "bsCr"] as const) totals[k] += net[k] ?? 0;
   return { subtotals, net, totals };
 }
+
+// ---- Repairing saved work. The shape of the work has changed over time; anything saved in an older shape, in the browser or on the server, is made valid here.
+const text = (v: unknown): string => (typeof v === "string" ? v : "");
+const record = (v: unknown): Record<string, string> => (v && typeof v === "object" && !Array.isArray(v) ? Object.fromEntries(Object.entries(v as Record<string, unknown>).map(([k, x]) => [k, text(x)])) : {});
+
+export function normalizeWork(raw: unknown): StudentWork {
+  const r = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  const ledger = (Array.isArray(r.ledger) ? r.ledger : []).filter((a): a is Record<string, unknown> => !!a && typeof (a as Record<string, unknown>).code === "string").map((a) => ({
+    code: a.code as string,
+    posted: (Array.isArray(a.posted) ? a.posted : []).filter((p): p is PostedLine => !!p && typeof (p as PostedLine).ref === "string" && ((p as PostedLine).side === "Dr" || (p as PostedLine).side === "Cr")),
+    runBalances: record(a.runBalances),
+    debitFooting: text(a.debitFooting), creditFooting: text(a.creditFooting), balance: text(a.balance),
+    side: (a.side === "Dr" || a.side === "Cr" ? a.side : "") as LedgerAccountIn["side"],
+  }));
+  const w = (r.worksheet && typeof r.worksheet === "object" ? r.worksheet : {}) as Record<string, unknown>;
+  const ending = (w.ending && typeof w.ending === "object" ? w.ending : {}) as Record<string, unknown>;
+  const targets: ColTarget[] = ["isDr", "isCr", "bsDr", "bsCr"];
+  return {
+    ledger,
+    worksheet: {
+      extraCodes: (Array.isArray(w.extraCodes) ? w.extraCodes : []).filter((c): c is string => typeof c === "string"),
+      adjustments: (Array.isArray(w.adjustments) ? w.adjustments : []).filter((a): a is AdjPlacement => !!a && typeof (a as AdjPlacement).ref === "string" && typeof (a as AdjPlacement).code === "string" && ((a as AdjPlacement).side === "Dr" || (a as AdjPlacement).side === "Cr")),
+      placements: (Array.isArray(w.placements) ? w.placements : []).filter((p): p is WsPlacement => !!p && typeof (p as WsPlacement).code === "string" && targets.includes((p as WsPlacement).to)),
+      ending: { isCr: text(ending.isCr), bsDr: text(ending.bsDr) },
+      subtotals: record(w.subtotals), net: record(w.net), totals: record(w.totals),
+    },
+  };
+}

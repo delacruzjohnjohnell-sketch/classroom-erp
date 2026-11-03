@@ -1,7 +1,7 @@
 // The only place BFAR talks to the database: the student's own submission, and the teacher's list and marking.
 // It uses the same Supabase client and login as the other editions; the functions are in migration 0083.
 import { supabase } from "@/lib/supabase";
-import { emptyWork, type StudentWork, type WorkMarking } from "../core/student-work";
+import { emptyWork, normalizeWork, type StudentWork, type WorkMarking } from "../core/student-work";
 import type { JournalLine } from "../core/types";
 import type { ReleasedResult, SubmissionStatus } from "../store/useAccountingStore";
 
@@ -11,7 +11,7 @@ export type Answers = Record<string, JournalLine[]>;
 interface Payload { v: 2; journal: Answers; work: StudentWork }
 const unpack = (raw: unknown): { journal: Answers; work: StudentWork } => {
   const p = raw as Partial<Payload> | null;
-  if (p && p.v === 2) return { journal: p.journal ?? {}, work: p.work ?? emptyWork() };
+  if (p && p.v === 2) return { journal: p.journal ?? {}, work: normalizeWork(p.work) };
   return { journal: (raw as Answers) ?? {}, work: emptyWork() };
 };
 interface CheckedPayload { v: 2; items: ReleasedResult["items"]; work?: WorkMarking }
