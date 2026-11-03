@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, BookOpen, Building2, Factory, Loader2, LogOut, Lock, Scale } from "lucide-react";
+import { ArrowRight, BookOpen, Building2, Factory, FileText, Loader2, LogOut, Lock, Scale } from "lucide-react";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
@@ -188,6 +188,15 @@ export default function ChoosePage() {
             cta={isTeacher ? "Check student work" : "Open"}
             busy={false}
             onClick={() => router.push(isTeacher ? "/bfar/teacher" : "/bfar")}
+          />
+
+          {/* ---------------- BIR eForms Lab: standalone, no company ---------------- */}
+          <EditionCard
+            accent="#F472B6" icon={<FileText size={22} />} title="BIR eForms Lab" subtitle="Tax returns, lessons, cases"
+            text="Practice filling out BIR tax returns on a screen that works like the Offline eBIRForms Package, with a lesson, tips and case problems for each form. A classroom simulation: nothing is sent to the BIR."
+            cta="Open"
+            busy={false}
+            onClick={() => router.push("/bir-lab")}
           />
         </div>
 
