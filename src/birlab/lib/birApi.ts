@@ -14,3 +14,26 @@ export async function logAttempt(a: AttemptInput): Promise<boolean> {
     return false;
   }
 }
+
+export interface AttemptRow { id: string; form_id: string; case_id: string; mode: string; score: number; max_score: number; final: boolean; seconds: number; wrong_form: boolean; created_at: string }
+export interface TeacherRow extends AttemptRow { student: string }
+
+/** The signed-in student's saved attempts, newest first; null when they cannot be read (migration not applied, offline). */
+export async function fetchMyAttempts(): Promise<AttemptRow[] | null> {
+  try {
+    const r = await supabase.rpc("bir_lab_my_attempts");
+    return r.error ? null : ((r.data ?? []) as AttemptRow[]);
+  } catch {
+    return null;
+  }
+}
+
+/** Every student's attempts with the student's name. Teachers only: the database refuses anyone else. */
+export async function fetchTeacherList(): Promise<TeacherRow[] | null> {
+  try {
+    const r = await supabase.rpc("bir_lab_teacher_list");
+    return r.error ? null : ((r.data ?? []) as TeacherRow[]);
+  } catch {
+    return null;
+  }
+}

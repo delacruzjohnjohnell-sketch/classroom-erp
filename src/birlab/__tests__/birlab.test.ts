@@ -91,8 +91,8 @@ describe("tax engine", () => {
 describe("rules file", () => {
   it("lists every unverified rule so the phase report can flag it", () => {
     const list = unverifiedRules().map((r) => r.rule);
-    expect(list).toEqual(expect.arrayContaining(["annualIndividualDue", "installment", "classification"]));
-    expect(list.some((r) => r.startsWith("penalties"))).toBe(true);
+    expect(list).toEqual(expect.arrayContaining(["corporate", "classification"]));
+    expect(list.some((r) => r.startsWith("penalties"))).toBe(false); // verified against the 2550Q Guidelines
     expect(list).not.toContain("individualTable2023");
   });
   it("carries a date and legal basis on every rule", () => {
@@ -104,9 +104,9 @@ describe("rules file", () => {
 });
 
 describe("form registry", () => {
-  it("lists every form in the spec and marks 1701A as built", () => {
+  it("lists every form in the spec and marks the built ones", () => {
     expect(FORMS.map((f) => f.id)).toEqual(expect.arrayContaining(["1700", "1701", "1701A", "1701-MS", "1701Q", "1702-RT", "1702-EX", "1702-MX", "1702Q", "2316", "2307", "1604-C", "1604-E", "1706", "1707", "2550Q", "2550M", "2551Q", "1601-C", "0619-E", "1601-EQ", "1606", "2000", "2000-OT", "1800", "1801"]));
-    expect(availableForms().map((f) => f.id)).toEqual(["1701A"]);
+    expect(availableForms().map((f) => f.id)).toContain("1701A");
     expect(getForm("1701A")?.def?.version).toBe("January 2018");
     expect(new Set(FORMS.map((f) => f.id)).size).toBe(FORMS.length);
   });

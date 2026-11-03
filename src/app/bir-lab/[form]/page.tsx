@@ -2,14 +2,8 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { getForm } from "@/birlab/forms/registry";
-import { LearnPage, type Lesson } from "@/birlab/components/LearnPage";
-import { AS_OF, GUIDE, LECTURE, QUIZ, TIPS } from "@/birlab/content/f1701a";
-import { CASES_1701A } from "@/birlab/cases/f1701a";
-
-// One lesson per built form. Later phases add their lessons here.
-const LESSONS: Record<string, Lesson> = {
-  "1701A": { asOf: AS_OF, lecture: LECTURE, guide: GUIDE, tips: TIPS, quiz: QUIZ, cases: CASES_1701A },
-};
+import { LearnPage } from "@/birlab/components/LearnPage";
+import { LESSONS } from "@/birlab/content/lessons";
 
 export default function FormLessonPage() {
   const { form } = useParams<{ form: string }>();

@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { getForm } from "@/birlab/forms/registry";
-import { getCase } from "@/birlab/cases/f1701a";
+import { getCase } from "@/birlab/cases";
 import { FormScreen } from "@/birlab/components/FormScreen";
 import { useBirStore } from "@/birlab/store/useBirStore";
 

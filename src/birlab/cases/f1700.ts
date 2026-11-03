@@ -1,0 +1,81 @@
+// Case problems for BIR Form 1700. Every person, TIN, address and employer is fictional (TINs are 000- placeholders; addresses are in Nueva Ecija).
+// The answer key is the form's own computation run on the facts (engine/check.ts keyValues); tests prove each key by hand.
+import type { CaseDef } from "./types";
+
+export const CASES_1700: CaseDef[] = [
+  {
+    id: "1700-easy",
+    form: "1700",
+    level: "easy",
+    year: 2025,
+    title: "Two employers in one year",
+    story: [
+      "Leah D. Pascual, 26, single, lives in Barangay Zulueta, Cabanatuan City, Nueva Ecija 3100. She is a rank-and-file employee with no business or other income. In 2025 she worked for Ricemill Trading Corp. from January to April and for Gapan Learning Center from May to December, so she is not qualified for substituted filing and must file her own annual return.",
+      "Her 2316 certificates show: Ricemill Trading, gross compensation ₱180,000, tax withheld ₱5,000; Gapan Learning Center, gross compensation ₱420,000, tax withheld ₱35,500. Part of her pay was exempt: 13th month pay and other benefits within the ₱90,000 ceiling, and her mandatory SSS, PhilHealth and Pag-IBIG contributions, a total of ₱60,000 of non-taxable compensation. She is a resident citizen under regular rates.",
+      "She files and pays in full on April 8, 2026. She attaches the two 2316 certificates. Fill in BIR Form 1700 for the taxable year 2025.",
+    ],
+    profile: { "4": "000-000-101-00000", "5": "025", "7": "PASCUAL, LEAH, DIZON", "8": "BRGY. ZULUETA, CABANATUAN CITY, NUEVA ECIJA", "8A": "3100", "9": "05/19/1999", "10": "leah.pascual@example.com", "11": "FILIPINO", "14": "09170000101", "15": "single" },
+    facts: { "1": "2025", "2": "no", "3": "II011", "6": "employee", "12": "no", "16": "no", "17": "separate", "37": "2", "S1cA": "180000", "S1eA": "5000", "S2cA": "420000", "S2eA": "35500", "43A": "60000" },
+    filingDate: "2026-04-08",
+    correctForm: "1700",
+    whyForm: "She earns purely compensation income but changed employers, so no single employer can do substituted filing: she files Form 1700 herself.",
+    hints: ["Add the compensation of both employers in Schedule 1 (Items 1c and 2c), then the tax withheld (1e and 2e).", "Non-taxable compensation goes to Item 43; Item 44 is gross compensation less that.", "Apply the 2023-onwards table: 15% from ₱250,000, then ₱22,500 + 20% over ₱400,000."],
+    solution: [
+      "Gross compensation (Item 42) = ₱180,000 + ₱420,000 = ₱600,000. Less non-taxable ₱60,000 (Item 43): Item 44 = ₱540,000. No other income, so Item 46 = ₱540,000.",
+      "Tax due (Item 47), Table 2: ₱22,500 + 20% × (₱540,000 − ₱400,000) = ₱22,500 + ₱28,000 = ₱50,500.",
+      "Tax withheld (Item 54) = ₱5,000 + ₱35,500 = ₱40,500 = total credits (Item 58).",
+      "Net tax payable (Items 59, 28, 30) = ₱50,500 − ₱40,500 = ₱10,000. Filed on time: no penalties. Total amount payable (Item 35) = ₱10,000.",
+    ],
+  },
+  {
+    id: "1700-average",
+    form: "1700",
+    level: "average",
+    year: 2025,
+    title: "Salary, honorarium and a second installment",
+    story: [
+      "Ramon S. Ocampo, 41, single, a senior accountant living at Barangay Caalibangbangan, Cabanatuan City, Nueva Ecija 3100, worked for two employers in 2025 (a promotion with a new company in July). He has no business.",
+      "From his 2316 certificates: first employer, gross compensation ₱500,000, tax withheld ₱40,000; second employer, gross compensation ₱300,000, tax withheld ₱25,000. His gross compensation includes a 13th month pay and other benefits of ₱130,000 and mandatory contributions of ₱40,000. Under the Code the 13th month pay and other benefits are exempt only up to ₱90,000, and the contributions are fully exempt, so his non-taxable compensation is ₱90,000 + ₱40,000 = ₱130,000.",
+      "He also received a ₱30,000 honorarium for a lecture at a university, with no tax withheld. This is other taxable non-business income (Item 45, to be specified as HONORARIUM).",
+      "He wants to use the second installment for half of the net tax payable, to be paid on or before October 15. He files on April 15, 2026. He attaches two 2316 certificates and the honorarium receipt.",
+    ],
+    profile: { "4": "000-000-102-00000", "5": "025", "7": "OCAMPO, RAMON, SALVADOR", "8": "BRGY. CAALIBANGBANGAN, CABANATUAN CITY, NUEVA ECIJA", "8A": "3100", "9": "09/02/1984", "10": "ramon.ocampo@example.com", "11": "FILIPINO", "14": "09170000102", "15": "single" },
+    facts: { "1": "2025", "2": "no", "3": "II011", "6": "employee", "12": "no", "16": "no", "17": "separate", "37": "3", "S1cA": "500000", "S1eA": "40000", "S2cA": "300000", "S2eA": "25000", "43A": "130000", "45A": "30000", "45S": "HONORARIUM", "29A": "8750" },
+    filingDate: "2026-04-15",
+    correctForm: "1700",
+    whyForm: "He earns compensation (and a small non-business honorarium) and had two employers, so he files Form 1700. The honorarium is not business income, so 1701A and 1701 are not needed.",
+    hints: ["The 13th month pay is exempt only up to ₱90,000. The contributions are exempt in full.", "The honorarium goes to Item 45, with a description.", "Item 29 is the part you postpone to October 15. The limit is 50% of Item 26 (the tax due). He chooses to postpone half of the net payable."],
+    solution: [
+      "Gross compensation (Item 42) = ₱500,000 + ₱300,000 = ₱800,000. Less non-taxable ₱130,000: Item 44 = ₱670,000.",
+      "Add the honorarium ₱30,000 (Item 45): total taxable income (Item 46) = ₱700,000.",
+      "Tax due (Item 47), Table 2: ₱700,000 falls in the ₱400,000-₱800,000 bracket, so use ₱22,500 + 20% × (₱700,000 − ₱400,000) = ₱22,500 + ₱60,000 = ₱82,500.",
+      "Tax withheld (Item 54) = ₱40,000 + ₱25,000 = ₱65,000. Net tax payable (Item 28) = ₱82,500 − ₱65,000 = ₱17,500.",
+      "Installment (Item 29) = ₱8,750 (allowed: not more than 50% of ₱82,500 = ₱41,250). Amount payable now (Item 30) = ₱17,500 − ₱8,750 = ₱8,750; the other ₱8,750 is paid by October 15. Filed on the due date: no penalties. Item 35 = ₱8,750.",
+    ],
+  },
+  {
+    id: "1700-difficult",
+    form: "1700",
+    level: "difficult",
+    year: 2025,
+    title: "Spouses file jointly, and late",
+    story: [
+      "Mr. Carlo V. Dela Rosa, 38, and Mrs. Joy A. Dela Rosa, 36, live at Barangay Sibut, San Jose City, Nueva Ecija 3121. Both are employees with no business income, and each had two employers in 2025, so each must file. They file jointly: Carlo is the taxpayer (column A) and Joy the spouse (column B). Both are resident citizens under regular rates and neither claims foreign tax credits.",
+      "Carlo: employer 1 gross compensation ₱300,000, tax withheld ₱10,000; employer 2 gross compensation ₱260,000, tax withheld ₱14,000. Non-taxable compensation ₱60,000. Joy: employer 1 ₱420,000, tax withheld ₱22,000; employer 2 ₱250,000, tax withheld ₱16,000. Non-taxable compensation ₱90,000, and a ₱20,000 honorarium (Item 45, HONORARIUM) with no tax withheld.",
+      "They forgot the deadline and file and pay on May 31, 2026. The RDO applies the regular late-filing rates: 25% surcharge and 12% interest a year counted by the day over 365, plus a compromise penalty of ₱1,000 for each spouse (enter it as given). They attach four 2316 certificates.",
+    ],
+    profile: { "4": "000-000-103-00000", "5": "026", "7": "DELA ROSA, CARLO, VILLANUEVA", "8": "BRGY. SIBUT, SAN JOSE CITY, NUEVA ECIJA", "8A": "3121", "9": "02/11/1987", "10": "carlo.delarosa@example.com", "11": "FILIPINO", "14": "09170000103", "15": "married" },
+    facts: { "1": "2025", "2": "no", "3": "II011", "6": "employee", "12": "no", "16": "yes", "17": "joint", "18": "000-000-104-00000", "19": "026", "20": "employee", "21": "DELA ROSA, JOY, ALCANTARA", "37": "4", "S1cA": "300000", "S1eA": "10000", "S2cA": "260000", "S2eA": "14000", "43A": "60000", "33A": "1000", "S1cB": "420000", "S1eB": "22000", "S2cB": "250000", "S2eB": "16000", "43B": "90000", "45B": "20000", "45S": "HONORARIUM", "33B": "1000" },
+    filingDate: "2026-05-31",
+    classification: "large",
+    correctForm: "1700",
+    whyForm: "Both spouses are compensation earners with two employers each and no business, so they file Form 1700 jointly, each spouse in their own column.",
+    hints: ["Fill both columns: A for Carlo, B for Joy. Each spouse's tax is computed on their own income.", "April 15 to May 31, 2026 is 46 days. Penalties are computed per column on that column's tax payable.", "Surcharge 25%; interest = payable × 12% × days ÷ 365; the compromise is typed."],
+    solution: [
+      "Carlo: gross ₱560,000 less ₱60,000 = ₱500,000 (Items 42-46). Tax (Item 47) = ₱22,500 + 20% × ₱100,000 = ₱42,500. Withheld ₱24,000. Net payable (Item 28) = ₱18,500.",
+      "Joy: gross ₱670,000 less ₱90,000 = ₱580,000 (Item 44) + ₱20,000 honorarium = ₱600,000 (Item 46). Tax = ₱22,500 + 20% × ₱200,000 = ₱62,500. Withheld ₱38,000. Net payable = ₱24,500.",
+      "46 days late. Carlo: surcharge 25% × ₱18,500 = ₱4,625; interest ₱18,500 × 12% × 46 ÷ 365 = ₱279.78, rounded to ₱280; compromise ₱1,000; penalties ₱5,905; Item 35A = ₱24,405.",
+      "Joy: surcharge 25% × ₱24,500 = ₱6,125; interest ₱24,500 × 12% × 46 ÷ 365 = ₱370.52, rounded to ₱371; compromise ₱1,000; penalties ₱7,496; Item 35B = ₱31,996.",
+    ],
+  },
+];

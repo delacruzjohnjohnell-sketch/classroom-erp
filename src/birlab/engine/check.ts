@@ -26,7 +26,7 @@ export function checkReturn(def: FormDef, key: Values, student: Values, ctx: Com
   for (const s of def.scoring(key)) {
     const expected = key[s.id] ?? "";
     const got = mine[s.id] ?? "";
-    const isChoice = CHOICE_IDS.has(s.id);
+    const isChoice = CHOICE_IDS.has(s.id) || /[A-Za-z]/.test(expected);
     // An amount item that is zero in the key and blank in the student's form is not required.
     if (!isChoice && amt(expected) === 0 && amt(got) === 0) { items.push({ id: s.id, item: s.item, status: "not-required", weight: 0 }); continue; }
     const ok = isChoice ? expected === got : Math.abs(amt(expected) - amt(got)) <= TOLERANCE;

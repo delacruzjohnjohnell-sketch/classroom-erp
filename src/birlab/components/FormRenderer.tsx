@@ -63,6 +63,8 @@ function Field({ f, p }: { f: FieldDef; p: Props }) {
     case "tin": control = <input id={`f-${f.id}`} disabled={ro} value={v} onChange={(e) => set(tinFormat(e.target.value))} placeholder="000-000-000-00000" className={`${cls} tracking-wider tabular-nums`} aria-label={`Item ${f.item}`} />; break;
     case "rdo": control = <input id={`f-${f.id}`} disabled={ro} value={v} maxLength={3} inputMode="numeric" onChange={(e) => set(e.target.value.replace(/\D/g, "").slice(0, 3))} className={cls} aria-label={`Item ${f.item}`} />; break;
     case "zip": control = <input id={`f-${f.id}`} disabled={ro} value={v} maxLength={4} inputMode="numeric" onChange={(e) => set(e.target.value.replace(/\D/g, "").slice(0, 4))} className={cls} aria-label={`Item ${f.item}`} />; break;
+    case "year": control = <input id={`f-${f.id}`} disabled={ro} value={v} maxLength={4} inputMode="numeric" onChange={(e) => set(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="YYYY" className={cls} aria-label={`Item ${f.item}`} />; break;
+    case "amount": control = <AmountInput id={f.id} value={v} onChange={set} disabled={ro} mark={p.marks?.[f.id]} error={err} />; break;
     case "count": control = <input id={`f-${f.id}`} disabled={ro} value={v} inputMode="numeric" onChange={(e) => set(e.target.value.replace(/\D/g, "").slice(0, 3))} className={`${cls} text-right`} aria-label={`Item ${f.item}`} />; break;
     case "email": control = <input id={`f-${f.id}`} disabled={ro} type="email" value={v} onChange={(e) => set(e.target.value)} className={cls} aria-label={`Item ${f.item}`} />; break;
     case "phone": control = <input id={`f-${f.id}`} disabled={ro} value={v} inputMode="tel" onChange={(e) => set(e.target.value.replace(/[^\d+\-\s()]/g, ""))} className={cls} aria-label={`Item ${f.item}`} />; break;
@@ -113,8 +115,8 @@ function RowView({ row, p }: { row: Row; p: Props }) {
   }
   // amounts
   const pad = row.indent === 2 ? "pl-10" : row.indent === 1 ? "pl-5" : "";
-  const twoCols = row.cols.length > 1;
-  const joint = p.values["18"] === "joint";
+  const twoCols = row.cols.length > 1 || row.cols.includes("B");
+  const joint = p.def.spouseOn ? p.def.spouseOn(p.values) : p.values["18"] === "joint";
   return (
     <div className={`grid items-center gap-2 px-2 py-0.5 ${twoCols ? "grid-cols-[1fr_9rem_9rem]" : "grid-cols-[1fr_9rem]"}`}>
       <div className={`flex items-start gap-1.5 text-[12px] leading-tight ${pad} ${row.bold ? "font-semibold" : ""} ${p.highlight && row.cols.some((c) => `${row.id}${c}` === p.highlight) ? "bg-yellow-200 rounded px-1" : ""}`}>
@@ -123,13 +125,14 @@ function RowView({ row, p }: { row: Row; p: Props }) {
           {row.specify && <input aria-label={`Item ${row.item} specify`} id={`f-${row.id}S`} disabled={!p.onChange} value={p.values[`${row.id}S`] ?? ""} onChange={(e) => p.onChange?.(`${row.id}S`, e.target.value.toUpperCase())} placeholder="specify" className={`${BOX} border-gray-400 mt-0.5 !w-56 ${p.errors?.[`${row.id}S`] ? "border-rose-500" : ""}`} />}
         </span>
       </div>
-      {row.cols.map((c) => {
+      {(twoCols ? (["A", "B"] as const) : row.cols).map((c) => {
+        if (!row.cols.includes(c)) return <div key={c} />;
         const id = `${row.id}${c}`;
         const colOff = c === "B" && !joint;
         const hl = p.highlight === id ? "ring-2 ring-yellow-500" : "";
         return (
           <div key={c} className={hl}>
-            {row.mode === "input"
+            {row.mode === "input" && !row.computedCols?.includes(c)
               ? <AmountInput id={id} value={p.values[id] ?? ""} onChange={(x) => p.onChange?.(id, x)} disabled={!p.onChange || colOff} mark={p.marks?.[id]} error={p.errors?.[id]} />
               : <Computed id={id} value={colOff ? "" : p.computed[id]} mark={p.marks?.[id]} />}
           </div>
@@ -148,7 +151,7 @@ function PageView({ page, p }: { page: Page; p: Props }) {
           <section key={s.id} className="rounded border border-gray-400 bg-[#eef1f6]">
             <div className="bg-gray-600 px-2 py-1 text-[12.5px] font-semibold text-white">{s.title}</div>
             {s.note && !p.compact && <div className="px-2 py-1 text-[11px] text-gray-600">{s.note}</div>}
-            {hasB && <div className="grid grid-cols-[1fr_9rem_9rem] gap-2 px-2 pt-1 text-[11px] font-semibold text-gray-600"><span>Particulars</span><span className="text-center">A) Taxpayer/Filer</span><span className="text-center">B) Spouse</span></div>}
+            {hasB && <div className="grid grid-cols-[1fr_9rem_9rem] gap-2 px-2 pt-1 text-[11px] font-semibold text-gray-600"><span>Particulars</span><span className="text-center">{p.def.colLabels?.[0] ?? "A) Taxpayer/Filer"}</span><span className="text-center">{p.def.colLabels?.[1] ?? "B) Spouse"}</span></div>}
             <div className="pb-1">{s.rows.map((r, i) => <RowView key={i} row={r} p={p} />)}</div>
           </section>
         );

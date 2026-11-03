@@ -1,6 +1,10 @@
 // Every form in the BIR Lab, in the order of the spec, with the due date the lab will teach and whether it is built yet.
 // A form is "available" once its definition, lecture and cases exist. The rest show as coming in a later phase.
+import { F1700 } from "./f1700";
+import { F1701 } from "./f1701";
 import { F1701A } from "./f1701a";
+import { F1701Q } from "./f1701q";
+import { packDef } from "../pack";
 import type { FormDef } from "./types";
 
 export type Track = "A" | "B" | "C";
@@ -20,11 +24,11 @@ export interface FormEntry {
 export const TRACKS: Record<Track, string> = { A: "Income taxation", B: "Business taxation and withholding", C: "Transfer taxation" };
 
 export const FORMS: FormEntry[] = [
-  { id: "1700", number: "1700", name: "Annual Income Tax Return (compensation income)", track: "A", whoFiles: "Individuals earning purely compensation income (not qualified for substituted filing)", due: "April 15" },
-  { id: "1701", number: "1701", name: "Annual Income Tax Return (mixed income)", track: "A", whoFiles: "Mixed-income earners, self-employed using graduated rates with itemized deductions, estates and trusts", due: "April 15" },
+  { id: "1700", number: "1700", name: "Annual Income Tax Return (compensation income)", track: "A", whoFiles: "Individuals earning purely compensation income (not qualified for substituted filing)", due: "April 15", def: F1700 },
+  { id: "1701", number: "1701", name: "Annual Income Tax Return (mixed income)", track: "A", whoFiles: "Mixed-income earners, self-employed using graduated rates with itemized deductions, estates and trusts", due: "April 15", def: F1701 },
   { id: "1701A", number: "1701A", name: "Annual Income Tax Return (purely business/profession)", track: "A", whoFiles: "Individuals purely in business/profession using graduated rates with OSD, or the 8% option", due: "April 15", def: F1701A },
   { id: "1701-MS", number: "1701-MS (Aug 2024)", name: "Annual Income Tax Return (micro and small taxpayers)", track: "A", whoFiles: "Individuals classified as micro or small taxpayers (simplified annual return)", due: "April 15" },
-  { id: "1701Q", number: "1701Q", name: "Quarterly Income Tax Return (individuals)", track: "A", whoFiles: "Individuals in business/profession, quarterly", due: "May 15, Aug 15, Nov 15" },
+  { id: "1701Q", number: "1701Q", name: "Quarterly Income Tax Return (individuals)", track: "A", whoFiles: "Individuals in business/profession, quarterly", due: "May 15, Aug 15, Nov 15", def: F1701Q },
   { id: "1702-RT", number: "1702-RT", name: "Annual Income Tax Return (regular rate)", track: "A", whoFiles: "Corporations/partnerships subject only to the regular rate", due: "15th day of the 4th month after year-end" },
   { id: "1702-EX", number: "1702-EX", name: "Annual Income Tax Return (exempt)", track: "A", whoFiles: "Non-individuals exempt under the Tax Code or special laws, no other taxable income", due: "15th day of the 4th month after year-end" },
   { id: "1702-MX", number: "1702-MX", name: "Annual Income Tax Return (mixed income)", track: "A", whoFiles: "Non-individuals with mixed income, multiple or special/preferential rates", due: "15th day of the 4th month after year-end" },
@@ -47,6 +51,9 @@ export const FORMS: FormEntry[] = [
   { id: "1800", number: "1800", name: "Donor's Tax Return", track: "C", whoFiles: "Donor's tax return", due: "Within 30 days after the gift" },
   { id: "1801", number: "1801", name: "Estate Tax Return", track: "C", whoFiles: "Estate tax return", due: "Within 1 year from death" },
 ];
+
+// Forms built from Phase 2b on keep their definition in pack/; attach it here so the rest of the lab sees one list.
+for (const entry of FORMS) if (!entry.def) entry.def = packDef(entry.id);
 
 export const getForm = (id: string): FormEntry | undefined => FORMS.find((x) => x.id === id);
 export const availableForms = (): FormEntry[] => FORMS.filter((x) => x.def);

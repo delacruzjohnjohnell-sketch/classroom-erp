@@ -1,32 +1,8 @@
 // Case problems for BIR Form 1701A. Every person, TIN, address and business is fictional (TINs are 000- placeholders; addresses are in Nueva Ecija).
 // A case holds the STORY and the FACTS the student must put on the form. The answer key is not stored here: it is the form's own computation run on the facts
 // (engine/check.ts keyValues), and birlab.test.ts proves each key's numbers by hand.
-import type { Values } from "../forms/types";
-
-export type Level = "easy" | "average" | "difficult";
-
-export interface CaseDef {
-  id: string;
-  form: string;
-  level: Level;
-  /** The taxable year the case is about. Its tax table is that year's (rules/2026.ts). */
-  year: number;
-  title: string;
-  story: string[];
-  /** Part I background, prefilled like the eBIRForms taxpayer profile. */
-  profile: Values;
-  /** Everything else the student must enter or choose. */
-  facts: Values;
-  /** The date the return is actually filed (ISO). */
-  filingDate: string;
-  /** Which form the story calls for, and why (a wrong choice scores zero). */
-  correctForm: string;
-  whyForm: string;
-  /** Practice-mode hints, shown one at a time. */
-  hints: string[];
-  /** The worked solution in plain steps, shown only after the return is final. */
-  solution: string[];
-}
+import type { CaseDef } from "./types";
+export type { CaseDef, Level } from "./types";
 
 export const CASES_1701A: CaseDef[] = [
   {

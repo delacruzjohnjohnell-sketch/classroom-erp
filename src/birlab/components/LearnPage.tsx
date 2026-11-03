@@ -3,7 +3,7 @@
 // Tips and notes, and a five-item Quick check that unlocks the case problems at 4 of 5. Everything stays readable if the student fails the quiz.
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import type { CaseDef } from "../cases/f1701a";
+import type { CaseDef } from "../cases/types";
 import type { GuideRow, LectureSection, QuizItem } from "../content/f1701a";
 import { getForm } from "../forms/registry";
 import { useBirStore } from "../store/useBirStore";
@@ -11,7 +11,7 @@ import { FormRenderer, pageOfId } from "./FormRenderer";
 
 export interface Lesson {
   asOf: string;
-  lecture: { title: string; minutes: string; sections: LectureSection[]; worked: { intro: string; steps: string[]; graduated: Record<string, string>; eight: Record<string, string> }; legal: string[] };
+  lecture: { title: string; minutes: string; sections: LectureSection[]; worked: { intro: string; steps: string[]; graduated?: Record<string, string>; eight?: Record<string, string>; tables?: { title: string; data: Record<string, string> }[] }; legal: string[] };
   guide: GuideRow[];
   tips: { checklist: string[]; pitfalls: string[]; amended: string; noPayment: string };
   quiz: QuizItem[];
@@ -74,7 +74,7 @@ export function LearnPage({ formId, lesson }: { formId: string; lesson: Lesson }
             <p className="mt-1">{lesson.lecture.worked.intro}</p>
             <ol className="mt-2 list-decimal space-y-1 pl-5">{lesson.lecture.worked.steps.map((s, i) => <li key={i}>{s}</li>)}</ol>
             <p className="mt-2 text-sm font-semibold">The same numbers on the form:</p>
-            <div className="mt-1 grid gap-3 sm:grid-cols-2"><WorkedTable title="Graduated rates with OSD (Part IV.A and IV.C)" data={lesson.lecture.worked.graduated} /><WorkedTable title="8% option (Part IV.B and IV.C)" data={lesson.lecture.worked.eight} /></div>
+            <div className="mt-1 grid gap-3 sm:grid-cols-2">{(lesson.lecture.worked.tables ?? [{ title: "Graduated rates with OSD (Part IV.A and IV.C)", data: lesson.lecture.worked.graduated ?? {} }, { title: "8% option (Part IV.B and IV.C)", data: lesson.lecture.worked.eight ?? {} }]).map((t) => <WorkedTable key={t.title} title={t.title} data={t.data} />)}</div>
           </section>
           <section>
             <h2 className="text-lg font-bold text-gray-900">7. Legal basis</h2>
@@ -142,7 +142,7 @@ export function LearnPage({ formId, lesson }: { formId: string; lesson: Lesson }
         </div>
       )}
 
-      <section className="rounded-lg border border-gray-200 bg-white p-4">
+      {lesson.cases.length > 0 && <section className="rounded-lg border border-gray-200 bg-white p-4">
         <h2 className="text-lg font-bold">Case problems</h2>
         {!unlocked && <p className="mt-1 text-sm text-amber-800">Pass the Quick check (4 of 5) to unlock these. {q ? `Your best so far is ${q.best} of ${lesson.quiz.length}.` : ""}</p>}
         <div className="mt-3 grid gap-3 md:grid-cols-3">
@@ -161,7 +161,7 @@ export function LearnPage({ formId, lesson }: { formId: string; lesson: Lesson }
         </div>
         <p className="mt-3 text-xs text-gray-500">Practice: unlimited tries, hints and &quot;Check my return&quot;. Assessment: one submission, no hints.</p>
         <div className="mt-3"><Link href={`/bir-lab/${formId}/fill`} className="rounded-md bg-gray-800 px-4 py-2 text-sm font-semibold text-white">Open the blank form (free fill-up)</Link></div>
-      </section>
+      </section>}
     </div>
   );
 }

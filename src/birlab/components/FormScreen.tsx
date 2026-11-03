@@ -7,8 +7,8 @@ import { checkReturn, keyValues, wrongFormResult, type CheckResult } from "../en
 import { annualReturnDue, isoToUs, money, amt } from "../engine/tax";
 import { logAttempt } from "../lib/birApi";
 import { FORMS, getForm } from "../forms/registry";
-import type { Issue, Values } from "../forms/types";
-import type { CaseDef } from "../cases/f1701a";
+import type { FieldDef, FormDef, Issue, Values } from "../forms/types";
+import type { CaseDef } from "../cases/types";
 import { draftKey, useBirStore, type Draft } from "../store/useBirStore";
 import { FormRenderer, pageOfId, type Mark } from "./FormRenderer";
 
@@ -17,16 +17,21 @@ interface Props { formId: string; caseDef?: CaseDef; mode: "practice" | "assessm
 const todayIso = () => new Date().toISOString().slice(0, 10);
 const hashStr = (s: string) => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 11).toString(36).toUpperCase().padStart(7, "0");
 
-function profileToValues(p: ReturnType<typeof useBirStore.getState>["profile"]): Values {
+/** Prefills the taxpayer's own identity items. The item numbers differ from form to form, so the first field of each kind on the form is used. */
+function profileToValues(p: ReturnType<typeof useBirStore.getState>["profile"], def?: FormDef): Values {
   const v: Values = {};
-  if (p.tin) v["4"] = p.tin;
-  if (p.rdo) v["5"] = p.rdo;
-  const name = [p.last, p.first, p.middle].filter(Boolean).join(", ");
-  if (name) v["8"] = name.toUpperCase();
-  if (p.address) v["9"] = p.address.toUpperCase();
-  if (p.zip) v["9A"] = p.zip;
-  if (p.tel) v["15"] = p.tel;
-  if (p.email) v["11"] = p.email;
+  if (!def) return v;
+  const fields = def.pages.flatMap((pg) => pg.sections.flatMap((s) => s.rows.flatMap((r) => (r.type === "fields" ? r.fields : []))));
+  const first = (pred: (f: FieldDef) => boolean) => fields.find(pred)?.id;
+  const name = [p.last, p.first, p.middle].filter(Boolean).join(", ") || p.tradeName;
+  const put = (id: string | undefined, value: string) => { if (id && value) v[id] = value; };
+  put(first((f) => f.kind === "tin"), p.tin);
+  put(first((f) => f.kind === "rdo"), p.rdo);
+  put(first((f) => f.kind === "text" && /name/i.test(f.label)), name.toUpperCase());
+  put(first((f) => f.kind === "text" && /address/i.test(f.label)), p.address.toUpperCase());
+  put(first((f) => f.kind === "zip"), p.zip);
+  put(first((f) => f.kind === "phone"), p.tel);
+  put(first((f) => f.kind === "email"), p.email);
   return v;
 }
 
@@ -39,7 +44,7 @@ export function FormScreen({ formId, caseDef, mode }: Props) {
 
   const [stage, setStage] = useState<"story" | "fill">(caseDef && !saved ? "story" : "fill");
   const [chosen, setChosen] = useState("");
-  const [values, setValues] = useState<Values>(() => saved?.values ?? (caseDef ? { ...caseDef.profile } : profileToValues(store.profile)));
+  const [values, setValues] = useState<Values>(() => saved?.values ?? (caseDef ? { ...caseDef.profile } : profileToValues(store.profile, def)));
   const [filingDate, setFilingDate] = useState(saved?.filingDate ?? caseDef?.filingDate ?? todayIso());
   const [status, setStatus] = useState<Draft["status"]>(saved?.status ?? "draft");
   const [page, setPage] = useState(0);
@@ -54,10 +59,10 @@ export function FormScreen({ formId, caseDef, mode }: Props) {
 
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
 
-  const ctx = useMemo(() => ({ filingDate }), [filingDate]);
+  const ctx = useMemo(() => ({ filingDate, classification: caseDef?.classification }), [filingDate, caseDef]);
   const computed = useMemo(() => (def ? def.compute(values, ctx) : {}), [def, values, ctx]);
   const locked = status === "final" || status === "submitted";
-  const key0 = useMemo(() => (def && caseDef ? keyValues(def, { ...caseDef.profile, ...caseDef.facts }, { filingDate: caseDef.filingDate }) : null), [def, caseDef]);
+  const key0 = useMemo(() => (def && caseDef ? keyValues(def, { ...caseDef.profile, ...caseDef.facts }, { filingDate: caseDef.filingDate, classification: caseDef.classification }) : null), [def, caseDef]);
 
   if (!entry || !def) return <p className="text-sm text-gray-600">This form is coming in a later phase.</p>;
 

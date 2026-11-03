@@ -1,7 +1,9 @@
 // The shape of a BIR form definition. One generic renderer draws any of them; the numbers come from `compute`, the checks from `validate`.
+import type { Classification } from "../engine/tax";
+
 export type Values = Record<string, string>;
 
-export type FieldKind = "text" | "tin" | "rdo" | "zip" | "email" | "phone" | "monthyear" | "date" | "yesno" | "radio" | "amount" | "count";
+export type FieldKind = "text" | "tin" | "rdo" | "zip" | "email" | "phone" | "monthyear" | "date" | "yesno" | "radio" | "amount" | "count" | "year";
 export interface Option { value: string; label: string }
 
 /** One numbered item that is not an amount row (identity, choices, dates). */
@@ -21,7 +23,7 @@ export interface FieldDef {
 export type Row =
   | { type: "fields"; fields: FieldDef[] }
   /** An amount row: item number, label, and one or two columns (A taxpayer, B spouse). `id` + "A"/"B" are the value ids. */
-  | { type: "amounts"; id: string; item: string; label: string; mode: "input" | "computed"; cols: ("A" | "B")[]; indent?: 0 | 1 | 2; bold?: boolean; whole?: boolean; note?: string; /** Show a small "specify" text box beside the label (id + "S"). */ specify?: boolean }
+  | { type: "amounts"; id: string; item: string; label: string; mode: "input" | "computed"; /** Columns computed even when `mode` is "input" (a row with a typed amount and a computed tax beside it). */ computedCols?: ("A" | "B")[]; cols: ("A" | "B")[]; indent?: 0 | 1 | 2; bold?: boolean; whole?: boolean; note?: string; /** Show a small "specify" text box beside the label (id + "S"). */ specify?: boolean }
   | { type: "heading"; text: string; note?: string }
   /** Part III: item, particulars, then bank, number, date, amount. */
   | { type: "payment"; id: string; item: string; label: string };
@@ -34,6 +36,8 @@ export interface Issue { id: string; item: string; message: string }
 export interface ComputeContext {
   /** The date the return is filed (ISO). Late filing adds surcharge and interest. */
   filingDate?: string;
+  /** Taxpayer classification for the late-filing rates; when absent the form works it out from the gross it knows. */
+  classification?: Classification;
 }
 
 export interface FormDef {
@@ -45,6 +49,10 @@ export interface FormDef {
   version: string;
   versionNote?: string;
   pages: Page[];
+  /** Whether the spouse column (B) is in use for these values. Defaults to "Filing Status is Joint Filing" (item 18). */
+  spouseOn?: (values: Values) => boolean;
+  /** Column headings when the two columns are not Taxpayer/Spouse (for example regular and special rate). */
+  colLabels?: [string, string];
   /** Everything the form works out by itself, from the typed values. */
   compute(values: Values, ctx: ComputeContext): Values;
   validate(values: Values, ctx: ComputeContext): Issue[];
