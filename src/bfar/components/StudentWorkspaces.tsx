@@ -8,7 +8,7 @@ import { emptyLedgerAccount, lineRef, type LedgerAccountIn, type TbRowIn, type T
 import type { JournalEntry } from "../core/types";
 import { COLUMN_KEYS, type ColumnKey } from "../core/worksheet-engine";
 import { formatAmount } from "../lib/currency";
-import { useState } from "react";
+import { useState, useSyncExternalStore, type ReactNode } from "react";
 import { saveMine } from "../lib/bfarApi";
 import { emptyWork, FREE_BOOK } from "../core/student-work";
 import { useAccountingStore } from "../store/useAccountingStore";
@@ -54,58 +54,76 @@ const postLines = (entries: JournalEntry[]): PostLine[] =>
   [...entries].filter((e) => e.stage === "transaction").sort((a, b) => a.date.localeCompare(b.date))
     .flatMap((e) => e.lines.map((l, i): PostLine => ({ ref: lineRef(e.id, i), entry: e, accountCode: l.accountCode, side: l.debit > 0 ? "Dr" : "Cr", amount: l.debit || l.credit })));
 
-function Chip({ line, selected, onSelect, onRemove, wrong, disabled, compact }: { line: PostLine; selected?: boolean; onSelect?: () => void; onRemove?: () => void; wrong?: boolean; disabled?: boolean; compact?: boolean }) {
+// Dragging is an extra for a mouse. Touch screens use the Post button, because a finger drag scrolls or pulls the page to refresh.
+const subscribePointer = (cb: () => void) => { const m = window.matchMedia("(pointer: fine)"); m.addEventListener("change", cb); return () => m.removeEventListener("change", cb); };
+const useFinePointer = () => useSyncExternalStore(subscribePointer, () => window.matchMedia("(pointer: fine)").matches, () => false);
+
+function Chip({ line, onRemove, wrong, disabled, draggable }: { line: PostLine; onRemove?: () => void; wrong?: boolean; disabled?: boolean; draggable?: boolean }) {
   return (
-    <div draggable={!disabled} onDragStart={(e) => { e.dataTransfer.setData("text/plain", line.ref); e.dataTransfer.effectAllowed = "move"; }}
-      onClick={onSelect} role={onSelect ? "button" : undefined} tabIndex={onSelect && !disabled ? 0 : undefined} aria-pressed={onSelect ? selected : undefined}
-      onKeyDown={(e) => { if (onSelect && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); onSelect(); } }}
-      className={`flex items-center justify-between gap-2 rounded border px-2 py-1 text-xs bg-white ${disabled ? "" : "cursor-grab"} ${selected ? "border-blue-600 ring-2 ring-blue-300" : wrong ? "border-rose-400 bg-rose-50" : "border-slate-300"}`}>
-      <span className={`truncate ${!compact && line.side === "Cr" ? "pl-4" : ""}`}>{line.entry.date.slice(5)} · {compact ? "" : getAccount(line.accountCode)?.name}</span>
+    <div draggable={!!draggable && !disabled} onDragStart={(e) => { e.dataTransfer.setData("text/plain", line.ref); e.dataTransfer.effectAllowed = "move"; }}
+      className={`flex items-center justify-between gap-2 rounded border px-2 py-1 text-xs bg-white ${draggable && !disabled ? "cursor-grab" : ""} ${wrong ? "border-rose-400 bg-rose-50" : "border-slate-300"}`}>
+      <span className="truncate">{line.entry.date.slice(5)}</span>
       <span className="tabular-nums font-medium">{formatAmount(line.amount)}</span>
       {wrong && <span className="text-rose-700 font-semibold" title="Wrong account or side">✗</span>}
-      {onRemove && !disabled && <button type="button" aria-label="Take this line out of the account" onClick={(e) => { e.stopPropagation(); onRemove(); }} className="text-slate-400 hover:text-rose-600"><Trash2 size={11} /></button>}
+      {onRemove && !disabled && <button type="button" aria-label="Take this line out of the account" onClick={onRemove} className="text-slate-400 hover:text-rose-600"><Trash2 size={11} /></button>}
+    </div>
+  );
+}
+
+/** One journal line waiting to be posted: the student picks the account and the side, then posts it. */
+function PostRow({ line, onPost, disabled }: { line: PostLine; onPost: (code: string, side: "Dr" | "Cr") => void; disabled?: boolean }) {
+  const [code, setCode] = useState("");
+  const [side, setSide] = useState<"" | "Dr" | "Cr">("");
+  return (
+    <div className="grid gap-2 items-center border-t border-slate-100 py-1.5 text-xs md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_7rem_5rem]">
+      <div className="min-w-0">
+        <div className={`truncate ${line.side === "Cr" ? "pl-5" : ""}`}><span className="text-slate-500">{line.entry.date.slice(5)}</span> · <b>{getAccount(line.accountCode)?.name}</b></div>
+        <div className="truncate text-slate-500">{line.entry.explanation}</div>
+      </div>
+      <AccountSelect value={code} disabled={disabled} onChange={setCode} />
+      <select value={side} disabled={disabled} onChange={(e) => setSide(e.target.value as "" | "Dr" | "Cr")} className={input} aria-label="Side"><option value="">Side</option><option value="Dr">Debit</option><option value="Cr">Credit</option></select>
+      <div className="flex items-center justify-between gap-2 md:contents">
+        <span className="tabular-nums font-medium md:hidden">{formatAmount(line.amount)}</span>
+        <button type="button" disabled={disabled || !code || !side} onClick={() => side && onPost(code, side)} className="rounded bg-blue-600 px-3 py-1.5 font-semibold text-white disabled:opacity-40">Post</button>
+      </div>
     </div>
   );
 }
 
 /**
- * Posting by drag and drop: each line of the student's journal is dragged to the debit or credit half of a ledger account (or tapped, then the half is tapped).
- * The student still types the footings and the ending balance. `instantFeedback` (the free journal only) flags a line dropped in the wrong place.
+ * Posting: each line of the student's journal is posted to an account and a side the student chooses (Post button; a mouse can also drag it to the debit or credit half).
+ * The student still types the footings and the ending balance. `instantFeedback` (the free journal only) flags a line posted to the wrong place.
  */
 export function LedgerWorkspace({ accounts, onChange, entries, disabled, instantFeedback }: { accounts: LedgerAccountIn[]; onChange: (a: LedgerAccountIn[]) => void; entries: JournalEntry[]; disabled?: boolean; instantFeedback?: boolean }) {
   const [view, setView] = useState<"t" | "col">("t");
-  const [selected, setSelected] = useState<string | null>(null);
+  const fine = useFinePointer();
   const lines = postLines(entries);
   const byRef = new Map(lines.map((l) => [l.ref, l]));
   const refs = entryRefs(entries, ["transaction"]);
   const postedRefs = new Set(accounts.flatMap((a) => a.posted.map((p) => p.ref)));
   const unposted = lines.filter((l) => !postedRefs.has(l.ref));
-  const taken = accounts.map((a) => a.code);
 
+  // Posting to an account that is not open yet opens it.
   const post = (ref: string, code: string, side: "Dr" | "Cr") => {
     if (disabled || !byRef.has(ref)) return;
-    onChange(accounts.map((a) => ({ ...a, posted: a.code === code ? [...a.posted.filter((p) => p.ref !== ref), { ref, side }] : a.posted.filter((p) => p.ref !== ref) })));
-    setSelected(null);
+    const base = accounts.some((a) => a.code === code) ? accounts : [...accounts, emptyLedgerAccount(code)];
+    onChange(base.map((a) => ({ ...a, posted: a.code === code ? [...a.posted.filter((p) => p.ref !== ref), { ref, side }] : a.posted.filter((p) => p.ref !== ref) })));
   };
   const unpost = (ref: string) => onChange(accounts.map((a) => ({ ...a, posted: a.posted.filter((p) => p.ref !== ref) })));
   const patch = (i: number, p: Partial<LedgerAccountIn>) => onChange(accounts.map((a, j) => (j === i ? { ...a, ...p } : a)));
   const zone = (code: string, side: "Dr" | "Cr") => ({
-    onDragOver: (e: React.DragEvent) => { if (!disabled) e.preventDefault(); },
-    onDrop: (e: React.DragEvent) => { e.preventDefault(); post(e.dataTransfer.getData("text/plain"), code, side); },
-    onClick: () => { if (selected) post(selected, code, side); },
+    onDragOver: (e: React.DragEvent) => { if (!disabled && fine) e.preventDefault(); },
+    onDrop: (e: React.DragEvent) => { e.preventDefault(); if (fine) post(e.dataTransfer.getData("text/plain"), code, side); },
   });
   const wrong = (l: PostLine, code: string, side: "Dr" | "Cr") => !!instantFeedback && (l.accountCode !== code || l.side !== side);
 
+  const field = (label: string, node: ReactNode) => <label className="flex flex-col gap-1 text-[11px] text-slate-500">{label}{node}</label>;
   const footings = (a: LedgerAccountIn, i: number) => (
-    <div className="grid grid-cols-[1fr_6rem_6rem_5rem] gap-2 items-center border-t border-slate-200 p-2 text-xs">
-      <span className="font-semibold text-slate-600">Footings and ending balance</span>
-      <input className={num} disabled={disabled} value={a.debitFooting} inputMode="decimal" placeholder="Total Dr" aria-label="Total debits" onChange={(e) => patch(i, { debitFooting: e.target.value })} />
-      <input className={num} disabled={disabled} value={a.creditFooting} inputMode="decimal" placeholder="Total Cr" aria-label="Total credits" onChange={(e) => patch(i, { creditFooting: e.target.value })} />
-      <span />
-      <span className="text-slate-500">Ending balance</span>
-      <input className={num} disabled={disabled} value={a.balance} inputMode="decimal" placeholder="Balance" aria-label="Ending balance" onChange={(e) => patch(i, { balance: e.target.value })} />
-      <select className={input} disabled={disabled} value={a.side} aria-label="Balance side" onChange={(e) => patch(i, { side: e.target.value as LedgerAccountIn["side"] })}><option value="">Dr / Cr</option><option value="Dr">Dr</option><option value="Cr">Cr</option></select>
-      <span />
+    <div className="grid grid-cols-2 gap-2 border-t border-slate-200 p-2 text-xs">
+      {field("Total debits", <input className={num} disabled={disabled} value={a.debitFooting} inputMode="decimal" aria-label="Total debits" onChange={(e) => patch(i, { debitFooting: e.target.value })} />)}
+      {field("Total credits", <input className={num} disabled={disabled} value={a.creditFooting} inputMode="decimal" aria-label="Total credits" onChange={(e) => patch(i, { creditFooting: e.target.value })} />)}
+      {field("Ending balance", <input className={num} disabled={disabled} value={a.balance} inputMode="decimal" aria-label="Ending balance" onChange={(e) => patch(i, { balance: e.target.value })} />)}
+      {field("Balance is", <select className={input} disabled={disabled} value={a.side} aria-label="Balance side" onChange={(e) => patch(i, { side: e.target.value as LedgerAccountIn["side"] })}><option value="">Debit or credit</option><option value="Dr">Debit</option><option value="Cr">Credit</option></select>)}
     </div>
   );
 
@@ -114,21 +132,25 @@ export function LedgerWorkspace({ accounts, onChange, entries, disabled, instant
       <Card title={`Journal lines to post: ${lines.length - unposted.length} of ${lines.length} posted`} className="mb-4">
         {lines.length === 0 ? <p className="text-sm text-slate-500">Journalize first; the lines of your journal appear here.</p> : unposted.length === 0 ? <p className="text-sm text-emerald-700">Every line is posted.</p> : (
           <>
-            <p className="text-xs text-slate-600 mb-2">Drag a line to the <b>left (debit)</b> or <b>right (credit)</b> half of the right account. On a phone or tablet, tap the line, then tap the half.</p>
-            <div className="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3 max-h-64 overflow-y-auto">
-              {unposted.map((l) => <Chip key={l.ref} line={l} disabled={disabled} selected={selected === l.ref} onSelect={() => setSelected(selected === l.ref ? null : l.ref)} />)}
+            <p className="text-xs text-slate-600 mb-2">For each line, choose the account and the side (debit or credit) it belongs to, then press Post.{fine ? " With a mouse you can also drag the line's amount to the debit or credit half of an account below." : ""}</p>
+            <div className="max-h-96 overflow-y-auto">
+              {unposted.map((l) => (
+                <div key={l.ref} className="flex items-start gap-2">
+                  {fine && !disabled && <div className="pt-2"><Chip line={l} draggable /></div>}
+                  <div className="flex-1 min-w-0"><PostRow line={l} disabled={disabled} onPost={(code, side) => post(l.ref, code, side)} /></div>
+                </div>
+              ))}
             </div>
           </>
         )}
       </Card>
-      <div className="flex flex-wrap items-center gap-3 mb-3">
-        {!disabled && <div className="max-w-xs w-full"><AccountSelect value="" taken={taken} onChange={(code) => code && onChange([...accounts, emptyLedgerAccount(code)])} /></div>}
-        {!disabled && <span className="text-xs text-slate-500">Open the accounts you need.</span>}
+      <div className="flex items-center gap-3 mb-3">
+        <span className="text-xs text-slate-500">{accounts.length === 0 ? "Your ledger accounts appear here as you post." : `${accounts.length} account${accounts.length === 1 ? "" : "s"} open`}</span>
         <div className="ml-auto flex rounded-md border border-slate-300 overflow-hidden text-xs">
           {([["t", "T-accounts"], ["col", "4-column"]] as const).map(([id, label]) => <button key={id} type="button" onClick={() => setView(id)} className={`px-3 py-1.5 ${view === id ? "bg-blue-600 text-white" : "bg-white text-slate-700"}`}>{label}</button>)}
         </div>
       </div>
-      {accounts.length === 0 ? <Empty>No ledger accounts yet. Open an account, then drag journal lines into it.</Empty> : (
+      {accounts.length === 0 ? <Empty>No ledger accounts yet. Post a journal line above.</Empty> : (
         <div className={`grid gap-4 ${view === "t" ? "sm:grid-cols-2 lg:grid-cols-3" : "lg:grid-cols-2"}`}>
           {accounts.map((a, i) => {
             const mine = a.posted.map((p) => ({ p, l: byRef.get(p.ref) })).filter((x): x is { p: typeof x.p; l: PostLine } => !!x.l).sort((x, y) => x.l.entry.date.localeCompare(y.l.entry.date));
@@ -136,17 +158,17 @@ export function LedgerWorkspace({ accounts, onChange, entries, disabled, instant
               <div key={a.code} className="bg-white border border-slate-200 rounded-lg overflow-hidden">
                 <div className="bg-slate-100 px-3 py-2 text-sm font-semibold flex justify-between items-center">
                   <span>{getAccount(a.code)?.name}</span>
-                  <span className="flex items-center gap-3 text-slate-500 font-normal">No. {a.code}{!disabled && <button type="button" aria-label={`Close ${a.code}`} onClick={() => onChange(accounts.filter((_, j) => j !== i))} className="text-slate-400 hover:text-rose-600"><Trash2 size={14} /></button>}</span>
+                  <span className="flex items-center gap-3 text-slate-500 font-normal">No. {a.code}{!disabled && a.posted.length === 0 && <button type="button" aria-label={`Close ${a.code}`} onClick={() => onChange(accounts.filter((_, j) => j !== i))} className="text-slate-400 hover:text-rose-600"><Trash2 size={14} /></button>}</span>
                 </div>
                 {view === "t" ? (
                   <div className="grid grid-cols-2 min-h-[6rem] text-xs">
-                    <div {...zone(a.code, "Dr")} aria-label={`${getAccount(a.code)?.name} debit side`} className={`border-r-2 border-t-2 border-slate-800 m-2 mr-0 p-1.5 space-y-1 ${selected ? "bg-blue-50 cursor-pointer" : "bg-slate-50"}`}>
+                    <div {...zone(a.code, "Dr")} aria-label={`${getAccount(a.code)?.name} debit side`} className="border-r-2 border-t-2 border-slate-800 m-2 mr-0 p-1.5 space-y-1 bg-slate-50">
                       <div className="text-[10px] uppercase tracking-wide text-slate-400">Debit</div>
-                      {mine.filter((x) => x.p.side === "Dr").map((x) => <Chip key={x.p.ref} compact line={x.l} disabled={disabled} wrong={wrong(x.l, a.code, "Dr")} onRemove={() => unpost(x.p.ref)} />)}
+                      {mine.filter((x) => x.p.side === "Dr").map((x) => <Chip key={x.p.ref} line={x.l} disabled={disabled} draggable={fine} wrong={wrong(x.l, a.code, "Dr")} onRemove={() => unpost(x.p.ref)} />)}
                     </div>
-                    <div {...zone(a.code, "Cr")} aria-label={`${getAccount(a.code)?.name} credit side`} className={`border-t-2 border-slate-800 m-2 ml-0 p-1.5 space-y-1 ${selected ? "bg-blue-50 cursor-pointer" : "bg-slate-50"}`}>
+                    <div {...zone(a.code, "Cr")} aria-label={`${getAccount(a.code)?.name} credit side`} className="border-t-2 border-slate-800 m-2 ml-0 p-1.5 space-y-1 bg-slate-50">
                       <div className="text-[10px] uppercase tracking-wide text-slate-400">Credit</div>
-                      {mine.filter((x) => x.p.side === "Cr").map((x) => <Chip key={x.p.ref} compact line={x.l} disabled={disabled} wrong={wrong(x.l, a.code, "Cr")} onRemove={() => unpost(x.p.ref)} />)}
+                      {mine.filter((x) => x.p.side === "Cr").map((x) => <Chip key={x.p.ref} line={x.l} disabled={disabled} draggable={fine} wrong={wrong(x.l, a.code, "Cr")} onRemove={() => unpost(x.p.ref)} />)}
                     </div>
                   </div>
                 ) : (
@@ -155,7 +177,7 @@ export function LedgerWorkspace({ accounts, onChange, entries, disabled, instant
                     <tbody>
                       {mine.map(({ p, l }) => (
                         <tr key={p.ref} className="border-t border-slate-100">
-                          <td className="p-1">{l.entry.date.slice(5)}</td><td className="p-1">{l.entry.explanation}</td><td className="p-1">{refs.get(l.entry.id)}</td>
+                          <td className="p-1">{l.entry.date.slice(5)}</td><td className="p-1">{l.entry.explanation}{wrong(l, a.code, p.side) && <span className="ml-1 text-rose-700 font-semibold" title="Wrong account or side">✗</span>}{!disabled && <button type="button" aria-label="Take this line out of the account" onClick={() => unpost(p.ref)} className="ml-1 text-slate-400 hover:text-rose-600 align-middle"><Trash2 size={11} /></button>}</td><td className="p-1">{refs.get(l.entry.id)}</td>
                           <td className="p-1 text-right tabular-nums">{p.side === "Dr" ? formatAmount(l.amount) : ""}</td><td className="p-1 text-right tabular-nums">{p.side === "Cr" ? formatAmount(l.amount) : ""}</td>
                           <td className="p-0.5"><input className={num} disabled={disabled} value={a.runBalances[p.ref] ?? ""} inputMode="decimal" aria-label="Running balance" onChange={(e) => patch(i, { runBalances: { ...a.runBalances, [p.ref]: e.target.value } })} /></td>
                         </tr>
@@ -163,8 +185,6 @@ export function LedgerWorkspace({ accounts, onChange, entries, disabled, instant
                     </tbody>
                   </table>
                 )}
-                {view === "col" && <div {...zone(a.code, "Dr")} className={`m-2 rounded border border-dashed p-2 text-center text-[11px] ${selected ? "border-blue-400 bg-blue-50 cursor-pointer" : "border-slate-300 text-slate-400"}`}>Drop a debit line here</div>}
-                {view === "col" && <div {...zone(a.code, "Cr")} className={`m-2 mt-0 rounded border border-dashed p-2 text-center text-[11px] ${selected ? "border-blue-400 bg-blue-50 cursor-pointer" : "border-slate-300 text-slate-400"}`}>Drop a credit line here</div>}
                 {footings(a, i)}
               </div>
             );
