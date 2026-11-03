@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { formatAmount, formatPeso, parsePesos, percentOf, roundDiv } from "../lib/currency";
-import { CHART_OF_ACCOUNTS, getAccount, searchAccounts } from "../core/chart-of-accounts";
+import { CHART_OF_ACCOUNTS, getAccount, searchAccounts, suggestAccounts } from "../core/chart-of-accounts";
 import { balanceMessage, createEntry, cr, dr, validateEntry } from "../core/journalizer";
 import { balanceOf, postToLedger, toTAccount } from "../core/ledger-posting";
 import { trialBalance } from "../core/trial-balance";
@@ -13,7 +13,7 @@ import { generateStatements } from "../core/statements-generator";
 import { evaluateEntry, gradeAnswers } from "../core/evaluator";
 import { PRACTICE_SETS, practiceItems } from "../practice-sets";
 import { expectedOf, gradeSubmission, gradeWork, keyJournal, keyOf, perfectWork, solutionEntries } from "../practice-sets/solution";
-import { emptyWork, entriesOfBook, FREE_BOOK } from "../core/student-work";
+import { emptyWork, entriesOfBook, FREE_BOOK, generateTrialBalance } from "../core/student-work";
 import { BAYANIHAN } from "../practice-sets/bayanihan";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
@@ -416,7 +416,6 @@ describe("separate books and hand-built ledger, trial balance and worksheet", ()
       const g = gradeWork(set, perfectWork(set), keyJournal(set));
       expect(g.score, set.id).toBe(g.max);
       expect(g.marking.worksheetTotalsOk).toBe(true);
-      expect(g.marking.tbTotalsOk).toBe(true);
     }
   });
   it("gives nothing for books that were not built", () => {
@@ -424,16 +423,14 @@ describe("separate books and hand-built ledger, trial balance and worksheet", ()
     expect(g.score).toBe(0);
     expect(g.max).toBeGreaterThan(20);
   });
-  it("marks a wrong ledger balance, a missing trial balance row and a wrong adjustment letter", () => {
+  it("marks a wrong ledger balance and a wrong adjustment letter", () => {
     const w = perfectWork(CLEANPRO);
     w.ledger.find((a) => a.code === "101")!.balance = "1.00";
-    w.tb.rows = w.tb.rows.filter((r) => r.code !== "150");
     w.worksheet.rows.find((r) => r.code === "140")!.adj = "b";
     const g = gradeWork(CLEANPRO, w, keyJournal(CLEANPRO));
     expect(g.marking.ledger.find((c) => c.code === "101")!.ok).toBe(false);
-    expect(g.marking.tb.find((c) => c.code === "150")).toMatchObject({ listed: false, ok: false });
     expect(g.marking.worksheet.find((c) => c.code === "140")!.ok).toBe(false);
-    expect(g.score).toBe(g.max - 3);
+    expect(g.score).toBe(g.max - 2);
   });
   it("flags accounts the student added that the key does not have", () => {
     const w = perfectWork(CLEANPRO);
@@ -464,5 +461,57 @@ describe("separate books and hand-built ledger, trial balance and worksheet", ()
     delete j["t05"];
     const g = gradeWork(CLEANPRO, perfectWork(CLEANPRO), j).marking.posting;
     expect(g.filter((p) => p.status === "no-line")).toHaveLength(2);
+  });
+});
+
+describe("predictive account search", () => {
+  const codes = (q: string) => suggestAccounts(q).map((a) => a.code);
+  it("finds accounts from the first letters", () => {
+    expect(codes("ca")[0]).toBe("101");
+    expect(codes("cash").slice(0, 2)).toEqual(["101", "102"]);
+    expect(codes("acc")[0]).toBe("110");
+    expect(codes("acc")).toEqual(expect.arrayContaining(["110", "201", "160-A"]));
+    expect(codes("depreciation")).toEqual(expect.arrayContaining(["160-A", "170-A", "605", "606"]));
+    expect(codes("sal")).toEqual(expect.arrayContaining(["210", "421", "420", "601"]));
+  });
+  it("matches a code prefix first and a word inside the name too", () => {
+    expect(codes("110")[0]).toBe("110");
+    expect(codes("110").slice(0, 2)).toEqual(["110", "110-A"]);
+    expect(codes("capital")).toContain("301");
+    expect(codes("rec")).toContain("110");
+  });
+  it("shows nothing for an empty box and nothing for gibberish", () => {
+    expect(codes("")).toEqual([]);
+    expect(codes("zzz")).toEqual([]);
+  });
+  it("never returns more than the limit", () => {
+    expect(suggestAccounts("a", 5).length).toBeLessThanOrEqual(5);
+  });
+});
+
+describe("the trial balance is generated from the student's ledger", () => {
+  const set = CLEANPRO;
+  const journalEntries = solutionEntries(set).filter((e) => e.stage === "transaction");
+  it("balances when everything is posted correctly and matches the books", () => {
+    const tb = generateTrialBalance(perfectWork(set).ledger, journalEntries);
+    expect(tb.balanced).toBe(true);
+    expect(tb.unpostedLines).toBe(0);
+    expect(tb.rows.find((r) => r.code === "101")).toMatchObject({ debit: P(463500), credit: 0 });
+    expect(tb.rows.find((r) => r.code === "301")).toMatchObject({ debit: 0, credit: P(500000) });
+    const expected = trialBalance(postToLedger(journalEntries, ["transaction"]));
+    expect(tb.totalDebit).toBe(expected.totalDebit);
+    expect(tb.rows).toHaveLength(expected.rows.length);
+  });
+  it("shows a posting mistake as an unbalanced trial balance", () => {
+    const w = structuredClone(perfectWork(set));
+    w.ledger.find((a) => a.code === "101")!.posted[0].side = "Cr"; // a debit posted on the credit side
+    const tb = generateTrialBalance(w.ledger, journalEntries);
+    expect(tb.balanced).toBe(false);
+  });
+  it("reports lines not posted yet and has no rows for an empty ledger", () => {
+    const w = structuredClone(perfectWork(set));
+    w.ledger.find((a) => a.code === "101")!.posted.pop();
+    expect(generateTrialBalance(w.ledger, journalEntries).unpostedLines).toBe(1);
+    expect(generateTrialBalance([], journalEntries).rows).toEqual([]);
   });
 });

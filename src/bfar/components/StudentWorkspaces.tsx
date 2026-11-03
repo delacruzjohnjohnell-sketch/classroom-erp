@@ -2,9 +2,10 @@
 // The places where students do the work themselves: post to ledger accounts, build the trial balance, fill the 10-column worksheet.
 // Nothing is calculated or checked here. The teacher checks it.
 import { Plus, Trash2 } from "lucide-react";
-import { CHART_OF_ACCOUNTS, getAccount } from "../core/chart-of-accounts";
+import { getAccount } from "../core/chart-of-accounts";
+import { AccountSelect } from "./AccountPicker";
 import { entryRefs } from "../core/ledger-posting";
-import { emptyLedgerAccount, lineRef, type LedgerAccountIn, type TbRowIn, type TrialBalanceIn, type WorksheetIn, type WsRowIn } from "../core/student-work";
+import { emptyLedgerAccount, generateTrialBalance, lineRef, type LedgerAccountIn, type WorksheetIn, type WsRowIn } from "../core/student-work";
 import type { JournalEntry } from "../core/types";
 import { COLUMN_KEYS, type ColumnKey } from "../core/worksheet-engine";
 import { formatAmount } from "../lib/currency";
@@ -16,15 +17,6 @@ import { Card, Empty } from "./ui";
 
 const input = "w-full rounded border border-slate-300 px-1.5 py-1 text-xs";
 const num = `${input} text-right tabular-nums`;
-
-function AccountSelect({ value, onChange, disabled, taken = [] }: { value: string; onChange: (code: string) => void; disabled?: boolean; taken?: string[] }) {
-  return (
-    <select value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)} className={input} aria-label="Account">
-      <option value="">Choose an account</option>
-      {CHART_OF_ACCOUNTS.map((a) => <option key={a.code} value={a.code} disabled={taken.includes(a.code) && a.code !== value}>{a.code} {a.name}</option>)}
-    </select>
-  );
-}
 
 /** The student's own journal for the book, read only, to post from. */
 export function JournalReference({ entries }: { entries: JournalEntry[] }) {
@@ -195,33 +187,21 @@ export function LedgerWorkspace({ accounts, onChange, entries, disabled, instant
   );
 }
 
-export function TrialBalanceWorkspace({ tb, onChange, disabled }: { tb: TrialBalanceIn; onChange: (t: TrialBalanceIn) => void; disabled?: boolean }) {
-  const taken = tb.rows.map((r) => r.code);
-  const patchRow = (i: number, p: Partial<TbRowIn>) => onChange({ ...tb, rows: tb.rows.map((r, j) => (j === i ? { ...r, ...p } : r)) });
+/** The trial balance of the student's own ledger. It is generated, not typed: it shows what the posting added up to, mistakes included. */
+export function GeneratedTrialBalanceView({ ledger, entries }: { ledger: LedgerAccountIn[]; entries: JournalEntry[] }) {
+  const tb = generateTrialBalance(ledger, entries);
+  if (tb.rows.length === 0) return <Empty>Post journal lines to the ledger and the trial balance builds itself here.</Empty>;
   return (
     <Card>
       <table className="w-full text-sm max-w-3xl">
-        <thead className="text-left text-xs text-slate-500"><tr><th className="p-1">Account title</th><th className="p-1 w-32 text-right">Debit</th><th className="p-1 w-32 text-right">Credit</th><th className="w-6" /></tr></thead>
-        <tbody>
-          {tb.rows.map((r, i) => (
-            <tr key={i}>
-              <td className="p-0.5"><AccountSelect value={r.code} taken={taken} disabled={disabled} onChange={(code) => patchRow(i, { code })} /></td>
-              <td className="p-0.5"><input className={num} disabled={disabled} value={r.debit} inputMode="decimal" aria-label="Debit" onChange={(e) => patchRow(i, { debit: e.target.value })} /></td>
-              <td className="p-0.5"><input className={num} disabled={disabled} value={r.credit} inputMode="decimal" aria-label="Credit" onChange={(e) => patchRow(i, { credit: e.target.value })} /></td>
-              <td>{!disabled && <button type="button" aria-label="Remove row" onClick={() => onChange({ ...tb, rows: tb.rows.filter((_, j) => j !== i) })} className="text-slate-400 hover:text-rose-600"><Trash2 size={13} /></button>}</td>
-            </tr>
-          ))}
-        </tbody>
-        <tfoot>
-          <tr className="border-t-2 border-slate-800 font-semibold">
-            <td className="p-1">Total</td>
-            <td className="p-0.5"><input className={num} disabled={disabled} value={tb.totalDebit} inputMode="decimal" aria-label="Total debits" onChange={(e) => onChange({ ...tb, totalDebit: e.target.value })} /></td>
-            <td className="p-0.5"><input className={num} disabled={disabled} value={tb.totalCredit} inputMode="decimal" aria-label="Total credits" onChange={(e) => onChange({ ...tb, totalCredit: e.target.value })} /></td>
-            <td />
-          </tr>
-        </tfoot>
+        <thead className="text-left text-xs text-slate-500"><tr><th className="p-1 w-20">Acct</th><th className="p-1">Account title</th><th className="p-1 w-36 text-right">Debit</th><th className="p-1 w-36 text-right">Credit</th></tr></thead>
+        <tbody>{tb.rows.map((r) => <tr key={r.code} className="border-t border-slate-100"><td className="p-1">{r.code}</td><td className="p-1">{r.name}</td><td className="p-1 text-right tabular-nums">{r.debit ? formatAmount(r.debit) : ""}</td><td className="p-1 text-right tabular-nums">{r.credit ? formatAmount(r.credit) : ""}</td></tr>)}</tbody>
+        <tfoot><tr className="border-t-2 border-slate-800 font-bold"><td className="p-1" colSpan={2}>Total</td><td className="p-1 text-right tabular-nums"><span className="inline-block border-b-4 border-double border-slate-900">{formatAmount(tb.totalDebit)}</span></td><td className="p-1 text-right tabular-nums"><span className="inline-block border-b-4 border-double border-slate-900">{formatAmount(tb.totalCredit)}</span></td></tr></tfoot>
       </table>
-      {!disabled && <button type="button" onClick={() => onChange({ ...tb, rows: [...tb.rows, { code: "", debit: "", credit: "" }] })} className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-blue-700 hover:underline"><Plus size={12} /> Add an account</button>}
+      <div className="mt-3 flex flex-wrap gap-2 text-xs">
+        <span className={`rounded-full px-2.5 py-0.5 font-semibold ${tb.balanced ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"}`}>{tb.balanced ? "Debits equal credits" : "Debits and credits are not equal: look for a line posted to the wrong side or left out"}</span>
+        {tb.unpostedLines > 0 && <span className="rounded-full bg-amber-100 px-2.5 py-0.5 font-semibold text-amber-800">{tb.unpostedLines} journal {tb.unpostedLines === 1 ? "line is" : "lines are"} not posted yet</span>}
+      </div>
     </Card>
   );
 }

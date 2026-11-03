@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { emptyWork, entriesOfBook, FREE_BOOK } from "@/bfar/core/student-work";
 import { BookPicker } from "@/bfar/components/BookPicker";
-import { LedgerWorkspace, SaveBar, TrialBalanceWorkspace } from "@/bfar/components/StudentWorkspaces";
+import { GeneratedTrialBalanceView, LedgerWorkspace, SaveBar } from "@/bfar/components/StudentWorkspaces";
 import { Card, PageHeader } from "@/bfar/components/ui";
 import { PRACTICE_SETS } from "@/bfar/practice-sets";
 import { useAccountingStore, useHydrated } from "@/bfar/store/useAccountingStore";
@@ -22,7 +22,7 @@ export default function LedgerPage() {
 
   return (
     <>
-      <PageHeader title="General ledger and trial balance" subtitle="Post your journal entries to the ledger accounts yourself, foot each account, then build the trial balance. Nothing is filled in for you; your teacher checks it." />
+      <PageHeader title="General ledger and trial balance" subtitle="Post your journal entries to the ledger accounts yourself and foot each account. The trial balance builds itself from what you posted, so a posting mistake shows up as an unbalanced trial balance." />
       <BookPicker />
       {!hydrated ? null : (
         <>
@@ -34,7 +34,7 @@ export default function LedgerPage() {
           </div>
           {tab === "ledger"
             ? <LedgerWorkspace accounts={work.ledger} entries={entriesOfBook(entries, book)} instantFeedback={book === FREE_BOOK} disabled={locked} onChange={(ledger) => saveWork(book, { ...work, ledger })} />
-            : <TrialBalanceWorkspace tb={work.tb} disabled={locked} onChange={(tb) => saveWork(book, { ...work, tb })} />}
+            : <GeneratedTrialBalanceView ledger={work.ledger} entries={entriesOfBook(entries, book)} />}
           <SaveBar book={book} />
         </>
       )}

@@ -80,5 +80,23 @@ export function searchAccounts(query: string, limit = 8): Account[] {
   return [...byCode, ...byName].slice(0, limit);
 }
 
+/**
+ * Predictive search for an account picker: typing "ca" finds Cash first, "acc" finds Accounts Payable and Accounts Receivable, "dep" the depreciation accounts.
+ * Ranked: code prefix, then name starts with the text, then a word of the name starts with it, then the text appears anywhere.
+ */
+export function suggestAccounts(query: string, limit = 8): Account[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  const rank = (a: Account): number => {
+    const name = a.name.toLowerCase();
+    if (a.code.toLowerCase().startsWith(q)) return 0;
+    if (name.startsWith(q)) return 1;
+    if (name.split(/[^a-z0-9]+/).some((w) => w.startsWith(q))) return 2;
+    if (name.includes(q)) return 3;
+    return 4;
+  };
+  return CHART_OF_ACCOUNTS.map((a, i) => ({ a, r: rank(a), i })).filter((x) => x.r < 4).sort((x, y) => x.r - y.r || x.i - y.i).slice(0, limit).map((x) => x.a);
+}
+
 /** Chart order is the order of the codes; used to sort trial balances and ledgers. */
 export const accountOrder = (code: string): number => CHART_OF_ACCOUNTS.findIndex((x) => x.code === code);
