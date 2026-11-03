@@ -76,7 +76,7 @@ function SetWork({ set }: { set: PracticeSet }) {
 
       {set.periodEndDocuments && set.periodEndDocuments.length > 0 && (
         <Card title="Papers for the end of the period" className="mb-4">
-          <div className="grid gap-3 md:grid-cols-2">{set.periodEndDocuments.map((d) => <SourceDocumentCard key={d.no} document={d} />)}</div>
+          <div className="grid gap-3 md:grid-cols-2">{set.periodEndDocuments.map((d) => <SourceDocumentCard key={d.no} document={d} entity={set.entity} />)}</div>
         </Card>
       )}
 
@@ -88,7 +88,7 @@ function SetWork({ set }: { set: PracticeSet }) {
               <div className="flex items-start gap-3">
                 <div className="text-xs font-semibold text-slate-500 w-20 shrink-0">{item.type === "adjustment" ? `Adjustment (${item.tag})` : `No. ${n + 1}`}<div className="font-normal">{item.date}</div></div>
                 <div className="flex-1 min-w-0">
-                  {item.document ? <SourceDocumentCard document={item.document} /> : <p className="text-sm font-medium text-slate-900">{item.description}</p>}
+                  {item.document ? <SourceDocumentCard document={item.document} entity={set.entity} /> : <p className="text-sm font-medium text-slate-900">{item.description}</p>}
                   {item.type === "adjustment" && <p className="text-xs text-slate-600 mt-2">Prepare the adjusting entry as of {item.date}.</p>}
                   <div className="mt-3">
                     <EntryLinesEditor draft={draftOf(item.id)} onChange={(d) => change(item.id, d)} disabled={locked} />

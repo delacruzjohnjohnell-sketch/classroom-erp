@@ -111,7 +111,7 @@ export default function TeacherCheckPage() {
                 <Card key={item.id} className={m.status === "correct" ? "border-emerald-300" : "border-rose-300"}>
                   <div className="flex flex-wrap items-start gap-4">
                     <div className="text-xs font-semibold text-slate-500 w-20 shrink-0">{item.type === "adjustment" ? `Adj. (${item.tag})` : `No. ${n + 1}`}</div>
-                    <div className="flex-1 min-w-[16rem]">{item.document ? <SourceDocumentCard document={item.document} /> : <p className="text-sm">{item.description}</p>}</div>
+                    <div className="flex-1 min-w-[16rem]">{item.document ? <SourceDocumentCard document={item.document} entity={set.entity} /> : <p className="text-sm">{item.description}</p>}</div>
                     <div className="w-72 shrink-0">
                       <div className="text-xs font-semibold mb-1">Student&apos;s entry <Pill ok={m.status === "correct"}>{m.status === "correct" ? "Correct" : m.status === "empty" ? "Blank" : "Not correct"}</Pill></div>
                       <LinesView lines={m.answer} />

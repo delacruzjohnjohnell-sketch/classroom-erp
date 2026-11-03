@@ -47,3 +47,28 @@ export function percentOf(c: Centavos, ratePercent: number): Centavos {
 }
 
 export const sum = (xs: Centavos[]): Centavos => xs.reduce((a, b) => a + b, 0);
+
+const ONES = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
+const TENS = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+const below1000 = (n: number): string => {
+  const parts: string[] = [];
+  if (n >= 100) { parts.push(`${ONES[Math.floor(n / 100)]} Hundred`); n %= 100; }
+  if (n >= 20) { parts.push(TENS[Math.floor(n / 10)] + (n % 10 ? `-${ONES[n % 10]}` : "")); } else if (n > 0) parts.push(ONES[n]);
+  return parts.join(" ");
+};
+
+/** "Five Hundred Thousand Pesos Only", as printed on receipts and checks. Centavos appear as "and 50/100". */
+export function pesosInWords(c: Centavos): string {
+  const abs = Math.abs(c);
+  let whole = Math.floor(abs / 100);
+  const cents = abs % 100;
+  if (whole === 0 && cents === 0) return "Zero Pesos Only";
+  const groups: [number, string][] = [[1_000_000_000, "Billion"], [1_000_000, "Million"], [1000, "Thousand"]];
+  const words: string[] = [];
+  for (const [size, name] of groups) {
+    if (whole >= size) { words.push(`${below1000(Math.floor(whole / size))} ${name}`); whole %= size; }
+  }
+  if (whole > 0) words.push(below1000(whole));
+  const pesos = words.join(" ") || "Zero";
+  return `${pesos} Pesos${cents ? ` and ${String(cents).padStart(2, "0")}/100` : ""} Only`;
+}
