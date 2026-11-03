@@ -184,9 +184,10 @@ export default function ChoosePage() {
           <EditionCard
             accent="#34D399" icon={<BookOpen size={22} />} title="Basic Financial Accounting" subtitle="BFAR, practice sets"
             text="Journal, ledger, worksheet and financial statements for a sole proprietorship, with graded practice sets. Works on its own, with no company to set up."
-            cta="Open"
+            company={isTeacher ? "Students' practice sets" : undefined}
+            cta={isTeacher ? "Check student work" : "Open"}
             busy={false}
-            onClick={() => router.push("/bfar")}
+            onClick={() => router.push(isTeacher ? "/bfar/teacher" : "/bfar")}
           />
         </div>
 

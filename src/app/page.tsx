@@ -12,7 +12,7 @@ export default function Home() {
   useEffect(() => {
     if (loading) return;
     if (!userId) { router.replace("/login"); return; }
-    if (profile?.role === "teacher") { router.replace("/teacher"); return; }
+    // Everyone starts at the system chooser; a teacher then sees the students' companies of the system they pick.
     router.replace("/choose");
   }, [loading, userId, profile, router]);
 

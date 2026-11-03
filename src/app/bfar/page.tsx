@@ -9,7 +9,7 @@ import { useAccountingStore, useHydrated } from "@/bfar/store/useAccountingStore
 const TOOLS = [
   { href: "/bfar/practice-sets", icon: ClipboardList, title: "Practice sets", text: "Three complete cycles that start from source documents: CleanPro and Bayanihan (service) and Metro Hardware (merchandising). Your teacher checks your work." },
   { href: "/bfar/journal", icon: NotebookPen, title: "Journal", text: "General journal and the four special journals. Debits must equal credits before an entry is accepted." },
-  { href: "/bfar/ledger", icon: BookOpen, title: "Ledger", text: "Post to the ledger accounts yourself, foot them, and build the trial balance." },
+  { href: "/bfar/ledger", icon: BookOpen, title: "Ledger", text: "Post to the ledger accounts yourself and foot them. The trial balance builds itself from what you posted." },
   { href: "/bfar/worksheet", icon: Table2, title: "Worksheet", text: "Fill the 10-column worksheet by hand, with the adjustment letters." },
   { href: "/bfar/statements", icon: FileSpreadsheet, title: "Statements", text: "PAS 1 statements, closing entries, post-closing trial balance and reversing entries. Print or save as PDF." },
   { href: "/bfar/reference", icon: Library, title: "Reference", text: "Normal balances, asset vs expense method, FOB terms, freight and credit terms." },

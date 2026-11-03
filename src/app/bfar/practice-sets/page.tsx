@@ -76,7 +76,7 @@ function SetWork({ set }: { set: PracticeSet }) {
         </div>
         {released?.work && <WorkResult marking={released.work} />}
         {released?.comment && <p className="mt-3 rounded-md bg-blue-50 border border-blue-200 p-2 text-sm"><b>Your teacher says:</b> {released.comment}</p>}
-        <p className="mt-3 text-xs text-slate-500">You will not be told whether an entry is right. Journalize each document here, then build your ledger, trial balance and worksheet on their pages, and submit. Your teacher checks all of it and releases the result.</p>
+        <p className="mt-3 text-xs text-slate-500">You will not be told whether an entry is right. Journalize each document here, then post to your ledger and fill your worksheet on their pages, and submit. Your teacher checks all of it and releases the result.</p>
       </Card>
 
       {set.periodEndDocuments && set.periodEndDocuments.length > 0 && (

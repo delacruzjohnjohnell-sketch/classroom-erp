@@ -197,6 +197,9 @@ export default function TeacherPage() {
           <div className="text-xs text-[#7F8EA0]">Teacher · {profile.full_name}</div>
         </div>
         <div className="flex items-center gap-2">
+          <button onClick={() => router.push("/choose")} className="flex items-center gap-1.5 border border-hairline rounded-md px-3 py-1.5 text-xs font-semibold" style={{ color: "#2F6BFF" }}>
+            Select system
+          </button>
           <button onClick={() => router.push("/teacher/scores")} className="flex items-center gap-1.5 border border-hairline rounded-md px-3 py-1.5 text-xs font-semibold" style={{ color: "#2F6BFF" }}>
             <ClipboardCheck size={15} /> Class scores (Excel)
           </button>

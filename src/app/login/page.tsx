@@ -101,7 +101,7 @@ export default function LoginPage() {
   // rendering a different component."
   useEffect(() => {
     if (!loading && userId && profile) {
-      if (profile.role === "teacher") { router.replace("/teacher"); return; }
+      if (profile.role === "teacher") { router.replace("/choose"); return; }
       if (profile.tenant_id) { router.replace("/choose"); }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
