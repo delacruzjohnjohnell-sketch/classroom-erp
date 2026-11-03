@@ -27,7 +27,7 @@ export default function WhichFormPage() {
   return (
     <div className="max-w-3xl space-y-4">
       <div>
-        <h1 className="text-2xl font-bold">Which form do I file?</h1>
+        <h1 className="border-l-4 border-[#f2b705] pl-3 text-2xl font-bold text-[#0b2a6f]">Which form do I file?</h1>
         <p className="mt-1 text-sm text-gray-600">Answer a few questions. This is a study aid: always read the story or the facts first, because the facts decide the form.</p>
       </div>
 
@@ -41,7 +41,7 @@ export default function WhichFormPage() {
         <fieldset className="rounded-lg border border-gray-200 bg-white p-4">
           <legend className="px-1 text-sm font-semibold">{q.text}</legend>
           <div className="mt-2 grid gap-2">
-            {q.options.map((o) => <button key={o.value} type="button" onClick={() => choose(o.value, o.label)} className="rounded border border-gray-300 px-3 py-2 text-left text-sm hover:bg-blue-50">{o.label}</button>)}
+            {q.options.map((o) => <button key={o.value} type="button" onClick={() => choose(o.value, o.label)} className="rounded border border-gray-300 px-3 py-2 text-left text-sm hover:bg-[#e8eefb]">{o.label}</button>)}
           </div>
         </fieldset>
       ) : (
@@ -53,7 +53,7 @@ export default function WhichFormPage() {
               <div key={p.form} className="rounded bg-white p-3 text-sm">
                 <div className="font-semibold">Form {entry?.number ?? p.form}{entry ? `: ${entry.name}` : ""}</div>
                 <p className="mt-0.5 text-gray-700">{p.reason}</p>
-                {entry && <Link href={`/bir-lab/${encodeURIComponent(entry.id)}`} className="mt-1 inline-block text-blue-700 underline">Open the lesson</Link>}
+                {entry && <Link href={`/bir-lab/${encodeURIComponent(entry.id)}`} className="mt-1 inline-block text-[#0b2a6f] underline">Open the lesson</Link>}
               </div>
             );
           })}

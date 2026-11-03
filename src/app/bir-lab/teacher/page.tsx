@@ -36,11 +36,11 @@ export default function TeacherPage() {
   const key = c && def ? keyValues(def, { ...c.profile, ...c.facts }, { filingDate: c.filingDate, classification: c.classification }) : null;
   const keyItems = key && def && c ? def.scoring({ ...c.profile, ...c.facts }).filter((s) => amt(key[s.id]) !== 0 || /[A-Za-z]/.test(key[s.id] ?? "")) : [];
 
-  if (!isTeacher) return <p className="text-sm text-gray-600">This page is for instructors. <Link href="/bir-lab" className="text-blue-700 underline">Back to the lab</Link></p>;
+  if (!isTeacher) return <p className="text-sm text-gray-600">This page is for instructors. <Link href="/bir-lab" className="text-[#0b2a6f] underline">Back to the lab</Link></p>;
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Instructor</h1>
+      <h1 className="border-l-4 border-[#f2b705] pl-3 text-2xl font-bold text-[#0b2a6f]">Instructor</h1>
 
       <section className="rounded-lg border border-gray-200 bg-white p-4">
         <h2 className="text-sm font-semibold text-gray-800">Student attempts</h2>

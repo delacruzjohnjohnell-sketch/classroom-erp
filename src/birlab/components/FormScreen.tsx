@@ -125,7 +125,7 @@ export function FormScreen({ formId, caseDef, mode }: Props) {
     return (
       <div className="max-w-3xl space-y-4">
         <div className="rounded-lg border border-gray-200 bg-white p-4">
-          <div className="text-xs font-semibold uppercase tracking-wide text-blue-700">{caseDef.level} case · taxable year {caseDef.year} · {mode} mode</div>
+          <div className="text-xs font-semibold uppercase tracking-wide text-[#0b2a6f]">{caseDef.level} case · taxable year {caseDef.year} · {mode} mode</div>
           <h2 className="text-lg font-bold mt-1">{caseDef.title}</h2>
           <div className="mt-2 space-y-2 text-sm text-gray-800">{caseDef.story.map((p, i) => <p key={i}>{p}</p>)}</div>
         </div>
@@ -137,11 +137,11 @@ export function FormScreen({ formId, caseDef, mode }: Props) {
             </select>
           </label>
           <p className="mt-2 text-xs text-gray-500">Choosing the wrong form scores zero, with an explanation.</p>
-          <button type="button" disabled={!chosen} onClick={chooseForm} className="mt-3 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">Open this form</button>
+          <button type="button" disabled={!chosen} onClick={chooseForm} className="mt-3 rounded-md bg-[#0b2a6f] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">Open this form</button>
           {result?.wrongForm && (
             <div role="alert" className="mt-3 rounded-md border border-rose-300 bg-rose-50 p-3 text-sm text-rose-900">
               <b>Score: 0.</b> You chose Form {result.wrongForm.chosen}; this taxpayer files Form {result.wrongForm.correct}. {result.wrongForm.why}
-              <div className="mt-2"><Link href={`/bir-lab/${formId}`} className="text-blue-700 underline">Back to the lesson</Link></div>
+              <div className="mt-2"><Link href={`/bir-lab/${formId}`} className="text-[#0b2a6f] underline">Back to the lesson</Link></div>
             </div>
           )}
         </div>
@@ -166,7 +166,7 @@ export function FormScreen({ formId, caseDef, mode }: Props) {
         </label>
         {late && <span className="rounded bg-rose-100 px-2 py-0.5 font-semibold text-rose-800">Filed late: surcharge and interest apply</span>}
         {mode === "assessment" && <label className="flex items-center gap-1"><input type="checkbox" checked={showTimer} onChange={(e) => setShowTimer(e.target.checked)} /> Timer {showTimer && <b className="tabular-nums">{mmss}</b>}</label>}
-        <Link href={`/bir-lab/${formId}`} className="ml-auto text-blue-700 underline">Lesson</Link>
+        <Link href={`/bir-lab/${formId}`} className="ml-auto text-[#0b2a6f] underline">Lesson</Link>
       </div>
 
       {caseDef && (
@@ -201,7 +201,7 @@ export function FormScreen({ formId, caseDef, mode }: Props) {
       </div>
 
       {caseDef && mode === "practice" && hintsUsed > 0 && (
-        <ul className="rounded border border-blue-200 bg-blue-50 p-3 text-sm list-disc pl-6">{caseDef.hints.slice(0, hintsUsed).map((h) => <li key={h}>{h}</li>)}</ul>
+        <ul className="rounded border border-blue-200 bg-[#e8eefb] p-3 text-sm list-disc pl-6">{caseDef.hints.slice(0, hintsUsed).map((h) => <li key={h}>{h}</li>)}</ul>
       )}
 
       {issues && issues.length > 0 && (

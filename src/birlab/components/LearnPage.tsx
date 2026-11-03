@@ -52,12 +52,12 @@ export function LearnPage({ formId, lesson }: { formId: string; lesson: Lesson }
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Form {entry.number}: {entry.name}</h1>
+        <h1 className="border-l-4 border-[#f2b705] pl-3 text-2xl font-bold text-[#0b2a6f]">Form {entry.number}: {entry.name}</h1>
         <p className="text-sm text-gray-600 mt-1">{entry.whoFiles}. Official version: <b>{def.version}</b>. Due: <b>{entry.due}</b> (the lecture explains where this date comes from). Rules as of {lesson.asOf}.</p>
       </div>
 
       <div className="flex flex-wrap gap-1 border-b border-gray-200" role="tablist">
-        {TABS.map((t) => <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)} className={`px-3 py-2 text-sm font-semibold border-b-2 -mb-px ${tab === t.id ? "border-blue-600 text-blue-700" : "border-transparent text-gray-600"}`}>{t.label}</button>)}
+        {TABS.map((t) => <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)} className={`px-3 py-2 text-sm font-semibold border-b-2 -mb-px ${tab === t.id ? "border-[#0b2a6f] text-[#0b2a6f]" : "border-transparent text-gray-600"}`}>{t.label}</button>)}
       </div>
 
       {tab === "lecture" && (
@@ -132,11 +132,11 @@ export function LearnPage({ formId, lesson }: { formId: string; lesson: Lesson }
             </fieldset>
           ))}
           {!graded ? (
-            <button type="button" disabled={answers.some((a) => a === null)} onClick={submitQuiz} className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">Check my answers</button>
+            <button type="button" disabled={answers.some((a) => a === null)} onClick={submitQuiz} className="rounded-md bg-[#0b2a6f] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">Check my answers</button>
           ) : (
             <div className="flex flex-wrap items-center gap-3">
               <span className={`rounded-full px-3 py-1 text-sm font-semibold ${score >= 4 ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-900"}`}>{score} of {lesson.quiz.length}{score >= 4 ? ": the case problems are unlocked" : ": 4 of 5 unlocks the case problems"}</span>
-              <button type="button" onClick={() => { setGraded(false); setAnswers(lesson.quiz.map(() => null)); }} className="text-sm text-blue-700 underline">Retake</button>
+              <button type="button" onClick={() => { setGraded(false); setAnswers(lesson.quiz.map(() => null)); }} className="text-sm text-[#0b2a6f] underline">Retake</button>
             </div>
           )}
         </div>
@@ -148,7 +148,7 @@ export function LearnPage({ formId, lesson }: { formId: string; lesson: Lesson }
         <div className="mt-3 grid gap-3 md:grid-cols-3">
           {lesson.cases.map((c) => (
             <div key={c.id} className="rounded border border-gray-200 p-3">
-              <div className="text-xs font-semibold uppercase tracking-wide text-blue-700">{c.level}</div>
+              <div className="text-xs font-semibold uppercase tracking-wide text-[#0b2a6f]">{c.level}</div>
               <div className="font-semibold">{c.title}</div>
               <p className="mt-1 text-xs text-gray-600">Taxable year {c.year}.</p>
               <div className="mt-2 flex gap-2">

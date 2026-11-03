@@ -16,7 +16,7 @@ export default function ProgressPage() {
 
   return (
     <div className="max-w-4xl space-y-5">
-      <h1 className="text-2xl font-bold">My progress</h1>
+      <h1 className="border-l-4 border-[#f2b705] pl-3 text-2xl font-bold text-[#0b2a6f]">My progress</h1>
 
       <section className="rounded-lg border border-gray-200 bg-white p-4">
         <h2 className="text-sm font-semibold text-gray-800">Quick checks</h2>

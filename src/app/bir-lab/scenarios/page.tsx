@@ -11,7 +11,7 @@ export default function ScenariosPage() {
   return (
     <div className="max-w-4xl space-y-4">
       <div>
-        <h1 className="text-2xl font-bold">Cross-form scenarios</h1>
+        <h1 className="border-l-4 border-[#f2b705] pl-3 text-2xl font-bold text-[#0b2a6f]">Cross-form scenarios</h1>
         <p className="mt-1 text-sm text-gray-600">Real taxpayers file several returns that feed one another. Work through each scenario in order: the figure on one form becomes a credit or a check on the next. Each step needs the lesson read and its Quick check passed (4 of 5), like any case.</p>
       </div>
       {SCENARIOS.map((s) => (

@@ -42,7 +42,7 @@ export default function BirLabHome() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">BIR eForms Lab</h1>
+        <h1 className="border-l-4 border-[#f2b705] pl-3 text-2xl font-bold text-[#0b2a6f]">BIR eForms Lab</h1>
         <p className="mt-1 max-w-3xl text-sm text-gray-600">Practice filling out BIR returns in a screen that works like the Offline eBIRForms Package. Each form has a lesson, a filling guide, tips, a quick check and three case problems. Nothing here is sent to the BIR.</p>
       </div>
 
@@ -81,7 +81,7 @@ export default function BirLabHome() {
               ))}
             </select>
           </label>
-          <button type="button" onClick={() => router.push(`/bir-lab/${formId}`)} className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white">Fill-Up</button>
+          <button type="button" onClick={() => router.push(`/bir-lab/${formId}`)} className="rounded-md bg-[#0b2a6f] px-4 py-2 text-sm font-semibold text-white">Fill-Up</button>
         </div>
         {chosen && <p className="mt-2 text-xs text-gray-600">{chosen.whoFiles}. Due: {chosen.due}.{chosen.def ? "" : " This form is built in a later phase."}</p>}
 
@@ -104,7 +104,7 @@ export default function BirLabHome() {
         <div className="mt-2 overflow-x-auto"><table className="w-full text-xs">
           <thead className="text-left text-gray-500"><tr><th className="p-1.5">Form</th><th className="p-1.5">Who files</th><th className="p-1.5">Due</th><th className="p-1.5">Status</th></tr></thead>
           <tbody>{FORMS.map((f) => (
-            <tr key={f.id} className="border-t border-gray-100"><td className="p-1.5 font-semibold">{f.number}</td><td className="p-1.5">{f.whoFiles}</td><td className="p-1.5">{f.due}</td><td className="p-1.5">{f.def ? <Link className="text-blue-700 underline" href={`/bir-lab/${f.id}`}>Open</Link> : <span className="text-gray-400">later phase</span>}</td></tr>
+            <tr key={f.id} className="border-t border-gray-100"><td className="p-1.5 font-semibold">{f.number}</td><td className="p-1.5">{f.whoFiles}</td><td className="p-1.5">{f.due}</td><td className="p-1.5">{f.def ? <Link className="text-[#0b2a6f] underline" href={`/bir-lab/${f.id}`}>Open</Link> : <span className="text-gray-400">later phase</span>}</td></tr>
           ))}</tbody>
         </table></div>
       </section>

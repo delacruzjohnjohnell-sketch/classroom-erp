@@ -15,13 +15,13 @@ function FillInner() {
   const mode = params.get("mode") === "assessment" ? "assessment" : caseDef ? "practice" : "free";
   const { visited, quiz } = useBirStore();
 
-  if (!entry?.def) return <p className="text-sm text-gray-600">This form is built in a later phase. <Link className="text-blue-700 underline" href="/bir-lab">Back to the lab</Link></p>;
+  if (!entry?.def) return <p className="text-sm text-gray-600">This form is built in a later phase. <Link className="text-[#0b2a6f] underline" href="/bir-lab">Back to the lab</Link></p>;
   if (!visited[entry.id]) {
     return (
       <div className="max-w-xl space-y-2 rounded border border-gray-200 bg-white p-4">
         <h1 className="text-lg font-bold">Read the lesson first</h1>
         <p className="text-sm text-gray-700">Each form has a short lesson, a filling guide and tips. Open it once, then come back to fill the form.</p>
-        <Link href={`/bir-lab/${entry.id}`} className="inline-block rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white">Open the lesson</Link>
+        <Link href={`/bir-lab/${entry.id}`} className="inline-block rounded-md bg-[#0b2a6f] px-4 py-2 text-sm font-semibold text-white">Open the lesson</Link>
       </div>
     );
   }
@@ -30,7 +30,7 @@ function FillInner() {
       <div className="max-w-xl space-y-2 rounded border border-gray-200 bg-white p-4">
         <h1 className="text-lg font-bold">Pass the quick check first</h1>
         <p className="text-sm text-gray-700">The case problems unlock when you get 4 of 5 on the Quick check. You can still read the whole lesson.</p>
-        <Link href={`/bir-lab/${entry.id}`} className="inline-block rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white">Go to the lesson</Link>
+        <Link href={`/bir-lab/${entry.id}`} className="inline-block rounded-md bg-[#0b2a6f] px-4 py-2 text-sm font-semibold text-white">Go to the lesson</Link>
       </div>
     );
   }

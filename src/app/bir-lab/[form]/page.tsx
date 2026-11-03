@@ -8,15 +8,15 @@ import { LESSONS } from "@/birlab/content/lessons";
 export default function FormLessonPage() {
   const { form } = useParams<{ form: string }>();
   const entry = getForm(decodeURIComponent(form ?? ""));
-  if (!entry) return <p className="text-sm text-gray-600">That form is not in the lab. <Link className="text-blue-700 underline" href="/bir-lab">Back to the lab</Link></p>;
+  if (!entry) return <p className="text-sm text-gray-600">That form is not in the lab. <Link className="text-[#0b2a6f] underline" href="/bir-lab">Back to the lab</Link></p>;
   const lesson = LESSONS[entry.id];
   if (!lesson) {
     return (
       <div className="max-w-2xl space-y-2">
-        <h1 className="text-2xl font-bold">Form {entry.number}: {entry.name}</h1>
+        <h1 className="border-l-4 border-[#f2b705] pl-3 text-2xl font-bold text-[#0b2a6f]">Form {entry.number}: {entry.name}</h1>
         <p className="text-sm text-gray-700">{entry.whoFiles}. Due: {entry.due}.</p>
         <p className="rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">The lesson, filling screen and cases for this form are built in a later phase.</p>
-        <Link className="text-sm text-blue-700 underline" href="/bir-lab">Back to the lab</Link>
+        <Link className="text-sm text-[#0b2a6f] underline" href="/bir-lab">Back to the lab</Link>
       </div>
     );
   }

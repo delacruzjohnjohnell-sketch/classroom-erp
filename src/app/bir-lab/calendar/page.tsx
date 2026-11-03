@@ -19,7 +19,7 @@ export default function CalendarPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold">Filing calendar</h1>
+        <h1 className="border-l-4 border-[#f2b705] pl-3 text-2xl font-bold text-[#0b2a6f]">Filing calendar</h1>
         <p className="mt-1 max-w-3xl text-sm text-gray-600">When each return is due for a calendar-year taxpayer. Dates marked <span className="rounded bg-amber-100 px-1 text-amber-900">taught</span> come from the Code or your course table and are not printed on the BIR form or its instructions; the others were checked against the form&apos;s own Guidelines or the BIR forms page.</p>
       </div>
       <div className="flex flex-wrap items-end gap-4">
@@ -28,7 +28,7 @@ export default function CalendarPage() {
         </label>
         <fieldset className="flex flex-wrap gap-2 text-xs"><legend className="mb-1 text-gray-600">Show only (none selected shows everything)</legend>
           {AUDIENCES.map((a) => (
-            <label key={a.id} className={`cursor-pointer rounded-full border px-3 py-1 ${picked.includes(a.id) ? "border-blue-600 bg-blue-50 text-blue-800" : "border-gray-300 bg-white text-gray-700"}`}>
+            <label key={a.id} className={`cursor-pointer rounded-full border px-3 py-1 ${picked.includes(a.id) ? "border-[#0b2a6f] bg-[#e8eefb] text-[#0b2a6f]" : "border-gray-300 bg-white text-gray-700"}`}>
               <input type="checkbox" className="sr-only" checked={picked.includes(a.id)} onChange={() => toggle(a.id)} />{a.label}
             </label>
           ))}
@@ -43,7 +43,7 @@ export default function CalendarPage() {
               {list.map((e, i) => (
                 <li key={`${e.date}-${e.form}-${i}`} className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 py-1.5">
                   <span className="w-24 shrink-0 font-semibold tabular-nums">{isoToUs(e.date)}</span>
-                  <Link href={`/bir-lab/${encodeURIComponent(e.form.split(" ")[0])}`} className="w-40 shrink-0 font-semibold text-blue-700 hover:underline">{e.form}</Link>
+                  <Link href={`/bir-lab/${encodeURIComponent(e.form.split(" ")[0])}`} className="w-40 shrink-0 font-semibold text-[#0b2a6f] hover:underline">{e.form}</Link>
                   <span className="min-w-0 flex-1">{e.what}</span>
                   {!e.verified && <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[11px] text-amber-900" title={e.source}>taught</span>}
                 </li>

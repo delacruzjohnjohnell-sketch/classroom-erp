@@ -17,9 +17,9 @@ export default function BirLabLayout({ children }: { children: ReactNode }) {
   // Saved work on this browser belongs to one user; someone else signing in starts clean.
   useEffect(() => { if (hydrated && userId) setOwner(userId); }, [hydrated, userId, setOwner]);
 
-  if (loading || !userId) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={20} /></div>;
+  if (loading || !userId) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-[#0b2a6f]" size={20} /></div>;
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
+    <div className="min-h-screen bg-[#eef2f8] text-gray-900">
       <BirNav />
       <SimulationBanner />
       <main className="max-w-6xl mx-auto px-4 py-6">{hydrated ? children : null}</main>
