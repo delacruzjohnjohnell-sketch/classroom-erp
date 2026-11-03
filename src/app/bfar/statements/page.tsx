@@ -9,6 +9,8 @@ import { generateStatements } from "@/bfar/core/statements-generator";
 import type { BusinessType, InventorySystem, JournalEntry } from "@/bfar/core/types";
 import { parsePesos } from "@/bfar/lib/currency";
 import { PRACTICE_SETS } from "@/bfar/practice-sets";
+import { entriesOfBook } from "@/bfar/core/student-work";
+import { BookPicker } from "@/bfar/components/BookPicker";
 import { Card, Empty, Money, PageHeader, Pill, StatementView } from "@/bfar/components/ui";
 import { useAccountingStore, useHydrated } from "@/bfar/store/useAccountingStore";
 
@@ -37,17 +39,25 @@ function EntryTable({ entries, empty }: { entries: JournalEntry[]; empty: string
 }
 
 export default function StatementsPage() {
+  const book = useAccountingStore((s) => s.activeBook);
+  // Remount when the book changes so each book starts with its own settings.
+  return <StatementsInner key={book} book={book} />;
+}
+
+function StatementsInner({ book }: { book: string }) {
   const hydrated = useHydrated();
-  const entries = useAccountingStore((s) => s.entries);
+  const init = PRACTICE_SETS.find((x) => x.id === book);
+  const allEntries = useAccountingStore((s) => s.entries);
+  const entries = useMemo(() => entriesOfBook(allEntries, book), [allEntries, book]);
   const [tab, setTab] = useState<Tab>("income");
-  const [business, setBusiness] = useState<BusinessType>("service");
-  const [inventory, setInventory] = useState<InventorySystem>("periodic");
-  const [ending, setEnding] = useState("");
-  const [entity, setEntity] = useState("Your Business Name");
-  const [period, setPeriod] = useState("For the month ended December 31, 2026");
-  const [asOf, setAsOf] = useState("December 31, 2026");
-  const [closingDate, setClosingDate] = useState("2026-12-31");
-  const [reversingDate, setReversingDate] = useState("2027-01-01");
+  const [business, setBusiness] = useState<BusinessType>(init?.business ?? "service");
+  const [inventory, setInventory] = useState<InventorySystem>(init?.inventory ?? "periodic");
+  const [ending, setEnding] = useState(init?.endingInventory ? (init.endingInventory / 100).toFixed(2) : "");
+  const [entity, setEntity] = useState(init?.entity ?? "Your Business Name");
+  const [period, setPeriod] = useState(init?.period ?? "For the month ended December 31, 2026");
+  const [asOf, setAsOf] = useState(init?.asOf ?? "December 31, 2026");
+  const [closingDate, setClosingDate] = useState(init?.closingDate ?? "2026-12-31");
+  const [reversingDate, setReversingDate] = useState(init?.reversingDate ?? "2027-01-01");
 
   const applySet = (id: string) => {
     const s = PRACTICE_SETS.find((x) => x.id === id);
@@ -65,8 +75,9 @@ export default function StatementsPage() {
 
   return (
     <>
-      <PageHeader title="Financial statements" subtitle="Prepared under PAS 1 from your adjusted books. Single underline for subtotals, double underline for totals."
+      <PageHeader title="Financial statements" subtitle="Prepared under PAS 1 from the journal entries of the chosen book. Single underline for subtotals, double underline for totals."
         actions={<button type="button" onClick={() => window.print()} className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm"><Printer size={14} /> Print / Save as PDF</button>} />
+      <BookPicker />
       <Card className="mb-4 print:hidden">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-sm">
           <label className="flex flex-col gap-1">Use the settings of

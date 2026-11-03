@@ -5,6 +5,7 @@ import { getAccount } from "@/bfar/core/chart-of-accounts";
 import { formatAmount } from "@/bfar/lib/currency";
 import { checkSubmission, listSubmissions, type TeacherRow } from "@/bfar/lib/bfarApi";
 import { PRACTICE_SETS, getPracticeSet, practiceItems } from "@/bfar/practice-sets";
+import { WorkResult } from "@/bfar/components/WorkResult";
 import type { Marking } from "@/bfar/practice-sets/solution";
 import { SourceDocumentCard } from "@/bfar/components/SourceDocumentCard";
 import { Card, Empty, PageHeader, Pill } from "@/bfar/components/ui";
@@ -43,7 +44,7 @@ export default function TeacherCheckPage() {
     const set = getPracticeSet(row.setId);
     if (!set) return;
     const { gradeSubmission } = await import("@/bfar/practice-sets/solution");
-    setOpenId(row.id); setMarking(gradeSubmission(set, row.answers)); setComment(row.comment ?? ""); setNote(null);
+    setOpenId(row.id); setMarking(gradeSubmission(set, row.journal, row.work)); setComment(row.comment ?? ""); setNote(null);
   };
 
   const save = async (release: boolean) => {
@@ -93,6 +94,7 @@ export default function TeacherCheckPage() {
               <button type="button" onClick={() => setOpenId(null)} className="text-blue-700 hover:underline">All submissions</button>
               <b>{row.student}</b><span>{set.title}</span>
               <Pill ok={marking.score === marking.max}>{marking.score} of {marking.max} correct</Pill>
+              <span className="text-xs text-slate-600">Journal {marking.journalScore}/{marking.journalMax} · Ledger, trial balance and worksheet {marking.workScore}/{marking.workMax}</span>
               {row.status === "released" && <Pill ok>Already released</Pill>}
             </div>
             <label className="flex flex-col gap-1 text-sm mt-3">Comment for the student (optional)
@@ -104,6 +106,7 @@ export default function TeacherCheckPage() {
               {note && <span role="status" className="text-sm text-slate-700">{note}</span>}
             </div>
           </Card>
+          <Card title="Ledger, trial balance and worksheet" className="mb-4"><WorkResult marking={marking.work} /></Card>
           <div className="grid gap-3">
             {practiceItems(set).map((item, n) => {
               const m = marking.items.find((x) => x.id === item.id)!;

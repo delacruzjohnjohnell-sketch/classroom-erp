@@ -12,7 +12,8 @@ import { reversingEntries } from "../core/reversing-engine";
 import { generateStatements } from "../core/statements-generator";
 import { evaluateEntry, gradeAnswers } from "../core/evaluator";
 import { PRACTICE_SETS, practiceItems } from "../practice-sets";
-import { expectedOf, gradeSubmission, keyOf, solutionEntries } from "../practice-sets/solution";
+import { expectedOf, gradeSubmission, gradeWork, keyOf, perfectWork, solutionEntries } from "../practice-sets/solution";
+import { emptyWork, entriesOfBook, FREE_BOOK } from "../core/student-work";
 import { BAYANIHAN } from "../practice-sets/bayanihan";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
@@ -371,8 +372,9 @@ describe("source documents and the student view", () => {
   it("grades a student's answers only through the teacher module", () => {
     const items = practiceItems(CLEANPRO);
     const answers = { [items[0].id]: keyOf("cleanpro", items[0].id)!.key, [items[2].id]: [dr("602", P(36000)), cr("101", P(36000))] };
-    const m = gradeSubmission(CLEANPRO, answers);
-    expect(m.max).toBe(23);
+    const m = gradeSubmission(CLEANPRO, answers, emptyWork());
+    expect(m.journalMax).toBe(23);
+    expect(m.max).toBe(m.journalMax + m.workMax);
     expect(m.score).toBe(1);
     expect(m.items[2].status).toBe("incorrect");
     expect(m.items[1].status).toBe("empty");
@@ -390,5 +392,52 @@ describe("source documents and the student view", () => {
       const ok = [...allowed].some((a) => f.endsWith(a));
       if (importsKeys || dynamic) expect(ok, f).toBe(true);
     }
+  });
+});
+
+describe("separate books and hand-built ledger, trial balance and worksheet", () => {
+  it("keeps each practice set's entries apart", () => {
+    const all = PRACTICE_SETS.flatMap((s) => solutionEntries(s));
+    const free = createEntry({ date: "2026-12-01", kind: "general", explanation: "x", lines: [dr("101", 100), cr("301", 100)] });
+    const mixed = [...all, free];
+    for (const set of PRACTICE_SETS) {
+      const mine = entriesOfBook(mixed, set.id);
+      expect(mine).toHaveLength(set.transactions.length + set.adjustments.length);
+      expect(mine.every((e) => e.id.startsWith(`${set.id}-`))).toBe(true);
+    }
+    expect(entriesOfBook(mixed, FREE_BOOK)).toEqual([free]);
+    // the ledger of one set does not include another set's amounts
+    const a = postToLedger(entriesOfBook(mixed, "cleanpro"), ["transaction"]);
+    expect(balanceOf(a, "101")).toBe(P(463500));
+    expect(balanceOf(a, "130")).toBe(0);
+  });
+  it("gives full marks to correct hand-built books in every set", () => {
+    for (const set of PRACTICE_SETS) {
+      const g = gradeWork(set, perfectWork(set));
+      expect(g.score, set.id).toBe(g.max);
+      expect(g.marking.worksheetTotalsOk).toBe(true);
+      expect(g.marking.tbTotalsOk).toBe(true);
+    }
+  });
+  it("gives nothing for books that were not built", () => {
+    const g = gradeWork(CLEANPRO, emptyWork());
+    expect(g.score).toBe(0);
+    expect(g.max).toBeGreaterThan(20);
+  });
+  it("marks a wrong ledger balance, a missing trial balance row and a wrong adjustment letter", () => {
+    const w = perfectWork(CLEANPRO);
+    w.ledger.find((a) => a.code === "101")!.balance = "1.00";
+    w.tb.rows = w.tb.rows.filter((r) => r.code !== "150");
+    w.worksheet.rows.find((r) => r.code === "140")!.adj = "b";
+    const g = gradeWork(CLEANPRO, w);
+    expect(g.marking.ledger.find((c) => c.code === "101")!.ok).toBe(false);
+    expect(g.marking.tb.find((c) => c.code === "150")).toMatchObject({ listed: false, ok: false });
+    expect(g.marking.worksheet.find((c) => c.code === "140")!.ok).toBe(false);
+    expect(g.score).toBe(g.max - 3);
+  });
+  it("flags accounts the student added that the key does not have", () => {
+    const w = perfectWork(CLEANPRO);
+    w.ledger.push({ code: "130", rows: [], debitFooting: "", creditFooting: "", balance: "", side: "" });
+    expect(gradeWork(CLEANPRO, w).marking.extra.ledger).toEqual(["130"]);
   });
 });

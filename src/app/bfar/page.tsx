@@ -1,16 +1,16 @@
 "use client";
 import Link from "next/link";
-import { BookOpen, ClipboardList, FileSpreadsheet, FileText, Library, NotebookPen, Table2 } from "lucide-react";
-import { postToLedger } from "@/bfar/core/ledger-posting";
-import { trialBalance } from "@/bfar/core/trial-balance";
-import { Card, PageHeader, Pill } from "@/bfar/components/ui";
+import { BookOpen, ClipboardList, FileSpreadsheet, Library, NotebookPen, Table2 } from "lucide-react";
+import { entriesOfBook, FREE_BOOK } from "@/bfar/core/student-work";
+import { PRACTICE_SETS } from "@/bfar/practice-sets";
+import { Card, PageHeader } from "@/bfar/components/ui";
 import { useAccountingStore, useHydrated } from "@/bfar/store/useAccountingStore";
 
 const TOOLS = [
-  { href: "/bfar/practice-sets", icon: ClipboardList, title: "Practice sets", text: "Two complete cycles with solution keys and Ballada-style hints: CleanPro (service) and Metro Hardware (merchandising)." },
+  { href: "/bfar/practice-sets", icon: ClipboardList, title: "Practice sets", text: "Three complete cycles that start from source documents: CleanPro and Bayanihan (service) and Metro Hardware (merchandising). Your teacher checks your work." },
   { href: "/bfar/journal", icon: NotebookPen, title: "Journal", text: "General journal and the four special journals. Debits must equal credits before an entry is accepted." },
-  { href: "/bfar/ledger", icon: BookOpen, title: "Ledger", text: "Four-column accounts or T-accounts with footings, running balances and the trial balance." },
-  { href: "/bfar/worksheet", icon: Table2, title: "Worksheet", text: "The 10-column worksheet, cross-footed, with a practice mode for the adjustment letters." },
+  { href: "/bfar/ledger", icon: BookOpen, title: "Ledger", text: "Post to the ledger accounts yourself, foot them, and build the trial balance." },
+  { href: "/bfar/worksheet", icon: Table2, title: "Worksheet", text: "Fill the 10-column worksheet by hand, with the adjustment letters." },
   { href: "/bfar/statements", icon: FileSpreadsheet, title: "Statements", text: "PAS 1 statements, closing entries, post-closing trial balance and reversing entries. Print or save as PDF." },
   { href: "/bfar/reference", icon: Library, title: "Reference", text: "Normal balances, asset vs expense method, FOB terms, freight and credit terms." },
 ];
@@ -18,7 +18,6 @@ const TOOLS = [
 export default function BfarHome() {
   const hydrated = useHydrated();
   const entries = useAccountingStore((s) => s.entries);
-  const tb = trialBalance(postToLedger(entries, ["transaction"]));
   return (
     <>
       <PageHeader
@@ -38,11 +37,12 @@ export default function BfarHome() {
       </div>
       <Card title="Your books right now" className="mt-6">
         {!hydrated ? <p className="text-sm text-slate-500">Loading…</p> : (
-          <div className="flex flex-wrap items-center gap-3 text-sm">
-            <FileText size={16} className="text-slate-500" />
-            <span>{entries.length} journal {entries.length === 1 ? "entry" : "entries"}</span>
-            {entries.length > 0 && <Pill ok={tb.balanced}>{tb.balanced ? "Trial balance balances" : "Trial balance does not balance"}</Pill>}
-            {entries.length === 0 && <span className="text-slate-500">Nothing yet. Start with a practice set or the journal.</span>}
+          <div className="grid gap-2 text-sm sm:grid-cols-2">
+            {[...PRACTICE_SETS.map((p) => ({ id: p.id, label: p.title })), { id: FREE_BOOK, label: "My own practice journal" }].map((b) => (
+              <div key={b.id} className="flex items-center justify-between rounded border border-slate-200 px-3 py-2">
+                <span>{b.label}</span><span className="text-slate-500">{entriesOfBook(entries, b.id).length} journal {entriesOfBook(entries, b.id).length === 1 ? "entry" : "entries"}</span>
+              </div>
+            ))}
           </div>
         )}
       </Card>

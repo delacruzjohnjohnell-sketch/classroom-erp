@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { createEntry, validateEntry, type EntryInput, type Validation } from "../core/journalizer";
+import { emptyWork, FREE_BOOK, type StudentWork, type WorkMarking } from "../core/student-work";
 import type { JournalEntry, JournalLine } from "../core/types";
 import { entryForItem, getPracticeSet, practiceItems } from "../practice-sets";
 
@@ -16,6 +17,8 @@ export interface ReleasedResult {
   max: number;
   comment: string | null;
   items: { id: string; status: string; messages: string[]; hints: string[]; key: JournalLine[]; answer: JournalLine[] }[];
+  /** The marking of the ledger, trial balance and worksheet the student built. */
+  work?: WorkMarking;
 }
 
 interface AccountingState {
@@ -25,6 +28,12 @@ interface AccountingState {
   entries: JournalEntry[];
   /** Student answers to the practice items: set id → item id → lines (even incomplete ones, so work is not lost). */
   answers: Record<string, Record<string, JournalLine[]>>;
+  /** The ledger, trial balance and worksheet the student built by hand, per book. */
+  work: Record<string, StudentWork | undefined>;
+  /** The book (practice set or the free journal) the pages are working on. */
+  activeBook: string;
+  setBook: (book: string) => void;
+  saveWork: (book: string, work: StudentWork) => void;
   status: Record<string, SubmissionStatus>;
   released: Record<string, ReleasedResult | undefined>;
   setOwner: (userId: string) => void;
@@ -33,7 +42,7 @@ interface AccountingState {
   /** Keeps the answer, and records it in the books when it is a complete, balanced entry (otherwise takes it out of the books). */
   saveItem: (setId: string, itemId: string, lines: JournalLine[]) => void;
   /** Replaces a set's answers with what the server holds. */
-  loadFromServer: (setId: string, answers: Record<string, JournalLine[]>, status: SubmissionStatus, released?: ReleasedResult) => void;
+  loadFromServer: (setId: string, answers: Record<string, JournalLine[]>, status: SubmissionStatus, released?: ReleasedResult, work?: StudentWork) => void;
   setStatus: (setId: string, status: SubmissionStatus) => void;
   resetSet: (setId: string) => void;
   resetBooks: () => void;
@@ -59,7 +68,11 @@ export const useAccountingStore = create<AccountingState>()(
       answers: {},
       status: {},
       released: {},
-      setOwner: (userId) => set((s) => (s.owner === userId ? s : { owner: userId, entries: [], answers: {}, status: {}, released: {} })),
+      work: {},
+      activeBook: FREE_BOOK,
+      setBook: (book) => set({ activeBook: book }),
+      saveWork: (book, work) => set((s) => ({ work: { ...s.work, [book]: work } })),
+      setOwner: (userId) => set((s) => (s.owner === userId ? s : { owner: userId, entries: [], answers: {}, status: {}, released: {}, work: {}, activeBook: FREE_BOOK })),
       addEntry: (input) => {
         const v = validateEntry(input);
         if (v.ok) set((s) => ({ entries: [...s.entries, createEntry(input)] }));
@@ -74,17 +87,18 @@ export const useAccountingStore = create<AccountingState>()(
         if (ps && item && lines.length > 0) { try { entries = [...entries, entryForItem(ps, item, lines)]; } catch { /* not complete yet */ } }
         return { entries, answers: { ...s.answers, [setId]: { ...s.answers[setId], [itemId]: lines } } };
       }),
-      loadFromServer: (setId, answers, status, released) => set((s) => ({
+      loadFromServer: (setId, answers, status, released, work) => set((s) => ({
         entries: [...s.entries.filter((e) => !e.id.startsWith(`${setId}-`)), ...rebuild(setId, answers)],
         answers: { ...s.answers, [setId]: answers },
         status: { ...s.status, [setId]: status },
         released: { ...s.released, [setId]: released },
+        work: { ...s.work, [setId]: work ?? s.work[setId] },
       })),
       setStatus: (setId, status) => set((s) => ({ status: { ...s.status, [setId]: status } })),
-      resetSet: (setId) => set((s) => ({ entries: s.entries.filter((e) => !e.id.startsWith(`${setId}-`)), answers: { ...s.answers, [setId]: {} } })),
-      resetBooks: () => set({ entries: [], answers: {}, status: {}, released: {} }),
+      resetSet: (setId) => set((s) => ({ entries: s.entries.filter((e) => !e.id.startsWith(`${setId}-`)), answers: { ...s.answers, [setId]: {} }, work: { ...s.work, [setId]: emptyWork() } })),
+      resetBooks: () => set({ entries: [], answers: {}, status: {}, released: {}, work: {} }),
     }),
-    { name: "bfar-accounting-v1", version: 2, storage: createJSONStorage(() => localStorage), skipHydration: true },
+    { name: "bfar-accounting-v1", version: 3, storage: createJSONStorage(() => localStorage), skipHydration: true },
   ),
 );
 

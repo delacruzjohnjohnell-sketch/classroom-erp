@@ -19,6 +19,13 @@ A fourth, standalone module in this repo, for Prof. Win Ballada's course. It doe
 - **Keys live only in `practice-sets/keys.ts`**, reached through `practice-sets/solution.ts`, and only from the teacher page (dynamic import) and the tests. A test fails if any other file imports them. Never add a key, hint or expected total to a file students load.
 - Teacher = `profiles.role = 'teacher'`; the database functions enforce it, the page also redirects.
 
+## Books are separate, and students build the books themselves
+
+- Every page works on one **book** (`activeBook` in the store): a practice set, or the student's free journal (`FREE_BOOK`). Entries are filtered with `entriesOfBook`; never merge books.
+- The **ledger, trial balance and worksheet are entered by hand** (`components/StudentWorkspaces.tsx`, data in `core/student-work.ts`). Never auto-generate them for students. The ledger is posted from the *transactions*; the adjusting entries go on the worksheet. They are saved and submitted with the journal (`answers` column holds `{ v: 2, journal, work }`; older rows hold the journal alone).
+- The teacher's grading (`practice-sets/solution.ts`: `gradeWork`, `gradeSubmission`) builds the expected books from the key and compares: one point per ledger account, trial balance row, worksheet row, plus the two totals. `perfectWork` produces a fully correct set of books for tests and demonstrations.
+- The statements page still generates statements from the student's own journal for the chosen book.
+
 ## Layout
 
 - `core/`: pure functions, no React. `types`, `chart-of-accounts` (Ballada codes; 505 Cost of Goods Sold is added for perpetual only), `journalizer`, `ledger-posting`, `trial-balance`, `adjustments-engine`, `worksheet-engine`, `closing-engine`, `post-closing-tb`, `reversing-engine`, `statements-generator`, `evaluator` (compares an entry with a key; used by the teacher's grading only).

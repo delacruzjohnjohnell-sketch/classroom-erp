@@ -4,6 +4,8 @@ import { Trash2 } from "lucide-react";
 import { getAccount } from "@/bfar/core/chart-of-accounts";
 import { entryRefs } from "@/bfar/core/ledger-posting";
 import { sum } from "@/bfar/lib/currency";
+import { entriesOfBook, FREE_BOOK } from "@/bfar/core/student-work";
+import { BookPicker } from "@/bfar/components/BookPicker";
 import type { JournalKind } from "@/bfar/core/types";
 import { BalanceBadge, EntryLinesEditor, draftToLines, emptyDraft } from "@/bfar/components/EntryBuilder";
 import { Card, Empty, Money, PageHeader } from "@/bfar/components/ui";
@@ -21,7 +23,9 @@ const STAGE_LABEL = { transaction: "", adjusting: "Adjusting", closing: "Closing
 
 export default function JournalPage() {
   const hydrated = useHydrated();
-  const entries = useAccountingStore((s) => s.entries);
+  const allEntries = useAccountingStore((s) => s.entries);
+  const book = useAccountingStore((s) => s.activeBook);
+  const entries = useMemo(() => entriesOfBook(allEntries, book), [allEntries, book]);
   const addEntry = useAccountingStore((s) => s.addEntry);
   const removeEntry = useAccountingStore((s) => s.removeEntry);
   const [date, setDate] = useState("2026-12-01");
@@ -44,7 +48,8 @@ export default function JournalPage() {
   return (
     <>
       <PageHeader title="Journal" subtitle="Record each transaction as a journal entry. Debit lines first, credit lines indented. The entry is only accepted when total debits equal total credits." />
-      <Card title="New entry">
+      <BookPicker />
+      {book !== FREE_BOOK ? <Card><p className="text-sm text-slate-600">This is your journal for the practice set, built from the source documents. Journalize on the Practice sets page. Choose &quot;My own practice journal&quot; above to record your own entries.</p></Card> : <Card title="New entry">
         <div className="flex flex-wrap gap-3 mb-3 text-sm">
           <label className="flex flex-col gap-1">Date<input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="rounded border border-slate-300 px-2 py-1.5" /></label>
           <label className="flex flex-col gap-1">Journal
@@ -62,7 +67,7 @@ export default function JournalPage() {
           <button type="button" onClick={submit} className="ml-auto rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">Record entry</button>
         </div>
         {errors.length > 0 && <ul className="mt-2 text-sm text-rose-700 list-disc pl-5" role="alert">{errors.map((e) => <li key={e}>{e}</li>)}</ul>}
-      </Card>
+      </Card>}
 
       <div className="flex flex-wrap gap-1 mt-6 mb-3">
         {KINDS.map((k) => <button key={k.id} type="button" onClick={() => setView(k.id)} className={`rounded-full px-3 py-1 text-xs font-semibold border ${view === k.id ? "bg-blue-600 border-blue-600 text-white" : "border-slate-300 text-slate-700"}`}>{k.label}</button>)}
@@ -84,7 +89,7 @@ export default function JournalPage() {
                   <td className="p-2">{refs.get(e.id)}</td>
                   <td className="p-2 text-right">{e.lines.map((l, i) => <div key={i}><Money value={l.debit} />&nbsp;</div>)}</td>
                   <td className="p-2 text-right">{e.lines.map((l, i) => <div key={i}><Money value={l.credit} />&nbsp;</div>)}</td>
-                  <td className="p-2"><button type="button" onClick={() => removeEntry(e.id)} aria-label="Delete entry" className="text-slate-400 hover:text-rose-600"><Trash2 size={14} /></button></td>
+                  <td className="p-2">{book === FREE_BOOK && <button type="button" onClick={() => removeEntry(e.id)} aria-label="Delete entry" className="text-slate-400 hover:text-rose-600"><Trash2 size={14} /></button>}</td>
                 </tr>
               ))}
             </tbody>

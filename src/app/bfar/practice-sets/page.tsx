@@ -5,6 +5,8 @@ import { CheckCircle2, XCircle } from "lucide-react";
 import { getAccount } from "@/bfar/core/chart-of-accounts";
 import { formatAmount } from "@/bfar/lib/currency";
 import { loadMine, saveMine } from "@/bfar/lib/bfarApi";
+import { emptyWork } from "@/bfar/core/student-work";
+import { WorkResult } from "@/bfar/components/WorkResult";
 import { PRACTICE_SETS, practiceItems } from "@/bfar/practice-sets";
 import type { PracticeSet } from "@/bfar/practice-sets/types";
 import { BalanceBadge, EntryLinesEditor, draftToLines, emptyDraft, linesToDraft, type DraftLine } from "@/bfar/components/EntryBuilder";
@@ -20,6 +22,7 @@ function SetWork({ set }: { set: PracticeSet }) {
   const loadFromServer = useAccountingStore((s) => s.loadFromServer);
   const setStatus = useAccountingStore((s) => s.setStatus);
   const resetSet = useAccountingStore((s) => s.resetSet);
+  const setBook = useAccountingStore((s) => s.setBook);
   const [drafts, setDrafts] = useState<Record<string, DraftLine[]>>({});
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
@@ -31,15 +34,16 @@ function SetWork({ set }: { set: PracticeSet }) {
 
   // Pull what the server holds (and the teacher's released marking) when the set is opened.
   useEffect(() => {
+    setBook(set.id);
     let live = true;
     loadMine(set.id).then((mine) => {
       if (!live || !mine) return;
       const local = useAccountingStore.getState().answers[set.id];
-      if (mine.status === "released" || !local || Object.keys(local).length === 0) loadFromServer(set.id, mine.answers, mine.status, mine.released);
+      if (mine.status === "released" || !local || Object.keys(local).length === 0) loadFromServer(set.id, mine.journal, mine.status, mine.released, mine.work);
       else setStatus(set.id, mine.status);
     }).catch(() => { /* not saved to the teacher yet, or the database is not set up: the books still work on this device */ });
     return () => { live = false; };
-  }, [set.id, loadFromServer, setStatus]);
+  }, [set.id, loadFromServer, setStatus, setBook]);
 
   const change = (id: string, d: DraftLine[]) => {
     setDrafts((x) => ({ ...x, [id]: d }));
@@ -50,7 +54,7 @@ function SetWork({ set }: { set: PracticeSet }) {
     setBusy(true); setMessage(null);
     try {
       const mine = useAccountingStore.getState().answers[set.id] ?? {};
-      const s = await saveMine(set.id, mine, submit);
+      const s = await saveMine(set.id, mine, useAccountingStore.getState().work[set.id] ?? emptyWork(), submit);
       setStatus(set.id, s);
       setMessage({ ok: true, text: submit ? "Submitted. Your teacher will check it." : "Saved." });
     } catch (e) {
@@ -70,8 +74,9 @@ function SetWork({ set }: { set: PracticeSet }) {
           {!locked && <button type="button" onClick={() => { resetSet(set.id); setDrafts({}); setMessage(null); }} className="text-slate-600 hover:underline">Start over</button>}
           {entered > 0 && <><Link href="/bfar/ledger" className="text-blue-700 hover:underline">Ledger</Link><Link href="/bfar/worksheet" className="text-blue-700 hover:underline">Worksheet</Link><Link href="/bfar/statements" className="text-blue-700 hover:underline">Statements</Link></>}
         </div>
+        {released?.work && <WorkResult marking={released.work} />}
         {released?.comment && <p className="mt-3 rounded-md bg-blue-50 border border-blue-200 p-2 text-sm"><b>Your teacher says:</b> {released.comment}</p>}
-        <p className="mt-3 text-xs text-slate-500">You will not be told whether an entry is right. Journalize each document, save, and submit. Your teacher checks the work and releases the result.</p>
+        <p className="mt-3 text-xs text-slate-500">You will not be told whether an entry is right. Journalize each document here, then build your ledger, trial balance and worksheet on their pages, and submit. Your teacher checks all of it and releases the result.</p>
       </Card>
 
       {set.periodEndDocuments && set.periodEndDocuments.length > 0 && (
