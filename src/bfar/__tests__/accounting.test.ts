@@ -11,7 +11,11 @@ import { postClosingTrialBalance } from "../core/post-closing-tb";
 import { reversingEntries } from "../core/reversing-engine";
 import { generateStatements } from "../core/statements-generator";
 import { evaluateEntry, gradeAnswers } from "../core/evaluator";
-import { PRACTICE_SETS, practiceItems, solutionEntries } from "../practice-sets";
+import { PRACTICE_SETS, practiceItems } from "../practice-sets";
+import { expectedOf, gradeSubmission, keyOf, solutionEntries } from "../practice-sets/solution";
+import { BAYANIHAN } from "../practice-sets/bayanihan";
+import { readFileSync, readdirSync, statSync } from "node:fs";
+import { join } from "node:path";
 import { CLEANPRO } from "../practice-sets/cleanpro";
 import { METRO } from "../practice-sets/metro";
 import { P } from "../practice-sets/types";
@@ -156,7 +160,7 @@ describe("Practice Set A: CleanPro (service)", () => {
   it("has 17 transactions and 6 lettered adjustments, all balanced", () => {
     expect(CLEANPRO.transactions).toHaveLength(17);
     expect(CLEANPRO.adjustments.map((a) => a.tag)).toEqual(["a", "b", "c", "d", "e", "f"]);
-    for (const it of practiceItems(CLEANPRO)) expect(validateEntry({ date: "2026-12-01", kind: "general", explanation: "x", lines: it.key }).ok).toBe(true);
+    for (const it of practiceItems(CLEANPRO)) expect(validateEntry({ date: "2026-12-01", kind: "general", explanation: "x", lines: keyOf("cleanpro", it.id)!.key }).ok).toBe(true);
   });
   it("has the expected unadjusted balances", () => {
     const l = postToLedger(entries, ["transaction"]);
@@ -266,9 +270,10 @@ describe("Practice Set B: Metro Hardware (merchandising, periodic)", () => {
   it("matches the figures stated on the set", () => {
     for (const set of PRACTICE_SETS) {
       const s = generateStatements(solutionEntries(set), { business: set.business, inventory: set.inventory, endingInventory: set.endingInventory, entity: set.entity, period: set.period, asOf: set.asOf });
-      expect(s.netIncome).toBe(set.expected.netIncome);
-      expect(s.totalAssets).toBe(set.expected.totalAssets);
-      expect(s.endingCapital).toBe(set.expected.endingCapital);
+      const exp = expectedOf(set.id)!;
+      expect(s.netIncome).toBe(exp.netIncome);
+      expect(s.totalAssets).toBe(exp.totalAssets);
+      expect(s.endingCapital).toBe(exp.endingCapital);
     }
   });
 });
@@ -289,7 +294,7 @@ describe("perpetual inventory", () => {
 });
 
 describe("evaluator", () => {
-  const rent = CLEANPRO.transactions[2];
+  const rent = { key: keyOf("cleanpro", "t03")!.key, hint: keyOf("cleanpro", "t03")!.hint };
   it("accepts the key regardless of line order", () => {
     expect(evaluateEntry([cr("101", P(36000)), dr("140", P(36000))], rent.key).status).toBe("correct");
   });
@@ -300,7 +305,7 @@ describe("evaluator", () => {
     expect(r.messages).toContain("Missing: Dr 140 Prepaid Rent.");
   });
   it("gives the contra-asset hint when the equipment account is credited", () => {
-    const dep = CLEANPRO.adjustments[3];
+    const dep = keyOf("cleanpro", "adj-d")!;
     const r = evaluateEntry([dr("605", P(3600)), cr("160", P(3600))], dep.key);
     expect(r.hints.join(" ")).toMatch(/contra-asset/);
   });
@@ -317,9 +322,73 @@ describe("evaluator", () => {
     expect(evaluateEntry([dr("602", P(36000)), cr("101", P(36000))], rent.key, { showKey: true }).key).toEqual(rent.key);
   });
   it("grades a whole set", () => {
-    const items = practiceItems(CLEANPRO).map((i) => ({ id: i.id, key: i.key }));
+    const items = practiceItems(CLEANPRO).map((i) => ({ id: i.id, key: keyOf("cleanpro", i.id)!.key }));
     const answers = { [items[0].id]: items[0].key, [items[1].id]: items[1].key };
     const g = gradeAnswers(items, answers);
     expect(g).toMatchObject({ total: 23, correct: 2, percent: 9 });
+  });
+});
+
+describe("Practice Set C: Bayanihan (comprehensive service)", () => {
+  const entries = solutionEntries(BAYANIHAN);
+  const opts = { business: "service" as const, entity: BAYANIHAN.entity, period: BAYANIHAN.period, asOf: BAYANIHAN.asOf };
+
+  it("has 28 documents and ten lettered adjustments", () => {
+    expect(BAYANIHAN.transactions).toHaveLength(28);
+    expect(BAYANIHAN.adjustments.map((a) => a.tag)).toEqual(["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"]);
+  });
+  it("produces the expected figures with balanced statements", () => {
+    const s = generateStatements(entries, opts);
+    const exp = expectedOf("bayanihan")!;
+    expect(s.netIncome).toBe(exp.netIncome);
+    expect(s.totalAssets).toBe(exp.totalAssets);
+    expect(s.endingCapital).toBe(exp.endingCapital);
+    expect(s.balanced).toBe(true);
+    expect(s.cashReconciles).toBe(true);
+  });
+  it("cross-foots the worksheet and closes to permanent accounts only", () => {
+    expect(buildWorksheet(entries).crossFooted).toBe(true);
+    const c = closingEntries(entries, "2027-01-31");
+    const pc = postClosingTrialBalance([...entries, ...c.entries]);
+    expect(pc.balanced).toBe(true);
+    expect(pc.onlyPermanentAccounts).toBe(true);
+  });
+  it("reverses exactly the four reversible adjustments", () => {
+    expect(reversingEntries(entries, "2027-02-01").map((e) => e.tag)).toEqual(["a", "f", "g", "h"]);
+  });
+});
+
+describe("source documents and the student view", () => {
+  it("gives every item in every set a source document and a key", () => {
+    for (const set of PRACTICE_SETS) {
+      for (const it of practiceItems(set)) {
+        expect(it.document, `${set.id}/${it.id}`).toBeDefined();
+        expect(it.document!.items.length).toBeGreaterThan(0);
+        expect(keyOf(set.id, it.id), `${set.id}/${it.id} key`).toBeDefined();
+      }
+    }
+  });
+  it("grades a student's answers only through the teacher module", () => {
+    const items = practiceItems(CLEANPRO);
+    const answers = { [items[0].id]: keyOf("cleanpro", items[0].id)!.key, [items[2].id]: [dr("602", P(36000)), cr("101", P(36000))] };
+    const m = gradeSubmission(CLEANPRO, answers);
+    expect(m.max).toBe(23);
+    expect(m.score).toBe(1);
+    expect(m.items[2].status).toBe("incorrect");
+    expect(m.items[1].status).toBe("empty");
+    expect(m.items[2].hints.join(" ")).toMatch(/ASSET/);
+  });
+  it("never ships the keys to students: no student-facing file imports the key modules", () => {
+    const root = join(__dirname, "..", "..");
+    const walk = (dir: string): string[] => readdirSync(dir).flatMap((f) => { const p = join(dir, f); return statSync(p).isDirectory() ? (f === "__tests__" ? [] : walk(p)) : [p]; });
+    const files = [...walk(join(root, "bfar")), ...walk(join(root, "app", "bfar"))].filter((f) => /\.(ts|tsx)$/.test(f));
+    const allowed = new Set(["keys.ts", "solution.ts", join("app", "bfar", "teacher", "page.tsx")].map((x) => x));
+    for (const f of files) {
+      const src = readFileSync(f, "utf8");
+      const importsKeys = /from\s+["'][^"']*(\/keys|\/solution)["']/.test(src);
+      const dynamic = /import\(["'][^"']*practice-sets\/solution["']\)/.test(src);
+      const ok = [...allowed].some((a) => f.endsWith(a));
+      if (importsKeys || dynamic) expect(ok, f).toBe(true);
+    }
   });
 });

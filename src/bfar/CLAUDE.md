@@ -1,6 +1,6 @@
 # BFAR module (Basic Financial Accounting and Reporting)
 
-A fourth, standalone module in this repo, for Prof. Win Ballada's course. It does not touch the Standard, Manufacturing or AIS editions: no database, no tenants, no `AppShell`, no session. Routes live under `/bfar` (`src/app/bfar`), code under `src/bfar`. The only shared file it changes is the card on `src/app/choose/page.tsx`.
+A fourth, standalone module in this repo, for Prof. Win Ballada's course. It does not touch the Standard, Manufacturing or AIS editions: no tenants, no `AppShell`. It uses the same login (`useSession`) and one table of its own (`bfar_submissions`, migration 0083). Routes live under `/bfar` (`src/app/bfar`), code under `src/bfar`. The only shared file it changes is the card on `src/app/choose/page.tsx`.
 
 ## Rules that must not break
 
@@ -13,10 +13,16 @@ A fourth, standalone module in this repo, for Prof. Win Ballada's course. It doe
 - **Closing (REID):** revenue → Income Summary, expenses → Income Summary, Income Summary → Capital, Drawing → Capital. Periodic inventory: debit ending inventory in entry 1, credit beginning in entry 2.
 - **Statements** follow PAS 1: single underline on subtotals, double underline (`border-b-4 border-double`) on totals.
 
+## Students never see answers
+
+- Students journalize from **source documents** (`practice-sets/documents.ts`, `SourceDocumentCard`). No instant check, no hints, no key. They save and submit (`lib/bfarApi.ts` → `bfar_save`); the teacher checks on `/bfar/teacher` and releases the result, and only then does the student get right/wrong, hints and the correct entry (`bfar_my` returns the marking only when released).
+- **Keys live only in `practice-sets/keys.ts`**, reached through `practice-sets/solution.ts`, and only from the teacher page (dynamic import) and the tests. A test fails if any other file imports them. Never add a key, hint or expected total to a file students load.
+- Teacher = `profiles.role = 'teacher'`; the database functions enforce it, the page also redirects.
+
 ## Layout
 
-- `core/`: pure functions, no React. `types`, `chart-of-accounts` (Ballada codes; 505 Cost of Goods Sold is added for perpetual only), `journalizer`, `ledger-posting`, `trial-balance`, `adjustments-engine`, `worksheet-engine`, `closing-engine`, `post-closing-tb`, `reversing-engine`, `statements-generator`, `evaluator` (validates against the key, hints, key hidden unless instructor mode).
-- `practice-sets/`: Set A CleanPro (service) and Set B Metro Hardware (merchandising, periodic), each with the solution key and the expected totals the tests check.
+- `core/`: pure functions, no React. `types`, `chart-of-accounts` (Ballada codes; 505 Cost of Goods Sold is added for perpetual only), `journalizer`, `ledger-posting`, `trial-balance`, `adjustments-engine`, `worksheet-engine`, `closing-engine`, `post-closing-tb`, `reversing-engine`, `statements-generator`, `evaluator` (compares an entry with a key; used by the teacher's grading only).
+- `practice-sets/`: Set A CleanPro (service), Set B Metro Hardware (merchandising, periodic), Set C Bayanihan (comprehensive service, 28 documents, 10 adjustments). The set files hold facts and documents only; `keys.ts` holds the keys, hints and expected totals.
 - `store/useAccountingStore.ts`: Zustand with `persist` (`bfar-accounting-v1`, `skipHydration`). Pages render stored data only after `useHydrated()`.
 - `components/`, `src/app/bfar/*`: UI.
 
