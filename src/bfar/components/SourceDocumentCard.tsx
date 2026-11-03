@@ -5,10 +5,10 @@ import { formatAmount, formatPeso, pesosInWords, sum } from "../lib/currency";
 import type { SourceDocument } from "../practice-sets/types";
 
 const hash = (s: string) => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
-const tin = (name: string) => { const h = hash(name); const p = (n: number) => String((h >> n) % 900 + 100); return `${p(1)}-${p(5)}-${p(9)}-000`; };
+const tin = (name: string) => { const h = hash(name); const p = (n: number) => String((h >>> n) % 900 + 100); return `${p(1)}-${p(5)}-${p(9)}-000`; };
 const STREETS = ["Rizal Avenue", "Mabini Street", "Aguinaldo Highway", "Bonifacio Drive", "Katipunan Avenue", "Quezon Boulevard", "P. Burgos Street", "Ayala Avenue"];
 const CITIES = ["Quezon City", "Makati City", "Pasig City", "Mandaluyong City", "Manila", "Cebu City", "Davao City", "Taguig City"];
-const address = (name: string) => { const h = hash(name); return `${(h % 880) + 20} ${STREETS[h % STREETS.length]}, ${CITIES[(h >> 3) % CITIES.length]}, Philippines`; };
+const address = (name: string) => { const h = hash(name); return `${(h % 880) + 20} ${STREETS[h % STREETS.length]}, ${CITIES[(h >>> 3) % CITIES.length]}, Philippines`; };
 const nameOnly = (party: string) => party.split(",")[0];
 
 const RED = "text-red-700";
