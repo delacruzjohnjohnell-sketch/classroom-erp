@@ -161,8 +161,13 @@ export const RULES = {
     effectiveFrom: "2018-01-01",
     basis: "Printed on BIR Form 1801 (January 2018 ENCS): 6% on the net taxable estate; standard deduction P5,000,000 (citizen or resident) or P500,000 (non-resident alien); family home deduction up to P10,000,000 for a resident citizen; NIRC Sec. 86 and Sec. 90",
     verified: true,
-    rate: 0.06, standardResident: 5_000_000, standardNonResident: 500_000, familyHomeCap: 10_000_000, dueMonthsAfterDeath: 12,
-    note: "The rates and deductions are printed on the form. The 1801 PDF has no instruction page: the filing deadline of one year from death (Sec. 90) is from the Code and the user's table.",
+    rate: 0.06, standardResident: 5_000_000, standardNonResident: 500_000, familyHomeCap: 10_000_000,
+  },
+  estateTaxDue: {
+    effectiveFrom: "2018-01-01",
+    basis: "NIRC Sec. 90: estate tax return within one year from the date of death (the 1801 PDF has no instruction page; also the user's table)",
+    verified: false,
+    dueMonthsAfterDeath: 12,
   },
   /** Donor's tax (BIR Form 1800): the 1800 PDF could not be downloaded, so these come from the Code and a secondary description, not from the form. */
   donorTax: {

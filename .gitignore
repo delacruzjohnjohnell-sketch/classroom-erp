@@ -18,3 +18,4 @@ supabase/.temp
 /handbook-mfg/put.sh
 test-results/
 playwright-report/
+*.tsbuildinfo

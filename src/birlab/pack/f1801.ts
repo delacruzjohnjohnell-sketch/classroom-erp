@@ -10,7 +10,7 @@ import { caseOf, lessonOf, ymd } from "./kit";
 /** One year after the date of death (Code Sec. 90; the 1801 PDF has no instruction page). */
 function dueOf(v: Values): string {
   const d = usToIso(v["1"]);
-  return isIso(d) ? ymd(Number(d.slice(0, 4)) + RULES.estateTax.dueMonthsAfterDeath / 12, Number(d.slice(5, 7)), Number(d.slice(8, 10))) : "";
+  return isIso(d) ? ymd(Number(d.slice(0, 4)) + RULES.estateTaxDue.dueMonthsAfterDeath / 12, Number(d.slice(5, 7)), Number(d.slice(8, 10))) : "";
 }
 const peso = (n: number) => n * 100;
 

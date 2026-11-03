@@ -1,7 +1,7 @@
 // The filing calendar: every due date of a taxable year for each kind of taxpayer, computed from the rules file (so it moves when a rule moves) and
 // labelled with whether the date was verified against an official BIR document or comes from the Code / the course table only.
 import { RULES } from "../rules/2026";
-import { addDays, dayOfNextMonth, lastDay, ymd } from "../pack/kit";
+import { addDays, dayOfNextMonth, lastDay, ymd } from "./dates";
 
 export type Audience = "individual" | "employee" | "employer" | "corporation" | "vat" | "nonvat" | "withholding";
 export const AUDIENCES: { id: Audience; label: string }[] = [
