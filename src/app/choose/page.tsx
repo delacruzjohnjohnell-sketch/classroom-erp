@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Building2, Factory, Loader2, LogOut, Lock, Scale } from "lucide-react";
+import { ArrowRight, BookOpen, Building2, Factory, Loader2, LogOut, Lock, Scale } from "lucide-react";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
@@ -178,6 +178,15 @@ export default function ChoosePage() {
             cta={isTeacher ? "Manage AIS companies" : "Open"}
             busy={busy === "AIS"}
             onClick={() => (isTeacher ? router.push("/ais/teams") : open("AIS"))}
+          />
+
+          {/* ---------------- BFAR: standalone, no company or database ---------------- */}
+          <EditionCard
+            accent="#34D399" icon={<BookOpen size={22} />} title="Basic Financial Accounting" subtitle="BFAR, practice sets"
+            text="Journal, ledger, worksheet and financial statements for a sole proprietorship, with graded practice sets. Works on its own, with no company to set up."
+            cta="Open"
+            busy={false}
+            onClick={() => router.push("/bfar")}
           />
         </div>
 

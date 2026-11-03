@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint .",
     "test": "node --test \"tests/**/*.test.ts\"",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "test:bfar": "vitest run",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",
@@ -18,7 +20,8 @@
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "recharts": "^2.12.7",
-    "zod": "^4.6.7"
+    "zod": "^4.6.7",
+    "zustand": "^5.0.16"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",
@@ -30,6 +33,7 @@
     "eslint-config-next": "^16.3.5",
     "postcss": "^8.4.45",
     "tailwindcss": "^3.4.10",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "vitest": "^3.2.7"
   }
 }
