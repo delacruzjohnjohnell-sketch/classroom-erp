@@ -2,7 +2,8 @@
 // Never import this from a student-facing page, or the keys end up in the students' download.
 import { evaluateEntry, type EvalStatus } from "../core/evaluator";
 import { postToLedger } from "../core/ledger-posting";
-import { amt, lineRef, type LedgerAccountIn, type LedgerCheck, type PostingCheck, type StudentWork, type WorkMarking, type WsCheck } from "../core/student-work";
+import { requireAccount } from "../core/chart-of-accounts";
+import { amt, computeWorksheet, generateTrialBalance, lineRef, worksheetFootings, type ColTarget, type ColumnCheck, type LedgerAccountIn, type LedgerCheck, type PostingCheck, type StudentWork, type WorkMarking, type WorksheetIn } from "../core/student-work";
 import { trialBalance } from "../core/trial-balance";
 import type { JournalEntry, JournalLine } from "../core/types";
 import { buildWorksheet, COLUMN_KEYS, type ColumnKey } from "../core/worksheet-engine";
@@ -23,32 +24,62 @@ export function expectedBooks(set: PracticeSet) {
   return { entries, ledger, tb: trialBalance(ledger), ws: buildWorksheet(entries, { endingInventory: set.endingInventory }) };
 }
 
-const norm = (letters: string) => letters.toLowerCase().split(/[^a-z]+/).filter(Boolean).sort().join(",");
+const pesos = (c: number) => (c ? (c / 100).toFixed(2) : "");
 
-/** Grades the ledger, trial balance and worksheet a student built by hand. One point per ledger account, trial balance row, worksheet row, plus one each for the two totals. */
-export function gradeWork(set: PracticeSet, work: StudentWork, journal: Record<string, JournalLine[] | undefined>): { marking: WorkMarking; score: number; max: number } {
-  const { entries, ledger, ws } = expectedBooks(set);
+/** The Income Statement or Balance Sheet column an account's adjusted balance belongs in, from the key. Merchandise inventory under the periodic system: its beginning balance goes to the Income Statement debit. */
+function expectedTarget(set: PracticeSet, row: { code: string; atbDr: number }): ColTarget {
+  const acc = requireAccount(row.code);
+  const incomeSide = acc.type === "revenue" || acc.type === "expense" || (set.inventory === "periodic" && row.code === "130");
+  return incomeSide ? (row.atbDr > 0 ? "isDr" : "isCr") : (row.atbDr > 0 ? "bsDr" : "bsCr");
+}
 
-  // Posting: each line of the key's transaction entries must exist in the student's journal and be dropped on its own account, on the right side.
-  const posting: PostingCheck[] = [];
-  for (const e of entries.filter((x) => x.stage === "transaction")) {
-    const mine = journal[e.id.slice(set.id.length + 1)] ?? [];
+/** Matches each line of a key entry to a line of the student's journal entry (same account, side and amount) and checks where the student placed it. */
+function checkPlacements(entries: JournalEntry[], itemIdOf: (e: JournalEntry) => string, journal: Record<string, JournalLine[] | undefined>, whereIs: (ref: string) => { code: string; side: "Dr" | "Cr" } | undefined): PostingCheck[] {
+  const out: PostingCheck[] = [];
+  for (const e of entries) {
+    const mine = journal[itemIdOf(e)] ?? [];
     const used = new Set<number>();
     for (const L of e.lines) {
       const side = L.debit > 0 ? "Dr" : "Cr", amount = L.debit || L.credit;
       const j = mine.findIndex((m, idx) => !used.has(idx) && m.accountCode === L.accountCode && (m.debit > 0 ? "Dr" : "Cr") === side && (m.debit || m.credit) === amount);
       const base = { entryId: e.id, accountCode: L.accountCode, side, amount } as const;
-      if (j < 0) { posting.push({ ...base, status: "no-line" }); continue; }
+      if (j < 0) { out.push({ ...base, status: "no-line" }); continue; }
       used.add(j);
-      const ref = lineRef(e.id, j);
-      const home = work.ledger.find((a) => a.posted.some((p) => p.ref === ref));
-      const where = home?.posted.find((p) => p.ref === ref);
-      if (!home || !where) posting.push({ ...base, status: "not-posted" });
-      else if (home.code !== L.accountCode) posting.push({ ...base, status: "wrong-account", postedTo: home.code, postedSide: where.side });
-      else if (where.side !== side) posting.push({ ...base, status: "wrong-side", postedTo: home.code, postedSide: where.side });
-      else posting.push({ ...base, status: "ok" });
+      const at = whereIs(lineRef(e.id, j));
+      if (!at) out.push({ ...base, status: "not-posted" });
+      else if (at.code !== L.accountCode) out.push({ ...base, status: "wrong-account", postedTo: at.code, postedSide: at.side });
+      else if (at.side !== side) out.push({ ...base, status: "wrong-side", postedTo: at.code, postedSide: at.side });
+      else out.push({ ...base, status: "ok" });
     }
   }
+  return out;
+}
+
+/** The student's own journal entries rebuilt from their answers, so the worksheet can be computed from what they did (follow-through). */
+function studentEntries(set: PracticeSet, journal: Record<string, JournalLine[] | undefined>): JournalEntry[] {
+  const out: JournalEntry[] = [];
+  for (const it of practiceItems(set)) {
+    const lines = journal[it.id];
+    if (!lines || lines.length === 0) continue;
+    try { out.push(entryForItem(set, it, lines)); } catch { /* an incomplete entry is not in their books */ }
+  }
+  return out;
+}
+
+/**
+ * Grades what a student built by hand: the posting to the ledger and the ledger footings, then the worksheet. The worksheet is graded by follow-through:
+ * the adjusting lines must be placed on the right row and column, each adjusted balance in the right column 7-10, and the typed footings must agree with the
+ * student's own placements, so one early mistake is charged once (in the posting) and not again on every later column.
+ */
+export function gradeWork(set: PracticeSet, work: StudentWork, journal: Record<string, JournalLine[] | undefined>): { marking: WorkMarking; score: number; max: number } {
+  const { entries, ledger, ws } = expectedBooks(set);
+  const tx = entries.filter((x) => x.stage === "transaction");
+
+  const posting = checkPlacements(tx, (e) => e.id.slice(set.id.length + 1), journal, (ref) => {
+    const home = work.ledger.find((a) => a.posted.some((p) => p.ref === ref));
+    const where = home?.posted.find((p) => p.ref === ref);
+    return home && where ? { code: home.code, side: where.side } : undefined;
+  });
 
   const ledgerChecks: LedgerCheck[] = ledger.map((l) => {
     const mine: LedgerAccountIn | undefined = work.ledger.find((a) => a.code === l.account.code);
@@ -58,29 +89,40 @@ export function gradeWork(set: PracticeSet, work: StudentWork, journal: Record<s
     return { code: l.account.code, opened: !!mine, ok, expected, got };
   });
 
-  const wsChecks: WsCheck[] = ws.rows.map((r) => {
-    const mine = work.worksheet.rows.find((x) => x.code === r.code);
-    const expected = Object.fromEntries(COLUMN_KEYS.map((k) => [k, r[k]])) as Record<ColumnKey, number>;
-    const got = Object.fromEntries(COLUMN_KEYS.map((k) => [k, amt(mine?.cells[k])])) as Record<ColumnKey, number>;
-    const adjOk = norm(mine?.adj ?? "") === norm(r.adjRefs.join(","));
-    return { code: r.code, listed: !!mine, ok: !!mine && adjOk && COLUMN_KEYS.every((k) => got[k] === expected[k]), expected, got, expectedAdj: r.adjRefs, gotAdj: (mine?.adj ?? "").toLowerCase().split(/[^a-z]+/).filter(Boolean) };
+  // The worksheet, from the student's own trial balance, adjustment lines and clicks.
+  const mineEntries = studentEntries(set, journal);
+  const rows = computeWorksheet(generateTrialBalance(work.ledger, mineEntries.filter((e) => e.stage === "transaction")), mineEntries, work.worksheet);
+  const adjusting = checkPlacements(entries.filter((x) => x.stage === "adjusting"), (e) => e.id.slice(set.id.length + 1), journal, (ref) => {
+    const a = work.worksheet.adjustments.find((x) => x.ref === ref);
+    return a ? { code: a.code, side: a.side } : undefined;
   });
-  const netExpected: Partial<Record<ColumnKey, number>> = ws.isNetIncome ? { isDr: ws.netIncome, bsCr: ws.netIncome } : { isCr: ws.netIncome, bsDr: ws.netIncome };
-  const netOk = (["isDr", "isCr", "bsDr", "bsCr"] as ColumnKey[]).every((k) => amt(work.worksheet.net[k]) === (netExpected[k] ?? 0));
-  const worksheetTotalsOk = netOk && COLUMN_KEYS.every((k) => amt(work.worksheet.totals[k]) === ws.totals[k]);
+  const endingOk = (set.endingInventory ?? 0) > 0 && amt(work.worksheet.ending.isCr) === set.endingInventory && amt(work.worksheet.ending.bsDr) === set.endingInventory;
+  const columns: ColumnCheck[] = ws.rows.map((r) => {
+    const mine = rows.find((x) => x.code === r.code);
+    const expectedTo = expectedTarget(set, r);
+    const periodicInv = set.inventory === "periodic" && r.code === "130";
+    const placed = !!mine?.to;
+    return { code: r.code, listed: !!mine, placed, expectedTo, gotTo: mine?.to, endingOk: periodicInv ? endingOk : undefined, ok: !!mine && mine.to === expectedTo && (!periodicInv || endingOk) };
+  });
+  const foot = worksheetFootings(rows);
+  const keys4: ColumnKey[] = ["isDr", "isCr", "bsDr", "bsCr"];
+  const built = rows.length > 0; // nothing earned for footing an empty worksheet
+  const footings = {
+    subtotalsOk: built && COLUMN_KEYS.every((k) => amt(work.worksheet.subtotals[k]) === foot.subtotals[k]),
+    netOk: built && keys4.every((k) => amt(work.worksheet.net[k]) === (foot.net[k] ?? 0)),
+    totalsOk: built && COLUMN_KEYS.every((k) => amt(work.worksheet.totals[k]) === foot.totals[k]),
+  };
 
-  const expectedCodes = (list: { code: string }[]) => new Set(list.map((x) => x.code));
+  const keyCodes = (list: { code: string }[]) => new Set(list.map((x) => x.code));
   const extra = {
-    ledger: work.ledger.filter((a) => !expectedCodes(ledger.map((l) => ({ code: l.account.code }))).has(a.code)).map((a) => a.code),
-    worksheet: work.worksheet.rows.filter((r) => r.code && !expectedCodes(ws.rows).has(r.code)).map((r) => r.code),
+    ledger: work.ledger.filter((a) => !keyCodes(ledger.map((l) => ({ code: l.account.code }))).has(a.code)).map((a) => a.code),
+    worksheet: rows.filter((r) => !keyCodes(ws.rows).has(r.code)).map((r) => r.code),
   };
 
-  const marking: WorkMarking = {
-    posting, ledger: ledgerChecks, worksheet: wsChecks, worksheetTotalsOk, extra,
-    expectedTotals: { worksheet: ws.totals },
-  };
-  const score = posting.filter((p) => p.status === "ok").length + ledgerChecks.filter((c) => c.ok).length + wsChecks.filter((c) => c.ok).length + (worksheetTotalsOk ? 1 : 0);
-  const max = posting.length + ledgerChecks.length + wsChecks.length + 1;
+  const marking: WorkMarking = { posting, ledger: ledgerChecks, adjusting, columns, footings, extra };
+  const footingPoints = Number(footings.subtotalsOk) + Number(footings.netOk) + Number(footings.totalsOk);
+  const score = posting.filter((p) => p.status === "ok").length + ledgerChecks.filter((c) => c.ok).length + adjusting.filter((p) => p.status === "ok").length + columns.filter((c) => c.ok).length + footingPoints;
+  const max = posting.length + ledgerChecks.length + adjusting.length + columns.length + 3;
   return { marking, score, max };
 }
 
@@ -104,24 +146,29 @@ export function gradeSubmission(set: PracticeSet, journal: Record<string, Journa
 export const keyJournal = (set: PracticeSet): Record<string, JournalLine[]> =>
   Object.fromEntries(practiceItems(set).map((it) => [it.id, KEYS[set.id].items[it.id].key]));
 
-const pesos = (c: number) => (c ? (c / 100).toFixed(2) : "");
-
 /** A fully correct set of hand-built books, in the form a student types them. For tests and for the teacher's demonstration. */
 export function perfectWork(set: PracticeSet): StudentWork {
-  const { entries, ledger, ws } = expectedBooks(set);
-  const cell = (n: number) => pesos(n);
-  return {
-    ledger: ledger.map((l) => ({
-      code: l.account.code,
-      posted: entries.filter((e) => e.stage === "transaction").flatMap((e) => e.lines.flatMap((x, i) => (x.accountCode === l.account.code ? [{ ref: lineRef(e.id, i), side: (x.debit > 0 ? "Dr" : "Cr") as "Dr" | "Cr" }] : []))),
-      runBalances: {},
-      debitFooting: pesos(l.debitTotal), creditFooting: pesos(l.creditTotal), balance: pesos(l.balance), side: l.balanceSide === "debit" ? "Dr" : "Cr",
-    })),
-    worksheet: {
-      rows: ws.rows.map((r) => ({ code: r.code, adj: r.adjRefs.join(", "), cells: Object.fromEntries(COLUMN_KEYS.map((k) => [k, cell(r[k])])) })),
-      subtotals: Object.fromEntries(COLUMN_KEYS.map((k) => [k, cell(ws.subtotals[k])])),
-      net: ws.isNetIncome ? { isDr: pesos(ws.netIncome), bsCr: pesos(ws.netIncome) } : { isCr: pesos(ws.netIncome), bsDr: pesos(ws.netIncome) },
-      totals: Object.fromEntries(COLUMN_KEYS.map((k) => [k, cell(ws.totals[k])])),
-    },
+  const { entries, ledger, tb, ws } = expectedBooks(set);
+  const tx = entries.filter((e) => e.stage === "transaction");
+  const lineSide = (x: JournalLine): "Dr" | "Cr" => (x.debit > 0 ? "Dr" : "Cr");
+  const tbCodes = new Set(tb.rows.map((r) => r.code));
+  const posted = ledger.map((l) => ({
+    code: l.account.code,
+    posted: tx.flatMap((e) => e.lines.flatMap((x, i) => (x.accountCode === l.account.code ? [{ ref: lineRef(e.id, i), side: lineSide(x) }] : []))),
+    runBalances: {},
+    debitFooting: pesos(l.debitTotal), creditFooting: pesos(l.creditTotal), balance: pesos(l.balance), side: (l.balanceSide === "debit" ? "Dr" : "Cr") as "Dr" | "Cr",
+  }));
+  const worksheet: WorksheetIn = {
+    extraCodes: ws.rows.filter((r) => !tbCodes.has(r.code)).map((r) => r.code),
+    adjustments: entries.filter((e) => e.stage === "adjusting").flatMap((e) => e.lines.map((x, i) => ({ ref: lineRef(e.id, i), code: x.accountCode, side: lineSide(x) }))),
+    placements: ws.rows.map((r) => ({ code: r.code, to: expectedTarget(set, r) })),
+    ending: set.endingInventory ? { isCr: pesos(set.endingInventory), bsDr: pesos(set.endingInventory) } : { isCr: "", bsDr: "" },
+    subtotals: {}, net: {}, totals: {},
   };
+  const rows = computeWorksheet(generateTrialBalance(posted, tx), entries, worksheet);
+  const foot = worksheetFootings(rows);
+  worksheet.subtotals = Object.fromEntries(COLUMN_KEYS.map((k) => [k, pesos(foot.subtotals[k])]));
+  worksheet.net = Object.fromEntries((Object.entries(foot.net) as [ColumnKey, number][]).map(([k, v]) => [k, pesos(v)]));
+  worksheet.totals = Object.fromEntries(COLUMN_KEYS.map((k) => [k, pesos(foot.totals[k])]));
+  return { ledger: posted, worksheet };
 }

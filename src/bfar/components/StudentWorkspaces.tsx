@@ -5,7 +5,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { getAccount } from "../core/chart-of-accounts";
 import { AccountSelect } from "./AccountPicker";
 import { entryRefs } from "../core/ledger-posting";
-import { emptyLedgerAccount, generateTrialBalance, lineRef, type LedgerAccountIn, type WorksheetIn, type WsRowIn } from "../core/student-work";
+import { computeWorksheet, emptyLedgerAccount, generateTrialBalance, lineRef, type ColTarget, type GeneratedTrialBalance, type LedgerAccountIn, type WorksheetIn } from "../core/student-work";
 import type { JournalEntry } from "../core/types";
 import { COLUMN_KEYS, type ColumnKey } from "../core/worksheet-engine";
 import { formatAmount } from "../lib/currency";
@@ -206,42 +206,130 @@ export function GeneratedTrialBalanceView({ ledger, entries }: { ledger: LedgerA
   );
 }
 
-const GROUPS = ["Trial balance", "Adjustments", "Adjusted trial balance", "Income statement", "Balance sheet"];
+const GROUPS = ["1-2 Trial balance", "3-4 Adjustments", "5-6 Adjusted trial balance", "7-8 Income statement", "9-10 Balance sheet"];
+type Sel = { kind: "adj"; ref: string } | { kind: "atb"; code: string } | null;
+const TARGETS: ColTarget[] = ["isDr", "isCr", "bsDr", "bsCr"];
+const num2 = (n: number) => (n ? formatAmount(n) : "");
 
-export function WorksheetWorkspace({ ws, onChange, disabled }: { ws: WorksheetIn; onChange: (w: WorksheetIn) => void; disabled?: boolean }) {
-  const taken = ws.rows.map((r) => r.code);
-  const patchRow = (i: number, p: Partial<WsRowIn>) => onChange({ ...ws, rows: ws.rows.map((r, j) => (j === i ? { ...r, ...p } : r)) });
-  const patchCell = (i: number, k: ColumnKey, v: string) => patchRow(i, { cells: { ...ws.rows[i].cells, [k]: v } });
+/**
+ * The worksheet by clicking. Columns 1-2 come from the student's own ledger and 5-6 are worked out from 1-4, so the student never types those.
+ * Adjustments: click an adjusting line from the journal, then click the Dr (3) or Cr (4) cell of the account. Columns 7-10: click the adjusted balance,
+ * then click the column it belongs in. Subtotals, the net income line and the totals are typed.
+ */
+export function WorksheetWorkspace({ ws, onChange, tb, adjEntries, periodic, disabled }: { ws: WorksheetIn; onChange: (w: WorksheetIn) => void; tb: GeneratedTrialBalance; adjEntries: JournalEntry[]; periodic: boolean; disabled?: boolean }) {
+  const [sel, setSel] = useState<Sel>(null);
+  const rows = computeWorksheet(tb, adjEntries, ws);
+  const lines = postLines(adjEntries.map((e) => ({ ...e, stage: "transaction" as const }))).map((l) => ({ ...l, tag: l.entry.tag ?? "" }));
+  const placedRefs = new Set(ws.adjustments.map((a) => a.ref));
+  const waiting = lines.filter((l) => !placedRefs.has(l.ref));
+  const byRef = new Map(lines.map((l) => [l.ref, l]));
+  const adjSel = sel?.kind === "adj";
+
+  const placeAdj = (code: string, side: "Dr" | "Cr") => {
+    if (disabled || sel?.kind !== "adj") return;
+    onChange({ ...ws, adjustments: [...ws.adjustments.filter((a) => a.ref !== sel.ref), { ref: sel.ref, code, side }] });
+    setSel(null);
+  };
+  const placeTarget = (code: string, to: ColTarget) => {
+    if (disabled || sel?.kind !== "atb" || sel.code !== code) return;
+    onChange({ ...ws, placements: [...ws.placements.filter((p) => p.code !== code), { code, to }] });
+    setSel(null);
+  };
   const footRow = (label: string, field: "subtotals" | "net" | "totals", only?: ColumnKey[]) => (
     <tr className="border-t border-slate-300 font-semibold bg-slate-50">
-      <td className="p-1" colSpan={2}>{label}</td>
+      <td className="p-1">{label}</td>
       {COLUMN_KEYS.map((k) => (
         <td key={k} className="p-0.5">{only && !only.includes(k) ? null : <input className={num} disabled={disabled} value={ws[field][k] ?? ""} inputMode="decimal" aria-label={`${label} ${k}`} onChange={(e) => onChange({ ...ws, [field]: { ...ws[field], [k]: e.target.value } })} />}</td>
       ))}
     </tr>
   );
+  const cellBtn = "w-full min-h-[1.6rem] rounded border px-1 py-0.5 text-right tabular-nums";
+
   return (
-    <div className="bg-white border border-slate-200 rounded-lg overflow-x-auto">
-      <table className="w-full min-w-[1250px] text-xs">
-        <thead className="bg-slate-100 text-slate-600">
-          <tr><th rowSpan={2} className="p-1.5 text-left w-56">Account title</th><th rowSpan={2} className="p-1.5 text-left w-16">Adj. ref</th>{GROUPS.map((g) => <th key={g} colSpan={2} className="p-1.5 border-l border-slate-200">{g}</th>)}</tr>
-          <tr>{GROUPS.flatMap((g) => ["Dr", "Cr"].map((s) => <th key={g + s} className="p-1 border-l border-slate-200 font-medium">{s}</th>))}</tr>
-        </thead>
-        <tbody>
-          {ws.rows.map((r, i) => (
-            <tr key={i} className="border-t border-slate-100">
-              <td className="p-0.5"><AccountSelect value={r.code} taken={taken} disabled={disabled} onChange={(code) => patchRow(i, { code })} /></td>
-              <td className="p-0.5"><input className={input} disabled={disabled} value={r.adj} placeholder="a, c" aria-label="Adjustment letters" onChange={(e) => patchRow(i, { adj: e.target.value })} /></td>
-              {COLUMN_KEYS.map((k) => <td key={k} className="p-0.5"><input className={num} disabled={disabled} value={r.cells[k] ?? ""} inputMode="decimal" aria-label={`${r.code || "row"} ${k}`} onChange={(e) => patchCell(i, k, e.target.value)} /></td>)}
-              <td>{!disabled && <button type="button" aria-label="Remove row" onClick={() => onChange({ ...ws, rows: ws.rows.filter((_, j) => j !== i) })} className="text-slate-400 hover:text-rose-600"><Trash2 size={13} /></button>}</td>
-            </tr>
-          ))}
-          {footRow("Subtotals", "subtotals")}
-          {footRow("Net income (loss)", "net", ["isDr", "isCr", "bsDr", "bsCr"])}
-          {footRow("Totals", "totals")}
-        </tbody>
-      </table>
-      {!disabled && <button type="button" onClick={() => onChange({ ...ws, rows: [...ws.rows, { code: "", adj: "", cells: {} }] })} className="m-2 inline-flex items-center gap-1 text-xs font-semibold text-blue-700 hover:underline"><Plus size={12} /> Add an account</button>}
+    <div>
+      <Card title={`Adjusting lines to place: ${lines.length - waiting.length} of ${lines.length} placed`} className="mb-4">
+        {lines.length === 0 ? <p className="text-sm text-slate-500">Journalize the adjustments first; their lines appear here.</p> : waiting.length === 0 ? <p className="text-sm text-emerald-700">Every adjusting line is placed.</p> : (
+          <>
+            <p className="text-xs text-slate-600 mb-2">Click an adjusting line, then click the <b>Dr (column 3)</b> or <b>Cr (column 4)</b> cell on the row of its account. An account that is not in the worksheet yet is added with the box under the lines.</p>
+            <div className="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3 max-h-56 overflow-y-auto">
+              {waiting.map((l) => {
+                const on = sel?.kind === "adj" && sel.ref === l.ref;
+                return (
+                  <button key={l.ref} type="button" disabled={disabled} aria-pressed={on} onClick={() => setSel(on ? null : { kind: "adj", ref: l.ref })}
+                    className={`flex items-center justify-between gap-2 rounded border px-2 py-1 text-left text-xs ${on ? "border-blue-600 bg-blue-50 ring-2 ring-blue-300" : "border-slate-300 bg-white"}`}>
+                    <span className={`truncate ${l.side === "Cr" ? "pl-4" : ""}`}><b>({l.tag})</b> {getAccount(l.accountCode)?.name}</span><span className="tabular-nums font-medium">{formatAmount(l.amount)}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
+        {!disabled && (
+          <div className="mt-3 flex flex-wrap items-center gap-2 max-w-md">
+            <span className="text-xs text-slate-500">Add an account row:</span>
+            <div className="flex-1 min-w-[12rem]"><AccountSelect value="" taken={rows.map((r) => r.code)} label="Add an account row" onChange={(code) => code && onChange({ ...ws, extraCodes: [...ws.extraCodes, code] })} /></div>
+          </div>
+        )}
+      </Card>
+
+      <p className="text-xs text-slate-600 mb-2">{sel?.kind === "atb" ? "Now click the column (7, 8, 9 or 10) where this adjusted balance belongs." : "To fill columns 7 to 10, click an adjusted balance (columns 5 or 6), then click the column it belongs in."}</p>
+      <div className="bg-white border border-slate-200 rounded-lg overflow-x-auto">
+        <table className="w-full min-w-[1100px] text-xs">
+          <thead className="bg-slate-100 text-slate-600">
+            <tr><th rowSpan={2} className="p-1.5 text-left w-52">Account title</th>{GROUPS.map((g) => <th key={g} colSpan={2} className="p-1.5 border-l border-slate-200">{g}</th>)}</tr>
+            <tr>{GROUPS.flatMap((g) => ["Dr", "Cr"].map((x) => <th key={g + x} className="p-1 border-l border-slate-200 font-medium">{x}</th>))}</tr>
+          </thead>
+          <tbody>
+            {rows.length === 0 && <tr><td colSpan={11} className="p-4 text-center text-slate-500">The trial balance builds from your ledger. Post journal lines on the Ledger page first.</td></tr>}
+            {rows.map((r) => {
+              const inventoryRow = periodic && r.code === "130";
+              const atbSelected = sel?.kind === "atb" && sel.code === r.code;
+              const adjCell = (side: "Dr" | "Cr") => {
+                const mine = ws.adjustments.filter((a) => a.code === r.code && a.side === side && byRef.has(a.ref));
+                return (
+                  <td className="p-0.5 align-top">
+                    <button type="button" disabled={disabled || !adjSel} onClick={() => placeAdj(r.code, side)} aria-label={`Place in ${r.name} ${side}`}
+                      className={`${cellBtn} ${adjSel ? "border-dashed border-blue-500 bg-blue-50 cursor-pointer" : "border-transparent"}`}>
+                      {mine.map((a) => <span key={a.ref} className="flex items-center justify-end gap-1">({byRef.get(a.ref)!.tag}) {formatAmount(byRef.get(a.ref)!.amount)}{!disabled && <span role="button" tabIndex={0} aria-label="Take this adjustment out" onClick={(e) => { e.stopPropagation(); onChange({ ...ws, adjustments: ws.adjustments.filter((x) => x.ref !== a.ref) }); }} className="text-slate-400 hover:text-rose-600"><Trash2 size={10} /></span>}</span>)}
+                    </button>
+                  </td>
+                );
+              };
+              const atbCell = (amount: number) => (
+                <td className="p-0.5">
+                  {amount ? <button type="button" disabled={disabled} aria-pressed={atbSelected} aria-label={`Select the adjusted balance of ${r.name}`} onClick={() => setSel(atbSelected ? null : { kind: "atb", code: r.code })}
+                    className={`${cellBtn} ${atbSelected ? "border-blue-600 bg-blue-50 ring-2 ring-blue-300" : "border-slate-300 bg-white hover:bg-slate-50"}`}>{formatAmount(amount)}</button> : null}
+                </td>
+              );
+              const targetCell = (to: ColTarget, value: number) => {
+                if (inventoryRow && (to === "isCr" || to === "bsDr")) {
+                  return <td key={to} className="p-0.5"><input className={num} disabled={disabled} value={ws.ending[to]} inputMode="decimal" placeholder="ending" aria-label={`Ending inventory ${to}`} onChange={(e) => onChange({ ...ws, ending: { ...ws.ending, [to]: e.target.value } })} /></td>;
+                }
+                return (
+                  <td key={to} className="p-0.5">
+                    <button type="button" disabled={disabled || !atbSelected} onClick={() => placeTarget(r.code, to)} aria-label={`Place ${r.name} in ${to}`}
+                      className={`${cellBtn} ${atbSelected ? "border-dashed border-blue-500 bg-blue-50 cursor-pointer" : "border-transparent"}`}>
+                      {r.to === to ? <span className="inline-flex items-center gap-1">{formatAmount(value)}{!disabled && <span role="button" tabIndex={0} aria-label="Take this out of the column" onClick={(e) => { e.stopPropagation(); onChange({ ...ws, placements: ws.placements.filter((p) => p.code !== r.code) }); }} className="text-slate-400 hover:text-rose-600"><Trash2 size={10} /></span>}</span> : ""}
+                    </button>
+                  </td>
+                );
+              };
+              return (
+                <tr key={r.code} className="border-t border-slate-100">
+                  <td className="p-1">{r.code} {r.name}{!disabled && ws.extraCodes.includes(r.code) && r.adjTags.length === 0 && <button type="button" aria-label={`Remove ${r.code}`} onClick={() => onChange({ ...ws, extraCodes: ws.extraCodes.filter((c) => c !== r.code) })} className="ml-1 text-slate-400 hover:text-rose-600 align-middle"><Trash2 size={10} /></button>}</td>
+                  <td className="p-1 text-right tabular-nums">{num2(r.tbDr)}</td><td className="p-1 text-right tabular-nums">{num2(r.tbCr)}</td>
+                  {adjCell("Dr")}{adjCell("Cr")}
+                  {atbCell(r.atbDr)}{atbCell(r.atbCr)}
+                  {TARGETS.map((to) => targetCell(to, r.atbDr || r.atbCr))}
+                </tr>
+              );
+            })}
+            {footRow("Subtotals", "subtotals")}
+            {footRow("Net income (loss)", "net", ["isDr", "isCr", "bsDr", "bsCr"])}
+            {footRow("Totals", "totals")}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

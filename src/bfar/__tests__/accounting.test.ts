@@ -13,7 +13,7 @@ import { generateStatements } from "../core/statements-generator";
 import { evaluateEntry, gradeAnswers } from "../core/evaluator";
 import { PRACTICE_SETS, practiceItems } from "../practice-sets";
 import { expectedOf, gradeSubmission, gradeWork, keyJournal, keyOf, perfectWork, solutionEntries } from "../practice-sets/solution";
-import { emptyWork, entriesOfBook, FREE_BOOK, generateTrialBalance } from "../core/student-work";
+import { computeWorksheet, emptyWork, entriesOfBook, FREE_BOOK, generateTrialBalance, worksheetFootings } from "../core/student-work";
 import { BAYANIHAN } from "../practice-sets/bayanihan";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
@@ -395,7 +395,7 @@ describe("source documents and the student view", () => {
   });
 });
 
-describe("separate books and hand-built ledger, trial balance and worksheet", () => {
+describe("separate books and the hand-built ledger and worksheet", () => {
   it("keeps each practice set's entries apart", () => {
     const all = PRACTICE_SETS.flatMap((s) => solutionEntries(s));
     const free = createEntry({ date: "2026-12-01", kind: "general", explanation: "x", lines: [dr("101", 100), cr("301", 100)] });
@@ -415,7 +415,7 @@ describe("separate books and hand-built ledger, trial balance and worksheet", ()
     for (const set of PRACTICE_SETS) {
       const g = gradeWork(set, perfectWork(set), keyJournal(set));
       expect(g.score, set.id).toBe(g.max);
-      expect(g.marking.worksheetTotalsOk).toBe(true);
+      expect(g.marking.footings).toEqual({ subtotalsOk: true, netOk: true, totalsOk: true });
     }
   });
   it("gives nothing for books that were not built", () => {
@@ -423,14 +423,76 @@ describe("separate books and hand-built ledger, trial balance and worksheet", ()
     expect(g.score).toBe(0);
     expect(g.max).toBeGreaterThan(20);
   });
-  it("marks a wrong ledger balance and a wrong adjustment letter", () => {
+  it("marks a wrong ledger balance", () => {
     const w = perfectWork(CLEANPRO);
     w.ledger.find((a) => a.code === "101")!.balance = "1.00";
-    w.worksheet.rows.find((r) => r.code === "140")!.adj = "b";
     const g = gradeWork(CLEANPRO, w, keyJournal(CLEANPRO));
     expect(g.marking.ledger.find((c) => c.code === "101")!.ok).toBe(false);
-    expect(g.marking.worksheet.find((c) => c.code === "140")!.ok).toBe(false);
-    expect(g.score).toBe(g.max - 2);
+    expect(g.score).toBe(g.max - 1);
+  });
+  it("marks an adjusted balance placed in the wrong column 7-10", () => {
+    const w = perfectWork(CLEANPRO);
+    w.worksheet.placements.find((p) => p.code === "140")!.to = "isDr"; // prepaid rent is a balance sheet asset
+    const g = gradeWork(CLEANPRO, w, keyJournal(CLEANPRO));
+    const c = g.marking.columns.find((x) => x.code === "140")!;
+    expect(c).toMatchObject({ ok: false, expectedTo: "bsDr", gotTo: "isDr" });
+    // the typed subtotals no longer match the student's own columns, so the footings are charged too
+    expect(g.marking.footings.subtotalsOk).toBe(false);
+  });
+  it("marks adjusting lines placed on the wrong account, in the wrong column, or not placed", () => {
+    const base = perfectWork(CLEANPRO);
+    const w1 = structuredClone(base);
+    w1.worksheet.adjustments[0].code = "603";
+    expect(gradeWork(CLEANPRO, w1, keyJournal(CLEANPRO)).marking.adjusting.filter((p) => p.status === "wrong-account")).toHaveLength(1);
+    const w2 = structuredClone(base);
+    w2.worksheet.adjustments[0].side = w2.worksheet.adjustments[0].side === "Dr" ? "Cr" : "Dr";
+    expect(gradeWork(CLEANPRO, w2, keyJournal(CLEANPRO)).marking.adjusting.filter((p) => p.status === "wrong-side")).toHaveLength(1);
+    const w3 = structuredClone(base);
+    w3.worksheet.adjustments.pop();
+    expect(gradeWork(CLEANPRO, w3, keyJournal(CLEANPRO)).marking.adjusting.filter((p) => p.status === "not-posted")).toHaveLength(1);
+  });
+  it("grades the footings by follow-through: an early posting mistake is not charged again", () => {
+    const w = structuredClone(perfectWork(CLEANPRO));
+    w.ledger.find((a) => a.code === "101")!.posted[0].side = "Cr"; // posting mistake: charged in the posting
+    // the student foots their own (wrong) columns correctly
+    const tx = solutionEntries(CLEANPRO);
+    const rows = computeWorksheet(generateTrialBalance(w.ledger, tx.filter((e) => e.stage === "transaction")), tx, w.worksheet);
+    const f = worksheetFootings(rows);
+    const text = (n: number) => (n ? (n / 100).toFixed(2) : "");
+    w.worksheet.subtotals = Object.fromEntries(Object.entries(f.subtotals).map(([k, v]) => [k, text(v)]));
+    w.worksheet.net = Object.fromEntries(Object.entries(f.net).map(([k, v]) => [k, text(v as number)]));
+    w.worksheet.totals = Object.fromEntries(Object.entries(f.totals).map(([k, v]) => [k, text(v)]));
+    const g = gradeWork(CLEANPRO, w, keyJournal(CLEANPRO));
+    expect(g.marking.posting.filter((p) => p.status !== "ok")).toHaveLength(1);
+    expect(g.marking.footings).toEqual({ subtotalsOk: true, netOk: true, totalsOk: true });
+  });
+  it("gives no footing points for an empty worksheet", () => {
+    const g = gradeWork(CLEANPRO, emptyWork(), keyJournal(CLEANPRO));
+    expect(g.marking.footings).toEqual({ subtotalsOk: false, netOk: false, totalsOk: false });
+  });
+  it("computes the worksheet columns from the student's clicks", () => {
+    const set = CLEANPRO;
+    const w = perfectWork(set);
+    const tx = solutionEntries(set);
+    const rows = computeWorksheet(generateTrialBalance(w.ledger, tx.filter((e) => e.stage === "transaction")), tx, w.worksheet);
+    const cash = rows.find((r) => r.code === "101")!;
+    expect(cash).toMatchObject({ tbDr: P(463500), adjDr: 0, atbDr: P(463500), bsDr: P(463500), to: "bsDr" });
+    const rent = rows.find((r) => r.code === "140")!;
+    expect(rent).toMatchObject({ tbDr: P(36000), adjCr: P(6000), atbDr: P(30000), adjTags: ["a"] });
+    const dep = rows.find((r) => r.code === "160-A")!;
+    expect(dep).toMatchObject({ tbCr: 0, adjCr: P(3600), atbCr: P(3600), bsCr: P(3600) });
+    expect(worksheetFootings(rows).totals.isDr).toBe(worksheetFootings(rows).totals.isCr);
+  });
+  it("handles the periodic ending inventory typed in columns 8 and 9", () => {
+    const set = METRO;
+    const w = perfectWork(set);
+    const tx = solutionEntries(set);
+    const rows = computeWorksheet(generateTrialBalance(w.ledger, tx.filter((e) => e.stage === "transaction")), tx, w.worksheet);
+    expect(rows.find((r) => r.code === "130")).toMatchObject({ isDr: P(50000), isCr: P(65000), bsDr: P(65000) });
+    const bad = structuredClone(w);
+    bad.worksheet.ending.bsDr = "64000.00";
+    const c = gradeWork(set, bad, keyJournal(set)).marking.columns.find((x) => x.code === "130")!;
+    expect(c).toMatchObject({ ok: false, endingOk: false });
   });
   it("flags accounts the student added that the key does not have", () => {
     const w = perfectWork(CLEANPRO);
