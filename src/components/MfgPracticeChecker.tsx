@@ -40,6 +40,8 @@ export default function MfgPracticeCheckModal({ tenant, onClose }: { tenant: { i
   const [practiceSet, setPracticeSet] = useState<MfgPracticeSet | null>(null);
   const [rel, setRel] = useState<{ class: boolean; owner: boolean; has_owner: boolean } | null>(null);
   const [relBusy, setRelBusy] = useState(false);
+  // the lock (migration 0086): undefined until read, null when the company is not checked, else the time it was checked
+  const [checkedAt, setCheckedAt] = useState<string | null | undefined>(undefined);
   // team companies: who posted what, by member and role (teacher only; empty when the company is not a team's)
   const [card, setCard] = useState<{ user_id: string; full_name: string; roles: string[]; counts: Record<string, number> }[]>([]);
   // the answer key released belongs to the practice set being checked
@@ -51,6 +53,24 @@ export default function MfgPracticeCheckModal({ tenant, onClose }: { tenant: { i
   };
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { loadRelease(); }, [tenant.id, setId]);   // eslint-disable-line react-hooks/exhaustive-deps
+
+  const loadChecked = async () => {
+    const r = await supabase.rpc("mfg_company_checked", { p_tenant: tenant.id });
+    setCheckedAt(r.error ? undefined : ((r.data as string | null) ?? null));   // an error means the lock update is not applied yet: show no toggle
+  };
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { loadChecked(); }, [tenant.id]);   // eslint-disable-line react-hooks/exhaustive-deps
+
+  const setChecked = async (on: boolean) => {
+    if (relBusy) return;
+    setRelBusy(true);
+    const r = await supabase.rpc("mfg_company_set_checked", { p_tenant: tenant.id, p_checked: on, p_activity: ACTIVITY });
+    setRelBusy(false);
+    if (r.error) { toast.error(r.error.message); return; }
+    toast.success(on ? "Marked as checked. The company is locked and the answer key is released to its student(s)." : "Marked as unchecked. The student(s) can edit the company again.");
+    loadChecked();
+    loadRelease();
+  };
 
   const release = async (who: "owner" | "class", on: boolean) => {
     if (relBusy) return;
@@ -178,6 +198,18 @@ export default function MfgPracticeCheckModal({ tenant, onClose }: { tenant: { i
                   <div className="text-[#A3B1C2]">{Object.keys(m.counts).length ? Object.entries(m.counts).map(([k, n]) => `${k} ${n}`).join(" · ") : "nothing posted yet"}</div>
                 </div>
               ))}
+            </div>
+          )}
+          {checkedAt !== undefined && (
+            <div className="mt-5 pt-4 border-t border-hairline">
+              <div className="text-[11px] font-bold uppercase tracking-wide text-[#7F8EA0] mb-2">Checked and locked</div>
+              <div className="text-[12.5px] text-[#A3B1C2] mb-2">
+                {checkedAt
+                  ? `Checked on ${new Date(checkedAt).toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short" })}. The student(s) can look at everything but cannot change anything.`
+                  : "When you mark this company checked, it is locked for its student(s) and the answer key is released to them. You can mark it unchecked to let them edit again."}
+              </div>
+              <button disabled={relBusy} onClick={() => setChecked(!checkedAt)} className="rounded-md px-3 py-2 text-xs font-semibold border border-hairline disabled:opacity-50"
+                style={{ color: checkedAt ? RED : TEAL }}>{checkedAt ? "Mark as unchecked (unlock)" : "Mark as checked (lock and release the key)"}</button>
             </div>
           )}
           <div className="mt-5 pt-4 border-t border-hairline">
