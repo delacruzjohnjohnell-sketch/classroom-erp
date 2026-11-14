@@ -38,6 +38,7 @@ export type CheckResult = {
   actual: string;
   pass: boolean;
   hint?: string;
+  extra?: boolean;   // shown as a note, never counted in the score or the total
 };
 
 type Side = "dr" | "cr";

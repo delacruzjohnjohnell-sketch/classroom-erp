@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { runMfgPracticeChecks, summarizeMfg, netIncome, type MfgSnapshot, type MfgPracticeSet } from "../src/lib/mfgPracticeCheck.ts";
+import { runMfgPracticeChecks, summarizeMfg, majorErrors, netIncome, type MfgSnapshot, type MfgPracticeSet } from "../src/lib/mfgPracticeCheck.ts";
 
 // The snapshot is a real run of Practice Set 1 (supabase/tests/mfg_practice_set1_key.sql) read by mfg_practice_snapshot.
 const MFG_SET_1: MfgPracticeSet = JSON.parse(readFileSync(new URL("./fixtures/mfgPracticeSet1.definition.json", import.meta.url), "utf8"));
@@ -12,6 +12,30 @@ test("the answer-key run passes every check of Set 1", () => {
   const bad = results.filter((r) => !r.pass).map((r) => `${r.group} / ${r.label}: expected ${r.expected}, found ${r.actual}`);
   assert.deepEqual(bad, []);
   assert.ok(results.length > 50);
+});
+
+test("the total is the same for every company: an extra ledger account is a note, not a check", () => {
+  const base = summarizeMfg(runMfgPracticeChecks(key(), MFG_SET_1));
+  const snap = key();
+  snap.gl["5500"] = 120; snap.gl["1210"] = 1233.3;   // accounts the key does not list (a variance, work in process)
+  const results = runMfgPracticeChecks(snap, MFG_SET_1);
+  const s = summarizeMfg(results);
+  assert.equal(s.total, base.total);
+  assert.equal(results.filter((r) => r.extra).length, 2);
+  assert.ok(results.filter((r) => r.extra).every((r) => !r.pass));
+});
+
+test("major errors name the root mistake and count the knock-on lines", () => {
+  assert.deepEqual(majorErrors(runMfgPracticeChecks(key(), MFG_SET_1)), { major: [], knockOn: 0 });
+  const snap = key();
+  const fin = snap.routings.find((r) => r.item === "STD-PL")!.ops!.find((o) => o.op_no === 20)!;
+  Object.assign(fin, { setup_min: 18, run_min: 12, labor_min: 12, machine_min: 12 });   // the swapped Finishing minutes
+  snap.gl["5500"] = 50;
+  const m = majorErrors(runMfgPracticeChecks(snap, MFG_SET_1));
+  assert.equal(m.major[0].group, "Items and costing");
+  assert.equal(m.major[0].label, "Routing STD-PL");
+  assert.ok(m.major.length <= 3);
+  assert.ok(m.major.every((x) => x.group !== "Ledger balances" && x.group !== "Stock on hand"));
 });
 
 test("the net profit in the summary is the ledger's", () => {

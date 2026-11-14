@@ -209,6 +209,8 @@ export function runMfgPracticeChecks(s: MfgSnapshot, set: MfgPracticeSet): Check
     const side = (n: number) => (n === 0 ? "nil" : n > 0 ? `${peso(n)} Dr` : `${peso(-n)} Cr`);
     add("Ledger balances", `${code} ${ACCOUNT_NAMES[code] ?? ""}`.trim(), want ? side(want.amount) : "nil", side(have), same(have, want?.amount ?? 0),
       want?.hint ?? "This account should not have a balance in this set. Look for an extra or duplicated posting.");
+    // an account the key does not list is a note, not a point: the total stays the same for every company
+    if (!want) out[out.length - 1].extra = true;
   }
   const wantNet = netIncome(Object.fromEntries(set.balances.map((b) => [b.code, b.amount])));
   const haveNet = netIncome(s.gl);
@@ -313,9 +315,32 @@ export function runMfgPracticeChecks(s: MfgSnapshot, set: MfgPracticeSet): Check
   return out;
 }
 
+export type MajorError = { group: string; label: string; expected: string; actual: string; hint?: string; more: number };
+
+// The root mistakes a student should fix first: the first failed line of each area, in the order the work is done (setup, items, purchasing, production, sales, month end).
+// Stock and ledger lines are consequences while an earlier area is wrong, so they are counted as knock-on, not listed.
+export function majorErrors(results: CheckResult[], max = 3): { major: MajorError[]; knockOn: number } {
+  const failed = results.filter((r) => !r.pass && !r.extra);
+  const groups: string[] = [];
+  results.forEach((r) => { if (!groups.includes(r.group)) groups.push(r.group); });
+  const consequence = new Set(["Stock on hand", "Ledger balances"]);
+  const rootFailed = failed.some((r) => !consequence.has(r.group));
+  const major: MajorError[] = [];
+  let knockOn = 0;
+  for (const g of groups) {
+    const f = failed.filter((r) => r.group === g);
+    if (f.length === 0) continue;
+    if (rootFailed && consequence.has(g)) { knockOn += f.length; continue; }
+    if (major.length >= max) { knockOn += f.length; continue; }
+    major.push({ group: g, label: f[0].label, expected: f[0].expected, actual: f[0].actual, hint: f[0].hint, more: f.length - 1 });
+  }
+  return { major, knockOn };
+}
+
 export function summarizeMfg(results: CheckResult[]) {
-  const passed = results.filter((r) => r.pass).length;
-  return { passed, failed: results.length - passed, total: results.length };
+  const scored = results.filter((r) => !r.extra);
+  const passed = scored.filter((r) => r.pass).length;
+  return { passed, failed: scored.length - passed, total: scored.length };
 }
 
 const ACCOUNT_NAMES: Record<string, string> = {

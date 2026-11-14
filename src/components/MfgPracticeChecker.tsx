@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase";
 import type { CheckResult } from "@/lib/practiceCheck";
 import { toast } from "@/lib/toast";
 import { roleLabel } from "@/lib/mfgTeams";
-import { netIncome, runMfgPracticeChecks, summarizeMfg, type MfgPracticeSet, type MfgSnapshot } from "@/lib/mfgPracticeCheck";
+import { majorErrors, netIncome, runMfgPracticeChecks, summarizeMfg, type MfgPracticeSet, type MfgSnapshot } from "@/lib/mfgPracticeCheck";
 
 const TEAL = "#22D3C5", RED = "#FF6B7A";
 
@@ -16,7 +16,7 @@ function Row({ r }: { r: CheckResult }) {
     <div className="flex gap-2.5 py-2 border-b border-hairline text-[12.5px]">
       {r.pass ? <CheckCircle2 size={15} color={TEAL} className="mt-0.5 shrink-0" /> : <XCircle size={15} color={RED} className="mt-0.5 shrink-0" />}
       <div className="min-w-0">
-        <div className="font-semibold">{r.label}</div>
+        <div className="font-semibold">{r.label}{r.extra && <span className="ml-2 font-normal text-[#A3B1C2]">(extra account, not scored)</span>}</div>
         <div className="text-[#A3B1C2] break-words">Expected {r.expected}<br />Found {r.actual}</div>
         {r.hint && <div className="mt-1" style={{ color: RED }}>{r.hint}</div>}
       </div>
@@ -114,7 +114,8 @@ export default function MfgPracticeCheckModal({ tenant, onClose }: { tenant: { i
   const results = useMemo(() => (snap && practiceSet ? runMfgPracticeChecks(snap, practiceSet) : null), [snap, practiceSet]);
   const s = results ? summarizeMfg(results) : null;
   const failed = results?.filter((r) => !r.pass) ?? [];
-  const passed = results?.filter((r) => r.pass) ?? [];
+  const passed = results?.filter((r) => r.pass && !r.extra) ?? [];
+  const major = results ? majorErrors(results) : null;
   const net = snap ? netIncome(snap.gl) : 0;
 
   return (
@@ -134,6 +135,21 @@ export default function MfgPracticeCheckModal({ tenant, onClose }: { tenant: { i
             <div className="text-[12.5px] text-[#A3B1C2]">checks passed · {net >= 0 ? "net profit" : "net loss"} so far</div>
           </div>
           {s.failed === 0 && <div className="text-[13px] mb-2" style={{ color: TEAL }}>Everything matches the practice set.</div>}
+
+          {major && major.major.length > 0 && (
+            <div className="mb-4 rounded-lg border p-3" style={{ borderColor: RED }}>
+              <div className="text-[11px] font-bold uppercase tracking-wide mb-1" style={{ color: RED }}>Your major errors · fix these first</div>
+              {major.major.map((m, i) => (
+                <div key={m.group} className="py-2 border-b border-hairline last:border-b-0 text-[12.5px]">
+                  <div className="font-semibold">{i + 1}. {m.group}: {m.label}</div>
+                  <div className="text-[#A3B1C2] break-words">Expected {m.expected}<br />Found {m.actual}</div>
+                  {m.hint && <div className="mt-1" style={{ color: RED }}>{m.hint}</div>}
+                  {m.more > 0 && <div className="mt-1 text-[#A3B1C2]">{m.more} more in this area.</div>}
+                </div>
+              ))}
+              {major.knockOn > 0 && <div className="mt-2 text-[12px] text-[#A3B1C2]">{major.knockOn} stock or ledger line{major.knockOn === 1 ? "" : "s"} below will most likely fix themselves once these are right.</div>}
+            </div>
+          )}
 
           {grouped(failed).map(({ group, rows }) => (
             <div key={group} className="mb-3">

@@ -56,7 +56,7 @@ export async function scoreMfgAll(c: ClassCompany, sets: MfgPracticeSet[]): Prom
   return sets.map((set) => {
     const results = runMfgPracticeChecks(snap, set);
     const s = summarizeMfg(results);
-    return { edition: "Manufacturing" as const, activity: set.name, company: c.name, students: c.students, points: s.passed, max: s.total, status: "Checked now", detail: results.map((x) => detailFrom("Manufacturing", set.name, c, x)) };
+    return { edition: "Manufacturing" as const, activity: set.name, company: c.name, students: c.students, points: s.passed, max: s.total, status: "Checked now", detail: results.filter((x) => !x.extra).map((x) => detailFrom("Manufacturing", set.name, c, x)) };
   });
 }
 
