@@ -1,7 +1,7 @@
 // Who may use which system: a waiting or rejected student sees nothing, an approved student sees only the ticked systems, the teacher sees all,
 // and a profile from before the approvals update (no new fields) keeps full access.
 import { describe, expect, it } from "vitest";
-import { accessState, canUse, moduleOfEdition, ALL_MODULES } from "../../lib/access";
+import { accessState, canUse, moduleOfEdition, needsCompany, ALL_MODULES } from "../../lib/access";
 
 const student = (extra: Record<string, unknown> = {}) => ({ role: "student" as const, ...extra }) as Parameters<typeof canUse>[0];
 
@@ -29,6 +29,17 @@ describe("system access", () => {
   });
   it("an existing student without the new fields keeps full access", () => {
     for (const m of ALL_MODULES) expect(canUse(student(), m)).toBe(true);
+  });
+  it("only Standard and Manufacturing students have to start or join a company", () => {
+    const ok = (modules: string[]) => student({ approval: "approved", modules });
+    expect(needsCompany(ok(["ais"]))).toBe(false);
+    expect(needsCompany(ok(["bir"]))).toBe(false);
+    expect(needsCompany(ok(["bfar", "bir", "ais"]))).toBe(false);
+    expect(needsCompany(ok(["standard"]))).toBe(true);
+    expect(needsCompany(ok(["ais", "manufacturing"]))).toBe(true);
+    expect(needsCompany(student())).toBe(true);                                  // an existing student keeps the old flow
+    expect(needsCompany(student({ approval: "pending", modules: [] }))).toBe(false);
+    expect(needsCompany({ role: "teacher" } as Parameters<typeof canUse>[0])).toBe(false);
   });
   it("maps an edition to its module", () => {
     expect(moduleOfEdition("STANDARD")).toBe("standard");

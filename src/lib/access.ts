@@ -26,5 +26,12 @@ export function canUse(p: Pick<Profile, "role" | "approval" | "modules"> | null 
   return (p.modules ?? ALL_MODULES).includes(m);
 }
 
+/** Whether the person has to start or join a company of their own: only the Standard and Manufacturing ERPs work that way.
+ *  AIS companies are made and assigned by the teacher, and the BFAR and BIR practice sets use no company, so a student given only those goes straight to the menu. */
+export function needsCompany(p: Pick<Profile, "role" | "approval" | "modules"> | null | undefined): boolean {
+  if (!p || p.role === "teacher") return false;
+  return canUse(p, "standard") || canUse(p, "manufacturing");
+}
+
 /** The module an edition belongs to. */
 export const moduleOfEdition = (edition: string | null | undefined): ModuleId => (edition === "MANUFACTURING" ? "manufacturing" : edition === "AIS" ? "ais" : "standard");

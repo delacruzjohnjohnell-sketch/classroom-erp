@@ -8,7 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
 import { toast } from "@/lib/toast";
 import { EDITION_LABEL, type Edition } from "@/lib/edition";
-import { canUse } from "@/lib/access";
+import { canUse, needsCompany } from "@/lib/access";
 import { useAccessGuard } from "@/lib/useAccess";
 
 const CYAN = "#22D3C5", AMBER = "#F2B13C", VIOLET = "#9D7CFF";
@@ -114,7 +114,7 @@ export default function ChoosePage() {
 
   // a student with no company at all still has to create or join one first
   useEffect(() => {
-    if (ready && !isTeacher && userId && myCompanies.length === 0 && !profile?.tenant_id) router.replace("/login");
+    if (ready && !isTeacher && userId && myCompanies.length === 0 && !profile?.tenant_id && needsCompany(profile)) router.replace("/login");
   }, [ready, isTeacher, userId, myCompanies.length, profile, router]);
 
   if (loading || !ready || !profile || accessBlocked) {
