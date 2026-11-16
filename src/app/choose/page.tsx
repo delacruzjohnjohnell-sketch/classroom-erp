@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, BookOpen, Building2, Factory, FileText, Loader2, LogOut, Lock, Scale } from "lucide-react";
+import { BookOpen, Building2, Factory, FileText, Loader2, LogOut, Lock, Scale } from "lucide-react";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
@@ -156,21 +156,21 @@ export default function ChoosePage() {
       </div>
 
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-5 py-10">
-        <div className="text-center mb-8 max-w-xl">
-          <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#7F8EA0] mb-2">{isTeacher ? "Teacher" : `Welcome${profile.full_name ? `, ${profile.full_name.split(" ")[0]}` : ""}`}</div>
-          <h1 className="font-mono text-[22px] font-bold">Choose your ERP</h1>
-          <p className="text-[13px] text-[#A3B1C2] mt-2">
+        <div className="text-center mb-10 max-w-xl">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#4B3FE0] mb-2">{isTeacher ? "Teacher" : `Welcome${profile.full_name ? `, ${profile.full_name.split(" ")[0]}` : ""}`}</div>
+          <h1 className="text-[28px] sm:text-[32px] font-medium text-[#3F4250] leading-tight">Choose your ERP</h1>
+          <p className="text-[13.5px] text-[#7B8194] mt-3 leading-relaxed">
             {isTeacher
               ? "Open or close each edition for your class, then look at the companies in it."
               : "Each ERP is a separate company with its own books, documents and numbering. Nothing you post in one appears in the other."}
           </p>
         </div>
 
-        <div className="grid gap-5 w-full max-w-3xl" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))" }}>
+        <div className="flex flex-wrap justify-center gap-6 w-full max-w-[880px]">
           {/* ---------------- Standard ---------------- */}
           <EditionCard
-            accent={CYAN} icon={<Building2 size={22} />} title={EDITION_LABEL.STANDARD} subtitle="Service & Trading"
-            text="Sales, purchasing, inventory, banking, fixed assets, payroll and financial reports for a service or trading business."
+            tone={["#EDA867", "#CE8038"]} icon={<Building2 size={22} />} title={EDITION_LABEL.STANDARD} subtitle="Service & Trading"
+            text="Sales, purchasing, inventory, banking, assets, payroll and reports for a service or trading business."
             lastOpened={!isTeacher && lastEdition === "STANDARD" ? lastUsed.STANDARD : undefined}
             company={isTeacher ? `${counts("STANDARD")} student compan${counts("STANDARD") === 1 ? "y" : "ies"}` : standardCompany?.name}
             extra={!isTeacher && standardCompanies.length > 1 ? `${standardCompanies.length} companies — switch from the sidebar` : undefined}
@@ -183,8 +183,8 @@ export default function ChoosePage() {
 
           {/* ---------------- Manufacturing ---------------- */}
           <EditionCard
-            accent={AMBER} icon={<Factory size={22} />} title={EDITION_LABEL.MANUFACTURING} subtitle="Production, MRP, Costing, Quality"
-            text="Bills of materials, work centers, routings, production orders, standard and actual costing, variances and quality — on top of full financials."
+            tone={["#58CFCB", "#2B8497"]} icon={<Factory size={22} />} title={EDITION_LABEL.MANUFACTURING} subtitle="Production, Costing, Quality"
+            text="Bills of materials, routings, production orders, costing, variances and quality, on top of full financials."
             lastOpened={!isTeacher && lastEdition === "MANUFACTURING" ? lastUsed.MANUFACTURING : undefined}
             company={isTeacher ? `${counts("MANUFACTURING")} compan${counts("MANUFACTURING") === 1 ? "y" : "ies"}` : mfgCompany?.name}
             extra={!isTeacher && mfgCompanies.length > 1 ? `${mfgCompanies.length} companies (yours and your team's) — switch from the sidebar` : undefined}
@@ -197,8 +197,8 @@ export default function ChoosePage() {
 
           {/* ---------------- Accounting Information Systems ---------------- */}
           <EditionCard
-            accent={VIOLET} icon={<Scale size={22} />} title={EDITION_LABEL.AIS} subtitle="Controls, Documents, Audit"
-            text="Work as a firm's accounting and audit staff: review document packets, post or hold each one, then test the books for control failures and fraud."
+            tone={["#6E5CA8", "#3F3377"]} icon={<Scale size={22} />} title={EDITION_LABEL.AIS} subtitle="Controls, Documents, Audit"
+            text="Review document packets, post or hold each one, then audit the books for control failures and fraud."
             lastOpened={!isTeacher && lastEdition === "AIS" ? lastUsed.AIS : undefined}
             company={isTeacher ? `${counts("AIS")} compan${counts("AIS") === 1 ? "y" : "ies"}` : aisCompany?.name}
             extra={!isTeacher && aisCompanies.length > 1 ? `${aisCompanies.length} companies — switch from the sidebar` : undefined}
@@ -211,8 +211,8 @@ export default function ChoosePage() {
 
           {/* ---------------- BFAR: standalone, no company or database ---------------- */}
           <EditionCard
-            accent="#34D399" icon={<BookOpen size={22} />} title="Basic Financial Accounting" subtitle="BFAR, practice sets"
-            text="Journal, ledger, worksheet and financial statements for a sole proprietorship, with graded practice sets. Works on its own, with no company to set up."
+            tone={["#4A86DB", "#2756A8"]} icon={<BookOpen size={22} />} title="Basic Financial Accounting" subtitle="BFAR, practice sets"
+            text="Journal, ledger, worksheet and statements for a sole proprietorship, with graded practice sets. No company to set up."
             company={isTeacher ? "Students' practice sets" : undefined}
             locked={!isTeacher && !canUse(profile, "bfar")}
             lockedText="Your teacher has not given you this system."
@@ -223,8 +223,8 @@ export default function ChoosePage() {
 
           {/* ---------------- BIR eForms Lab: standalone, no company ---------------- */}
           <EditionCard
-            accent="#F472B6" icon={<FileText size={22} />} title="BIR eForms Lab" subtitle="Tax returns, lessons, cases"
-            text="Practice filling out BIR tax returns on a screen that works like the Offline eBIRForms Package, with a lesson, tips and case problems for each form. A classroom simulation: nothing is sent to the BIR."
+            tone={["#E8737C", "#A5424C"]} icon={<FileText size={22} />} title="BIR eForms Lab" subtitle="Tax returns, lessons, cases"
+            text="Fill out BIR tax returns on a screen like eBIRForms, with lessons and cases. A simulation: nothing is sent to the BIR."
             locked={!isTeacher && !canUse(profile, "bir")}
             lockedText="Your teacher has not given you this system."
             cta="Open"
@@ -282,39 +282,42 @@ export default function ChoosePage() {
   );
 }
 
-function EditionCard({ accent, icon, title, subtitle, text, company, extra, lastOpened, locked, lockedText, cta, busy, onClick }: {
-  accent: string; icon: React.ReactNode; title: string; subtitle: string; text: string;
+// A tall gradient card: a white line icon, the title, a short description and an outlined pill button that fills white on hover.
+// tone is the top and bottom colour of the gradient; a locked card is greyed and shows why instead of the button.
+function EditionCard({ tone, icon, title, subtitle, text, company, extra, lastOpened, locked, lockedText, cta, busy, onClick }: {
+  tone: [string, string]; icon: React.ReactNode; title: string; subtitle: string; text: string;
   company?: string; extra?: string; lastOpened?: LastUsed; locked?: boolean; lockedText?: string;
   cta: string; busy: boolean; onClick: () => void;
 }) {
   return (
-    <div className="relative rounded-2xl border bg-panel p-6 flex flex-col"
-      style={{ borderColor: lastOpened ? accent : "#243140", boxShadow: lastOpened ? `0 0 0 1px ${accent}55, 0 0 36px ${accent}14` : undefined, opacity: locked ? 0.7 : 1 }}>
-      <div className="absolute left-0 right-0 top-0 h-px rounded-t-2xl" style={{ background: `linear-gradient(90deg, ${accent}, transparent 60%)` }} />
-      <div className="flex items-start justify-between">
-        <div className="w-12 h-12 rounded-xl flex items-center justify-center border" style={{ color: accent, borderColor: `${accent}66`, background: `${accent}14` }}>{icon}</div>
-        {lastOpened && <span className="font-mono text-[10px] uppercase tracking-[0.12em] rounded px-2 py-1 border" style={{ color: accent, borderColor: `${accent}55`, background: `${accent}12` }}>Last opened</span>}
-      </div>
-      <div className="font-mono text-[16px] font-bold mt-4">{title}</div>
-      <div className="font-mono text-[11px] uppercase tracking-[0.14em] mt-0.5" style={{ color: accent }}>{subtitle}</div>
-      <div className="text-[13px] text-[#A3B1C2] leading-relaxed mt-3 flex-1">{text}</div>
+    <div className="group relative w-[256px] max-w-full rounded-md flex flex-col items-center text-center text-white px-5 pt-8 pb-6 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_20px_40px_-14px_var(--glow)]"
+      style={{
+        background: `linear-gradient(180deg, ${tone[0]}, ${tone[1]})`,
+        boxShadow: `0 14px 28px -16px ${tone[1]}`,
+        filter: locked ? "grayscale(0.6)" : undefined, opacity: locked ? 0.8 : 1,
+        ["--glow" as string]: tone[0], ["--ink" as string]: tone[1],
+      }}>
+      {lastOpened && <span className="absolute top-3 right-3 text-[9.5px] font-semibold uppercase tracking-[0.1em] rounded bg-white/25 px-1.5 py-0.5">Last opened</span>}
+      <div className="mb-5 [&>svg]:h-11 [&>svg]:w-11 [&>svg]:stroke-[1.2]" aria-hidden="true">{icon}</div>
+      <div className="text-[16px] font-medium leading-snug min-h-[2.6rem] flex items-center">{title}</div>
+      <div className="text-[10px] uppercase tracking-[0.14em] text-white/80 mt-1">{subtitle}</div>
+      <div className="text-[11.5px] leading-relaxed text-white/90 mt-3 flex-1">{text}</div>
 
       {company && (
-        <div className="mt-4 text-[12.5px] border-t border-hairline pt-3">
-          <div className="text-[#7F8EA0]">{locked ? "" : "Your company"}</div>
+        <div className="mt-4 w-full border-t border-white/25 pt-3 text-[11.5px]">
+          {!locked && <div className="text-white/70">Your company</div>}
           <div className="font-semibold truncate">{company}</div>
-          {extra && <div className="text-[11.5px] text-[#7F8EA0] mt-0.5">{extra}</div>}
-          {lastOpened && <div className="text-[11.5px] text-[#7F8EA0] mt-0.5">Last opened {fmtDate(lastOpened.opened_at)}</div>}
+          {extra && <div className="text-white/75 mt-0.5">{extra}</div>}
+          {lastOpened && <div className="text-white/75 mt-0.5">Last opened {fmtDate(lastOpened.opened_at)}</div>}
         </div>
       )}
 
       {locked ? (
-        <div className="mt-4 flex items-center justify-center gap-2 text-[12.5px] text-[#7F8EA0] border border-hairline rounded-lg py-2.5"><Lock size={14} /> {lockedText}</div>
+        <div className="mt-5 flex items-center justify-center gap-1.5 text-[11.5px] text-white/90"><Lock size={13} className="shrink-0" /> <span>{lockedText}</span></div>
       ) : (
         <button onClick={onClick} disabled={busy}
-          className="mt-4 flex items-center justify-center gap-2 rounded-lg py-2.5 text-[13.5px] font-semibold border transition-colors disabled:opacity-60"
-          style={{ color: accent, borderColor: `${accent}8c`, background: lastOpened ? `${accent}24` : `${accent}12` }}>
-          {busy ? <Loader2 size={15} className="animate-spin" /> : null} {cta} <ArrowRight size={15} />
+          className="mt-5 inline-flex items-center justify-center gap-2 rounded-full border border-white/90 px-6 py-1.5 text-[12px] font-medium transition-colors group-hover:bg-white group-hover:text-[color:var(--ink)] disabled:opacity-60">
+          {busy ? <Loader2 size={13} className="animate-spin" /> : null} {cta}
         </button>
       )}
     </div>
