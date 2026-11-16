@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, Building2, Factory, FileText, Loader2, LogOut, Lock, Scale } from "lucide-react";
+import { ArrowRight, BookOpen, Building2, Factory, FileText, Loader2, LogOut, Lock, Scale } from "lucide-react";
+import { Inter } from "next/font/google";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
@@ -11,7 +12,8 @@ import { EDITION_LABEL, type Edition } from "@/lib/edition";
 import { canUse, needsCompany } from "@/lib/access";
 import { useAccessGuard } from "@/lib/useAccess";
 
-const CYAN = "#22D3C5", AMBER = "#F2B13C", VIOLET = "#9D7CFF";
+const CYAN = "#22D3C5";
+const inter = Inter({ subsets: ["latin"], display: "swap" });   // this page only: the font is self-hosted at build and not applied anywhere else
 
 type EditionRow = { tenant_id: string; edition: Edition };
 type LastUsed = { edition: Edition; tenant_id: string; opened_at: string };
@@ -133,7 +135,7 @@ export default function ChoosePage() {
   const counts = (e: Edition) => tenants.filter((t) => editionOf(t.id) === e).length;
 
   return (
-    <div className="relative min-h-screen flex flex-col">
+    <div className={`${inter.className} relative min-h-screen flex flex-col bg-[#F4F6FA]`}>
       {/* the school's seal and the college's logo, faint behind everything; the white box of the seal is blended into the page */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute left-[3%] top-1/2 h-[min(44vw,420px)] w-[min(44vw,420px)] -translate-y-1/2 bg-contain bg-center bg-no-repeat opacity-[0.10] mix-blend-multiply" style={{ backgroundImage: "url(/olfu-seal.jpeg)" }} />
@@ -157,9 +159,9 @@ export default function ChoosePage() {
 
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-5 py-10">
         <div className="text-center mb-10 max-w-xl">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#4B3FE0] mb-2">{isTeacher ? "Teacher" : `Welcome${profile.full_name ? `, ${profile.full_name.split(" ")[0]}` : ""}`}</div>
-          <h1 className="text-[28px] sm:text-[32px] font-medium text-[#3F4250] leading-tight">Choose your ERP</h1>
-          <p className="text-[13.5px] text-[#7B8194] mt-3 leading-relaxed">
+          <div className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[#2563EB] mb-2">{isTeacher ? "Teacher" : `Welcome${profile.full_name ? `, ${profile.full_name.split(" ")[0]}` : ""}`}</div>
+          <h1 className="text-[28px] sm:text-[32px] font-semibold tracking-tight text-[#0F2A4A] leading-tight">Choose your ERP</h1>
+          <p className="text-[14.5px] text-[#475569] mt-3 leading-relaxed">
             {isTeacher
               ? "Open or close each edition for your class, then look at the companies in it."
               : "Each ERP is a separate company with its own books, documents and numbering. Nothing you post in one appears in the other."}
@@ -169,7 +171,7 @@ export default function ChoosePage() {
         <div className="flex flex-wrap justify-center gap-6 w-full max-w-[880px]">
           {/* ---------------- Standard ---------------- */}
           <EditionCard
-            tone={["#EDA867", "#CE8038"]} icon={<Building2 size={22} />} title={EDITION_LABEL.STANDARD} subtitle="Service & Trading"
+            accent="#D97706" icon={<Building2 size={22} />} title={EDITION_LABEL.STANDARD} subtitle="Service & Trading"
             text="Sales, purchasing, inventory, banking, assets, payroll and reports for a service or trading business."
             lastOpened={!isTeacher && lastEdition === "STANDARD" ? lastUsed.STANDARD : undefined}
             company={isTeacher ? `${counts("STANDARD")} student compan${counts("STANDARD") === 1 ? "y" : "ies"}` : standardCompany?.name}
@@ -183,7 +185,7 @@ export default function ChoosePage() {
 
           {/* ---------------- Manufacturing ---------------- */}
           <EditionCard
-            tone={["#58CFCB", "#2B8497"]} icon={<Factory size={22} />} title={EDITION_LABEL.MANUFACTURING} subtitle="Production, Costing, Quality"
+            accent="#0D9488" icon={<Factory size={22} />} title={EDITION_LABEL.MANUFACTURING} subtitle="Production, Costing, Quality"
             text="Bills of materials, routings, production orders, costing, variances and quality, on top of full financials."
             lastOpened={!isTeacher && lastEdition === "MANUFACTURING" ? lastUsed.MANUFACTURING : undefined}
             company={isTeacher ? `${counts("MANUFACTURING")} compan${counts("MANUFACTURING") === 1 ? "y" : "ies"}` : mfgCompany?.name}
@@ -197,7 +199,7 @@ export default function ChoosePage() {
 
           {/* ---------------- Accounting Information Systems ---------------- */}
           <EditionCard
-            tone={["#6E5CA8", "#3F3377"]} icon={<Scale size={22} />} title={EDITION_LABEL.AIS} subtitle="Controls, Documents, Audit"
+            accent="#4F46E5" icon={<Scale size={22} />} title={EDITION_LABEL.AIS} subtitle="Controls, Documents, Audit"
             text="Review document packets, post or hold each one, then audit the books for control failures and fraud."
             lastOpened={!isTeacher && lastEdition === "AIS" ? lastUsed.AIS : undefined}
             company={isTeacher ? `${counts("AIS")} compan${counts("AIS") === 1 ? "y" : "ies"}` : aisCompany?.name}
@@ -211,7 +213,7 @@ export default function ChoosePage() {
 
           {/* ---------------- BFAR: standalone, no company or database ---------------- */}
           <EditionCard
-            tone={["#4A86DB", "#2756A8"]} icon={<BookOpen size={22} />} title="Basic Financial Accounting" subtitle="BFAR, practice sets"
+            accent="#059669" icon={<BookOpen size={22} />} title="Basic Financial Accounting" subtitle="BFAR, practice sets"
             text="Journal, ledger, worksheet and statements for a sole proprietorship, with graded practice sets. No company to set up."
             company={isTeacher ? "Students' practice sets" : undefined}
             locked={!isTeacher && !canUse(profile, "bfar")}
@@ -223,7 +225,7 @@ export default function ChoosePage() {
 
           {/* ---------------- BIR eForms Lab: standalone, no company ---------------- */}
           <EditionCard
-            tone={["#E8737C", "#A5424C"]} icon={<FileText size={22} />} title="BIR eForms Lab" subtitle="Tax returns, lessons, cases"
+            accent="#E11D48" icon={<FileText size={22} />} title="BIR eForms Lab" subtitle="Tax returns, lessons, cases"
             text="Fill out BIR tax returns on a screen like eBIRForms, with lessons and cases. A simulation: nothing is sent to the BIR."
             locked={!isTeacher && !canUse(profile, "bir")}
             lockedText="Your teacher has not given you this system."
@@ -239,7 +241,7 @@ export default function ChoosePage() {
               <div className="font-semibold text-[14px]">A practice set is open for your AIS team</div>
               <div className="text-[12.5px] text-[#A3B1C2] mt-0.5">Any member of your team can start it; the whole team then works on the same set.</div>
             </div>
-            <button onClick={() => router.push("/ais/start")} className="rounded-lg px-4 py-2 text-[13px] font-semibold text-white" style={{ background: VIOLET }}>Choose a practice set</button>
+            <button onClick={() => router.push("/ais/start")} className="h-10 rounded-lg px-5 text-[14px] font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-[#1E40AF] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-2">Choose a practice set</button>
           </div>
         )}
 
@@ -252,8 +254,9 @@ export default function ChoosePage() {
               </div>
             </div>
             <button onClick={toggleManufacturing}
-              className="rounded-lg px-4 py-2 text-[13px] font-semibold border"
-              style={{ color: enabled.MANUFACTURING ? "#FF6B7A" : AMBER, borderColor: enabled.MANUFACTURING ? "rgba(255,107,122,0.55)" : "rgba(242,177,60,0.55)", background: enabled.MANUFACTURING ? "rgba(255,107,122,0.1)" : "rgba(242,177,60,0.1)" }}>
+              className={enabled.MANUFACTURING
+                ? "h-10 rounded-lg px-5 text-[14px] font-semibold border border-[#DC2626] text-[#DC2626] bg-white hover:bg-[#FEF2F2] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#DC2626] focus-visible:ring-offset-2"
+                : "h-10 rounded-lg px-5 text-[14px] font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-[#1E40AF] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-2"}>
               {enabled.MANUFACTURING ? "Close it" : "Open it for students"}
             </button>
           </div>
@@ -267,8 +270,9 @@ export default function ChoosePage() {
               </div>
             </div>
             <button onClick={toggleAis}
-              className="rounded-lg px-4 py-2 text-[13px] font-semibold border"
-              style={{ color: enabled.AIS ? "#FF6B7A" : VIOLET, borderColor: enabled.AIS ? "rgba(255,107,122,0.55)" : "rgba(157,124,255,0.55)", background: enabled.AIS ? "rgba(255,107,122,0.1)" : "rgba(157,124,255,0.1)" }}>
+              className={enabled.AIS
+                ? "h-10 rounded-lg px-5 text-[14px] font-semibold border border-[#DC2626] text-[#DC2626] bg-white hover:bg-[#FEF2F2] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#DC2626] focus-visible:ring-offset-2"
+                : "h-10 rounded-lg px-5 text-[14px] font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-[#1E40AF] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-2"}>
               {enabled.AIS ? "Close it" : "Open it for students"}
             </button>
           </div>
@@ -282,42 +286,43 @@ export default function ChoosePage() {
   );
 }
 
-// A tall gradient card: a white line icon, the title, a short description and an outlined pill button that fills white on hover.
-// tone is the top and bottom colour of the gradient; a locked card is greyed and shows why instead of the button.
-function EditionCard({ tone, icon, title, subtitle, text, company, extra, lastOpened, locked, lockedText, cta, busy, onClick }: {
-  tone: [string, string]; icon: React.ReactNode; title: string; subtitle: string; text: string;
+// A clean white card: a coloured icon tile, the title, a short description and a solid blue button. The whole card is clickable (the button is the keyboard target).
+// accent colours only the icon tile and the small tag, so each system has an identity without a rainbow; a locked card is plain grey and says why.
+const INK = "#0F2A4A";
+function EditionCard({ accent, icon, title, subtitle, text, company, extra, lastOpened, locked, lockedText, cta, busy, onClick }: {
+  accent: string; icon: React.ReactNode; title: string; subtitle: string; text: string;
   company?: string; extra?: string; lastOpened?: LastUsed; locked?: boolean; lockedText?: string;
   cta: string; busy: boolean; onClick: () => void;
 }) {
+  const tone = locked ? "#94A3B8" : accent;
   return (
-    <div className="group relative w-[256px] max-w-full rounded-md flex flex-col items-center text-center text-white px-5 pt-8 pb-6 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_20px_40px_-14px_var(--glow)]"
-      style={{
-        background: `linear-gradient(180deg, ${tone[0]}, ${tone[1]})`,
-        boxShadow: `0 14px 28px -16px ${tone[1]}`,
-        filter: locked ? "grayscale(0.6)" : undefined, opacity: locked ? 0.8 : 1,
-        ["--glow" as string]: tone[0], ["--ink" as string]: tone[1],
-      }}>
-      {lastOpened && <span className="absolute top-3 right-3 text-[9.5px] font-semibold uppercase tracking-[0.1em] rounded bg-white/25 px-1.5 py-0.5">Last opened</span>}
-      <div className="mb-5 [&>svg]:h-11 [&>svg]:w-11 [&>svg]:stroke-[1.2]" aria-hidden="true">{icon}</div>
-      <div className="text-[16px] font-medium leading-snug min-h-[2.6rem] flex items-center">{title}</div>
-      <div className="text-[10px] uppercase tracking-[0.14em] text-white/80 mt-1">{subtitle}</div>
-      <div className="text-[11.5px] leading-relaxed text-white/90 mt-3 flex-1">{text}</div>
+    <div
+      onClick={(e) => { if (!locked && !busy && !(e.target as HTMLElement).closest("button")) onClick(); }}
+      className={`relative w-[280px] max-w-full rounded-xl border border-[#E3E8F0] bg-white flex flex-col p-6 transition-all duration-200 ${locked ? "bg-[#F8FAFC]" : "cursor-pointer shadow-[0_1px_2px_rgba(15,42,74,0.06)] hover:-translate-y-0.5 hover:border-[#C7D2E4] hover:shadow-[0_14px_32px_-14px_rgba(15,42,74,0.28)]"}`}>
+      {lastOpened && <span className="absolute top-4 right-4 text-[10px] font-semibold uppercase tracking-[0.08em] rounded-full px-2 py-0.5" style={{ color: tone, background: `${tone}14` }}>Last opened</span>}
+      <div className="w-12 h-12 rounded-xl flex items-center justify-center [&>svg]:h-6 [&>svg]:w-6 [&>svg]:stroke-[1.7]" style={{ color: tone, background: `${tone}14` }} aria-hidden="true">{icon}</div>
+      <div className="text-[17px] font-semibold leading-snug mt-4" style={{ color: INK }}>{title}</div>
+      <div className="text-[11px] font-semibold uppercase tracking-[0.1em] mt-1" style={{ color: tone }}>{subtitle}</div>
+      <div className="text-[13.5px] leading-relaxed text-[#475569] mt-3 flex-1">{text}</div>
 
       {company && (
-        <div className="mt-4 w-full border-t border-white/25 pt-3 text-[11.5px]">
-          {!locked && <div className="text-white/70">Your company</div>}
-          <div className="font-semibold truncate">{company}</div>
-          {extra && <div className="text-white/75 mt-0.5">{extra}</div>}
-          {lastOpened && <div className="text-white/75 mt-0.5">Last opened {fmtDate(lastOpened.opened_at)}</div>}
+        <div className="mt-4 border-t border-[#E8ECF3] pt-3 text-[12.5px]">
+          {!locked && <div className="text-[#64748B]">Your company</div>}
+          <div className="font-semibold truncate" style={{ color: INK }}>{company}</div>
+          {extra && <div className="text-[#64748B] mt-0.5">{extra}</div>}
+          {lastOpened && <div className="text-[#64748B] mt-0.5">Last opened {fmtDate(lastOpened.opened_at)}</div>}
         </div>
       )}
 
       {locked ? (
-        <div className="mt-5 flex items-center justify-center gap-1.5 text-[11.5px] text-white/90"><Lock size={13} className="shrink-0" /> <span>{lockedText}</span></div>
+        <div className="mt-5">
+          <button type="button" disabled className="w-full h-10 inline-flex items-center justify-center gap-2 rounded-lg bg-[#E2E8F0] text-[#64748B] text-[14px] font-semibold cursor-not-allowed"><Lock size={14} /> Locked</button>
+          <div className="text-[12.5px] text-[#64748B] mt-2 text-center">{lockedText}</div>
+        </div>
       ) : (
-        <button onClick={onClick} disabled={busy}
-          className="mt-5 inline-flex items-center justify-center gap-2 rounded-full border border-white/90 px-6 py-1.5 text-[12px] font-medium transition-colors group-hover:bg-white group-hover:text-[color:var(--ink)] disabled:opacity-60">
-          {busy ? <Loader2 size={13} className="animate-spin" /> : null} {cta}
+        <button type="button" onClick={onClick} disabled={busy}
+          className="mt-5 w-full h-10 inline-flex items-center justify-center gap-2 rounded-lg text-white text-[14px] font-semibold bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-[#1E40AF] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed">
+          {busy ? <Loader2 size={15} className="animate-spin" /> : null} {cta} {!busy && <ArrowRight size={15} />}
         </button>
       )}
     </div>
