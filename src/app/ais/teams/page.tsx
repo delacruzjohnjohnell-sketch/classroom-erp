@@ -6,6 +6,8 @@ import { ArrowLeft, Loader2, LogOut, Plus, Trash2, Users } from "lucide-react";
 import { ConfirmDialog, Empty, FormStyles, GoldBtn, Label, Modal, OutlineBtn, Panel, TinyBtn } from "@/components/ui";
 import BulkCompanies from "@/components/ais/BulkCompanies";
 import PracticeSetsPanel from "@/components/ais/PracticeSetsPanel";
+import NewTeamModal from "@/components/ais/NewTeamModal";
+import { nextTeamName } from "@/lib/aisTeam";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
@@ -56,6 +58,7 @@ export default function AisTeamsPage() {
   const [addSeats, setAddSeats] = useState<Seat[]>(["ACCOUNTING"]);
   const [busy, setBusy] = useState(false);
   const [bulk, setBulk] = useState(false);
+  const [teamModal, setTeamModal] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [sets, setSets] = useState<SetRow[]>([]);
   const [importing, setImporting] = useState(false);
@@ -229,7 +232,10 @@ export default function AisTeamsPage() {
         </div>
 
         <Panel title="AIS companies">
-          <div className="mb-3"><GoldBtn onClick={() => setCreating(true)}><Plus size={14} /> New AIS company</GoldBtn></div>
+          <div className="mb-3 flex gap-2 flex-wrap">
+            <GoldBtn onClick={() => setTeamModal(true)}><Users size={14} /> New team: tick the students and their roles</GoldBtn>
+            <OutlineBtn onClick={() => setCreating(true)}><Plus size={14} /> New empty company</OutlineBtn>
+          </div>
           {companies === null ? <div className="py-6 flex justify-center"><Loader2 className="animate-spin" size={18} color={VIOLET} /></div>
             : companies.length === 0 ? <Empty>No AIS company yet. Create the first one.</Empty> : (
               <table>
@@ -286,6 +292,7 @@ export default function AisTeamsPage() {
         </Modal>
       )}
 
+      {teamModal && <NewTeamModal defaultName={nextTeamName((companies ?? []).map((c) => c.name))} fiscalStart={yearStart()} onClose={() => setTeamModal(false)} onCreated={loadCompanies} />}
       {importing && (
         <Modal title="Import a practice set" onClose={() => setImporting(false)} wide>
           <div className="text-[12px] text-[#7F8EA0] mb-2">Paste the contents of the set&rsquo;s .json file (for example <code>supabase/seed/ais_set_sinag_revenue.json</code>). A set that has already been assigned to a company cannot be replaced; import it under a new id instead.</div>

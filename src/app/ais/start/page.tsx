@@ -9,7 +9,7 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "@/lib/toast";
 import { useAccessGuard } from "@/lib/useAccess";
 
-type OpenSet = { id: string; title: string; topic: string | null; summary: string | null; documents: number; mode: "IMMEDIATE" | "AFTER_CLOSE"; started: string | null };
+type OpenSet = { id: string; title: string; topic: string | null; summary: string | null; documents: number; mode: "IMMEDIATE" | "AFTER_CLOSE"; started: string | null; team: { id: string; name: string } | null };
 const VIOLET = "#9D7CFF";
 
 export default function AisStartPage() {
@@ -61,7 +61,7 @@ export default function AisStartPage() {
         <div>
           <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#7F8EA0]">Accounting Information Systems</div>
           <h1 className="text-[22px] font-bold mt-1">Choose a practice set</h1>
-          <p className="text-[13px] text-[#A3B1C2] mt-1">Starting a set gives you your own company with both seats, Accounting and Audit, and numbers that are yours alone. Come back here any time to continue it.</p>
+          <p className="text-[13px] text-[#A3B1C2] mt-1">Your teacher puts you in a team and gives each of you a seat. When a set is open, any member of the team can start it. The whole team then works on the same set, in the same company, with the same numbers. Come back here any time to continue.</p>
         </div>
         {sets.length === 0 && <div className="rounded-xl border border-hairline bg-panel p-5 text-[13px] text-[#A3B1C2]">No practice set is open yet. Your teacher will open one; it will appear here.</div>}
         {sets.map((s) => (
@@ -69,8 +69,10 @@ export default function AisStartPage() {
             <div className="font-semibold text-[15px]">{s.title}</div>
             <div className="text-[12px] text-[#7F8EA0]">{s.topic} · {s.documents} documents · {s.mode === "IMMEDIATE" ? "Practice: each answer is explained straight away" : "Graded: results after the Audit closes"}</div>
             {s.summary && <p className="text-[13px] text-[#A3B1C2]">{s.summary}</p>}
-            <div><button type="button" disabled={busy !== null} onClick={() => start(s)} className="rounded-lg px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-50" style={{ background: VIOLET }}>
-              {busy === s.id ? "Opening…" : s.started ? "Continue" : "Start this practice set"}
+            {!s.started && !s.team && <div className="text-[12.5px] text-[#A3B1C2]">Your teacher has not put you in an AIS team yet, or your team already has a practice set. Ask your teacher.</div>}
+            {!s.started && s.team && <div className="text-[12.5px] text-[#A3B1C2]">Your team: <b>{s.team.name}</b></div>}
+            <div><button type="button" disabled={busy !== null || (!s.started && !s.team)} onClick={() => start(s)} className="rounded-lg px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-50" style={{ background: VIOLET }}>
+              {busy === s.id ? "Opening…" : s.started ? "Continue" : "Start with my team"}
             </button></div>
           </div>
         ))}

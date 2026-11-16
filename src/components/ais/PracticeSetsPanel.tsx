@@ -58,7 +58,7 @@ export default function PracticeSetsPanel({ sets, onChanged }: { sets: SetRow[];
       }
       const d = draftOf(id);
       const res = await mutate(supabase.rpc("ais_set_open", { p_set: id, p_open: open, p_mode: d.mode, p_lock: d.lock || null }),
-        { successMessage: open ? "Open. Every student who may use AIS can now start this set." : "Closed. Nobody new can start it; companies already started keep working." });
+        { successMessage: open ? "Open. Every team that has no set yet can now start it." : "Closed. No team can start it now; teams that already started keep working." });
       if (ok(res)) { await loadState(); onChanged(); }
     } finally { setBusy(null); }
   };
@@ -67,8 +67,9 @@ export default function PracticeSetsPanel({ sets, onChanged }: { sets: SetRow[];
   return (
     <div className="flex flex-col gap-3">
       <div className="text-[12.5px] text-[#A3B1C2] max-w-[780px]">
-        Open a set and it appears on every approved student&rsquo;s AIS card: they start it with one click and get their own company, both seats and their own numbers.
-        <b> Practice</b> explains each answer straight away; <b>Graded</b> shows results only after the Audit closes. Close it to stop new starts.
+        Put the students in teams first (the AIS companies above: add an Accounting student and an Audit student). Then open a set: any member of a team can start it, and the whole
+        team works on it in the company you made, with numbers of its own. <b>Practice</b> explains each answer straight away; <b>Graded</b> shows results only after the Audit closes.
+        Close it to stop new starts. A team that already has a set needs your &ldquo;Start a new round&rdquo; for another.
       </div>
       {state === null && <div className="rounded-lg bg-amber-50 p-3 text-[12.5px] text-amber-900">The sets can&rsquo;t be opened to the class until the database update 0088 is applied.</div>}
       {rows.length === 0 ? <div className="text-[12.5px] text-[#7F8EA0]">No practice set yet.</div> : (
@@ -90,7 +91,7 @@ export default function PracticeSetsPanel({ sets, onChanged }: { sets: SetRow[];
                   <td><input className="input" type="date" value={d.lock} onChange={(e) => setDraft(x.id, { lock: e.target.value })} disabled={state === null} aria-label={`Lock date for ${x.title}`} /></td>
                   <td>
                     {isOpen ? <b style={{ color: "#2E9E5B" }}>Open</b> : <span className="text-[#7F8EA0]">{x.installed ? "Closed" : "Not installed"}</span>}
-                    {st && st.started > 0 && <div className="text-[11px] text-[#7F8EA0]">{st.started} started</div>}
+                    {st && st.started > 0 && <div className="text-[11px] text-[#7F8EA0]">{st.started} team{st.started === 1 ? "" : "s"} started</div>}
                   </td>
                   <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
                     {isOpen ? (
