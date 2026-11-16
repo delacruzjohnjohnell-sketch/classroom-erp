@@ -127,8 +127,13 @@ export default function ChoosePage() {
   const counts = (e: Edition) => tenants.filter((t) => editionOf(t.id) === e).length;
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <div className="flex items-center justify-between px-6 py-4 border-b border-hairline bg-panel">
+    <div className="relative min-h-screen flex flex-col">
+      {/* the school's seal and the college's logo, faint behind everything; the white box of the seal is blended into the page */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute left-[3%] top-1/2 h-[min(44vw,420px)] w-[min(44vw,420px)] -translate-y-1/2 bg-contain bg-center bg-no-repeat opacity-[0.10] mix-blend-multiply" style={{ backgroundImage: "url(/olfu-seal.jpeg)" }} />
+        <div className="absolute right-[3%] top-1/2 h-[min(44vw,420px)] w-[min(44vw,420px)] -translate-y-1/2 bg-contain bg-center bg-no-repeat opacity-[0.10] mix-blend-multiply" style={{ backgroundImage: "url(/cba-logo.png)" }} />
+      </div>
+      <div className="relative z-10 flex items-center justify-between px-6 py-4 border-b border-hairline bg-panel">
         <div className="flex items-center gap-2.5">
           <div className="font-mono text-[13px] font-bold text-teal border border-[rgba(34,211,197,0.55)] bg-tealsoft rounded-md w-8 h-8 flex items-center justify-center shadow-glow">&gt;_</div>
           <div className="font-mono text-[14px] font-bold">JJ and Co.</div>
@@ -144,7 +149,7 @@ export default function ChoosePage() {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center px-5 py-10">
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-5 py-10">
         <div className="text-center mb-8 max-w-xl">
           <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#7F8EA0] mb-2">{isTeacher ? "Teacher" : `Welcome${profile.full_name ? `, ${profile.full_name.split(" ")[0]}` : ""}`}</div>
           <h1 className="font-mono text-[22px] font-bold">Choose your ERP</h1>
