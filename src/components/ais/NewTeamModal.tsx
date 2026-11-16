@@ -60,8 +60,10 @@ export default function NewTeamModal({ defaultName, fiscalStart, onClose, onCrea
           </div>
           <div className="text-[12.5px] text-[#A3B1C2]">
             Tick each student who belongs to the team and the role they hold. <b>Accounting</b> reviews and posts the documents; <b>Audit</b> tests the posted books.
-            Tick both for one student to make a solo team. Only approved students with the AIS system are listed.
+            Tick both for one student to make a solo team. Only students you ticked for the AIS system in Sign-up approvals are listed. A student who is missing: open
+            Sign-up approvals, tick AIS for them and press Save access.
           </div>
+          {students.length === 0 && <div className="rounded-lg bg-amber-50 p-3 text-[12.5px] text-amber-900">No student has been ticked for the AIS system yet. Do that in Sign-up approvals first.</div>}
           <div className="flex gap-3 items-center flex-wrap">
             <input className="input" style={{ maxWidth: 260 }} placeholder="Search a student" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search a student" />
             <label className="flex items-center gap-1.5 text-[12.5px]"><input type="checkbox" checked={onlyFree} onChange={(e) => setOnlyFree(e.target.checked)} /> Hide students already in a team ({inTeam})</label>
