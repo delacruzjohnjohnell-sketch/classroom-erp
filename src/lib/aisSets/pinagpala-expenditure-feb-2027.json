@@ -1,0 +1,4113 @@
+{
+ "id": "pinagpala-expenditure-feb-2027",
+ "title": "Expenditure, payroll and month-end controls (Pinagpala Hardware and Construction Supply, February 2027)",
+ "topic": "Expenditure cycle, payroll, fixed assets and close",
+ "summary": "35 documents at a hardware and construction supply store: purchases and payments, payroll, fixed assets and the month-end close. Review each packet, post the valid ones with the right journal and hold the ones that fail a control, naming the control. Harder than Set 1: partial deliveries, tolerances, delegated approvals, orders split to avoid a limit, a reformatted duplicate invoice, and clean documents that look wrong.",
+ "meta": {
+  "valid": 15,
+  "period": "2027-02",
+  "vat_rate": 12,
+  "documents": 35,
+  "exceptions": 20,
+  "hall_topic": "Expenditure cycle, payroll, fixed assets, close",
+  "population": {
+   "from": "2027-02-01",
+   "to": "2027-02-26",
+   "count": 400,
+   "approval_limit": 50000,
+   "customers": [
+    "Kabayan Builders",
+    "Santos Construction",
+    "Villar Contractors",
+    "Dela Rosa Hardware",
+    "Cabanatuan Homes Development",
+    "Mercado Renovations",
+    "Nueva Ecija Roofing",
+    "Pangilinan Builders",
+    "Gapan Contractors Inc.",
+    "JM Tile and Paint"
+   ]
+  }
+ },
+ "txns": [
+  {
+   "seq": 1,
+   "template": {
+    "title": "Purchase: {{q}} bags of cement from Luzon Portland",
+    "date": "2027-02-02",
+    "company": "Pinagpala Hardware and Construction Supply",
+    "docs": [
+     {
+      "type": "Purchasing policy (in force)",
+      "fields": {
+       "Approval limits": "Purchasing supervisor up to 50,000.00 per order; General Manager above 50,000.00",
+       "Same item, same supplier": "Orders within 3 days are added together when applying the limit",
+       "Price tolerance": "An invoice price up to 2% above the PO price is accepted",
+       "Suppliers": "Approved supplier list: Luzon Portland Cement Corp.; Bataan Rebar and Steel; Nueva Ecija Paint Depot; Central Luzon PVC Supply"
+      }
+     },
+     {
+      "type": "Purchase order",
+      "fields": {
+       "PO no.": "PO-{{po}}",
+       "Date": "2027-01-28",
+       "Supplier": "Luzon Portland Cement Corp.",
+       "Item": "Portland cement, 40 kg bag",
+       "Quantity ordered": "{{q}}",
+       "Unit price": "245.00",
+       "Order total (incl. 12% VAT)": "{{gross}}",
+       "Prepared by": "R. Bautista (purchasing clerk)",
+       "Approved by": "General Manager T. Pineda"
+      }
+     },
+     {
+      "type": "Receiving report",
+      "fields": {
+       "RR no.": "RR-{{rr}}",
+       "Date received": "2027-02-02",
+       "Item": "Portland cement, 40 kg bag",
+       "Quantity received": "{{q}}",
+       "Received by": "Warehouse head M. Sison"
+      }
+     },
+     {
+      "type": "Supplier invoice",
+      "fields": {
+       "Invoice no.": "LP-{{inv}}",
+       "Invoice date": "2027-02-02",
+       "Supplier": "Luzon Portland Cement Corp.",
+       "Item": "Portland cement, 40 kg bag",
+       "Quantity billed": "{{q}}",
+       "Unit price": "245.00",
+       "Net amount": "{{net}}",
+       "VAT 12%": "{{vat}}",
+       "Total due": "{{gross}}",
+       "Terms": "30 days"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "q",
+      "range": [
+       250,
+       450,
+       50
+      ]
+     },
+     {
+      "name": "net",
+      "op": "mul",
+      "a": "q",
+      "b": 245,
+      "fmt": "money"
+     },
+     {
+      "name": "vat",
+      "op": "pct",
+      "a": "net",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "net",
+       "vat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "po",
+      "range": [
+       4400,
+       4499,
+       1
+      ]
+     },
+     {
+      "name": "rr",
+      "range": [
+       3000,
+       3099,
+       1
+      ]
+     },
+     {
+      "name": "inv",
+      "range": [
+       20400,
+       20499,
+       1
+      ]
+     }
+    ]
+   },
+   "key": {
+    "decision": "POST",
+    "explanation": "The order ({{net}} net) was approved by the General Manager, as the policy requires above 50,000.00. {{q}} bags were received and {{q}} billed at the PO price. Record the inventory, the input VAT and the payable.",
+    "journal": [
+     {
+      "acct": "1200",
+      "dr": "net"
+     },
+     {
+      "acct": "1160",
+      "dr": "vat"
+     },
+     {
+      "acct": "2000",
+      "cr": "gross"
+     }
+    ]
+   }
+  },
+  {
+   "seq": 2,
+   "template": {
+    "title": "Purchase: partial delivery of rebar ({{r}} of {{ord}} received)",
+    "date": "2027-02-03",
+    "company": "Pinagpala Hardware and Construction Supply",
+    "docs": [
+     {
+      "type": "Purchasing policy (in force)",
+      "fields": {
+       "Approval limits": "Purchasing supervisor up to 50,000.00 per order; General Manager above 50,000.00",
+       "Same item, same supplier": "Orders within 3 days are added together when applying the limit",
+       "Price tolerance": "An invoice price up to 2% above the PO price is accepted",
+       "Suppliers": "Approved supplier list: Luzon Portland Cement Corp.; Bataan Rebar and Steel; Nueva Ecija Paint Depot; Central Luzon PVC Supply"
+      }
+     },
+     {
+      "type": "Purchase order",
+      "fields": {
+       "PO no.": "PO-{{po}}",
+       "Date": "2027-01-29",
+       "Supplier": "Bataan Rebar and Steel",
+       "Item": "Rebar 10 mm x 6 m",
+       "Quantity ordered": "{{ord}}",
+       "Unit price": "285.00",
+       "Order total (incl. 12% VAT)": "{{ogross}}",
+       "Prepared by": "R. Bautista (purchasing clerk)",
+       "Approved by": "General Manager T. Pineda"
+      }
+     },
+     {
+      "type": "Receiving report",
+      "fields": {
+       "RR no.": "RR-{{rr}}",
+       "Date received": "2027-02-03",
+       "Item": "Rebar 10 mm x 6 m",
+       "Quantity received": "{{r}}",
+       "Received by": "Warehouse head M. Sison",
+       "Note": "{{bo}} pieces on back order, to follow"
+      }
+     },
+     {
+      "type": "Supplier invoice",
+      "fields": {
+       "Invoice no.": "BR-{{inv}}",
+       "Invoice date": "2027-02-03",
+       "Supplier": "Bataan Rebar and Steel",
+       "Item": "Rebar 10 mm x 6 m",
+       "Quantity billed": "{{r}}",
+       "Unit price": "285.00",
+       "Net amount": "{{net}}",
+       "VAT 12%": "{{vat}}",
+       "Total due": "{{gross}}",
+       "Terms": "30 days"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "r",
+      "range": [
+       150,
+       240,
+       30
+      ]
+     },
+     {
+      "name": "bo",
+      "range": [
+       60,
+       120,
+       30
+      ]
+     },
+     {
+      "name": "ord",
+      "op": "add",
+      "terms": [
+       "r",
+       "bo"
+      ]
+     },
+     {
+      "name": "net",
+      "op": "mul",
+      "a": "r",
+      "b": 285,
+      "fmt": "money"
+     },
+     {
+      "name": "vat",
+      "op": "pct",
+      "a": "net",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "net",
+       "vat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "onet",
+      "op": "mul",
+      "a": "ord",
+      "b": 285,
+      "fmt": "money"
+     },
+     {
+      "name": "ovat",
+      "op": "pct",
+      "a": "onet",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "ogross",
+      "op": "add",
+      "terms": [
+       "onet",
+       "ovat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "po",
+      "range": [
+       4400,
+       4499,
+       1
+      ]
+     },
+     {
+      "name": "rr",
+      "range": [
+       3100,
+       3199,
+       1
+      ]
+     },
+     {
+      "name": "inv",
+      "range": [
+       7700,
+       7799,
+       1
+      ]
+     }
+    ]
+   },
+   "key": {
+    "decision": "POST",
+    "explanation": "Only {{r}} of the {{ord}} pieces ordered arrived, and the supplier billed only the {{r}} received. That is correct: record the {{r}} received and leave the {{bo}} on back order. Do not hold a clean partial delivery.",
+    "journal": [
+     {
+      "acct": "1200",
+      "dr": "net"
+     },
+     {
+      "acct": "1160",
+      "dr": "vat"
+     },
+     {
+      "acct": "2000",
+      "cr": "gross"
+     }
+    ]
+   }
+  },
+  {
+   "seq": 3,
+   "template": {
+    "title": "Purchase: rebar invoice with no receiving report",
+    "date": "2027-02-04",
+    "company": "Pinagpala Hardware and Construction Supply",
+    "docs": [
+     {
+      "type": "Purchasing policy (in force)",
+      "fields": {
+       "Approval limits": "Purchasing supervisor up to 50,000.00 per order; General Manager above 50,000.00",
+       "Same item, same supplier": "Orders within 3 days are added together when applying the limit",
+       "Price tolerance": "An invoice price up to 2% above the PO price is accepted",
+       "Suppliers": "Approved supplier list: Luzon Portland Cement Corp.; Bataan Rebar and Steel; Nueva Ecija Paint Depot; Central Luzon PVC Supply"
+      }
+     },
+     {
+      "type": "Purchase order",
+      "fields": {
+       "PO no.": "PO-{{po}}",
+       "Date": "2027-01-30",
+       "Supplier": "Bataan Rebar and Steel",
+       "Item": "Rebar 10 mm x 6 m",
+       "Quantity ordered": "{{q}}",
+       "Unit price": "285.00",
+       "Order total (incl. 12% VAT)": "{{gross}}",
+       "Prepared by": "R. Bautista (purchasing clerk)",
+       "Approved by": "Purchasing supervisor E. Villanueva"
+      }
+     },
+     {
+      "type": "Receiving report",
+      "fields": {
+       "RR no.": "—",
+       "Status": "NOT ATTACHED: the warehouse has no record of this delivery"
+      }
+     },
+     {
+      "type": "Supplier invoice",
+      "fields": {
+       "Invoice no.": "BR-{{inv}}",
+       "Invoice date": "2027-02-04",
+       "Supplier": "Bataan Rebar and Steel",
+       "Item": "Rebar 10 mm x 6 m",
+       "Quantity billed": "{{q}}",
+       "Unit price": "285.00",
+       "Net amount": "{{net}}",
+       "VAT 12%": "{{vat}}",
+       "Total due": "{{gross}}",
+       "Terms": "30 days"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "q",
+      "range": [
+       100,
+       175,
+       25
+      ]
+     },
+     {
+      "name": "net",
+      "op": "mul",
+      "a": "q",
+      "b": 285,
+      "fmt": "money"
+     },
+     {
+      "name": "vat",
+      "op": "pct",
+      "a": "net",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "net",
+       "vat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "po",
+      "range": [
+       4400,
+       4499,
+       1
+      ]
+     },
+     {
+      "name": "inv",
+      "range": [
+       7800,
+       7899,
+       1
+      ]
+     }
+    ]
+   },
+   "key": {
+    "decision": "HOLD",
+    "failed_control": "NO_RECEIVING_REPORT",
+    "explanation": "There is an order and an invoice but no receiving report. Without proof that the {{q}} pieces were received, the liability must not be recorded."
+   }
+  },
+  {
+   "seq": 4,
+   "template": {
+    "title": "Purchase: GI sheets billed above the PO price",
+    "date": "2027-02-05",
+    "company": "Pinagpala Hardware and Construction Supply",
+    "docs": [
+     {
+      "type": "Purchasing policy (in force)",
+      "fields": {
+       "Approval limits": "Purchasing supervisor up to 50,000.00 per order; General Manager above 50,000.00",
+       "Same item, same supplier": "Orders within 3 days are added together when applying the limit",
+       "Price tolerance": "An invoice price up to 2% above the PO price is accepted",
+       "Suppliers": "Approved supplier list: Luzon Portland Cement Corp.; Bataan Rebar and Steel; Nueva Ecija Paint Depot; Central Luzon PVC Supply"
+      }
+     },
+     {
+      "type": "Purchase order",
+      "fields": {
+       "PO no.": "PO-{{po}}",
+       "Date": "2027-02-01",
+       "Supplier": "Central Luzon PVC Supply",
+       "Item": "GI sheet 0.4 mm x 8 ft",
+       "Quantity ordered": "{{q}}",
+       "Unit price": "420.00",
+       "Order total (incl. 12% VAT)": "{{pgross}}",
+       "Prepared by": "R. Bautista (purchasing clerk)",
+       "Approved by": "Purchasing supervisor E. Villanueva"
+      }
+     },
+     {
+      "type": "Receiving report",
+      "fields": {
+       "RR no.": "RR-{{rr}}",
+       "Date received": "2027-02-05",
+       "Item": "GI sheet 0.4 mm x 8 ft",
+       "Quantity received": "{{q}}",
+       "Received by": "Warehouse head M. Sison"
+      }
+     },
+     {
+      "type": "Supplier invoice",
+      "fields": {
+       "Invoice no.": "CL-{{inv}}",
+       "Invoice date": "2027-02-05",
+       "Supplier": "Central Luzon PVC Supply",
+       "Item": "GI sheet 0.4 mm x 8 ft",
+       "Quantity billed": "{{q}}",
+       "Unit price": "455.00",
+       "Net amount": "{{inet}}",
+       "VAT 12%": "{{ivat}}",
+       "Total due": "{{igross}}",
+       "Terms": "30 days"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "q",
+      "range": [
+       80,
+       115,
+       5
+      ]
+     },
+     {
+      "name": "pnet",
+      "op": "mul",
+      "a": "q",
+      "b": 420,
+      "fmt": "money"
+     },
+     {
+      "name": "pvat",
+      "op": "pct",
+      "a": "pnet",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "pgross",
+      "op": "add",
+      "terms": [
+       "pnet",
+       "pvat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "inet",
+      "op": "mul",
+      "a": "q",
+      "b": 455,
+      "fmt": "money"
+     },
+     {
+      "name": "ivat",
+      "op": "pct",
+      "a": "inet",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "igross",
+      "op": "add",
+      "terms": [
+       "inet",
+       "ivat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "po",
+      "range": [
+       4400,
+       4499,
+       1
+      ]
+     },
+     {
+      "name": "rr",
+      "range": [
+       3200,
+       3299,
+       1
+      ]
+     },
+     {
+      "name": "inv",
+      "range": [
+       5500,
+       5599,
+       1
+      ]
+     }
+    ]
+   },
+   "key": {
+    "decision": "HOLD",
+    "failed_control": "PRICE_MISMATCH",
+    "explanation": "The PO price is 420.00 and the invoice charges 455.00, which is 8.3% higher and above the 2% tolerance. The price was not authorized."
+   }
+  },
+  {
+   "seq": 5,
+   "template": {
+    "title": "Purchase: GI sheets, price slightly above the PO",
+    "date": "2027-02-06",
+    "company": "Pinagpala Hardware and Construction Supply",
+    "docs": [
+     {
+      "type": "Purchasing policy (in force)",
+      "fields": {
+       "Approval limits": "Purchasing supervisor up to 50,000.00 per order; General Manager above 50,000.00",
+       "Same item, same supplier": "Orders within 3 days are added together when applying the limit",
+       "Price tolerance": "An invoice price up to 2% above the PO price is accepted",
+       "Suppliers": "Approved supplier list: Luzon Portland Cement Corp.; Bataan Rebar and Steel; Nueva Ecija Paint Depot; Central Luzon PVC Supply"
+      }
+     },
+     {
+      "type": "Purchase order",
+      "fields": {
+       "PO no.": "PO-{{po}}",
+       "Date": "2027-02-02",
+       "Supplier": "Central Luzon PVC Supply",
+       "Item": "GI sheet 0.4 mm x 8 ft",
+       "Quantity ordered": "{{q}}",
+       "Unit price": "420.00",
+       "Order total (incl. 12% VAT)": "{{pgross}}",
+       "Prepared by": "R. Bautista (purchasing clerk)",
+       "Approved by": "Purchasing supervisor E. Villanueva"
+      }
+     },
+     {
+      "type": "Receiving report",
+      "fields": {
+       "RR no.": "RR-{{rr}}",
+       "Date received": "2027-02-06",
+       "Item": "GI sheet 0.4 mm x 8 ft",
+       "Quantity received": "{{q}}",
+       "Received by": "Warehouse head M. Sison"
+      }
+     },
+     {
+      "type": "Supplier invoice",
+      "fields": {
+       "Invoice no.": "CL-{{inv}}",
+       "Invoice date": "2027-02-06",
+       "Supplier": "Central Luzon PVC Supply",
+       "Item": "GI sheet 0.4 mm x 8 ft",
+       "Quantity billed": "{{q}}",
+       "Unit price": "428.00",
+       "Net amount": "{{inet}}",
+       "VAT 12%": "{{ivat}}",
+       "Total due": "{{igross}}",
+       "Terms": "30 days"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "q",
+      "range": [
+       80,
+       115,
+       5
+      ]
+     },
+     {
+      "name": "pnet",
+      "op": "mul",
+      "a": "q",
+      "b": 420,
+      "fmt": "money"
+     },
+     {
+      "name": "pvat",
+      "op": "pct",
+      "a": "pnet",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "pgross",
+      "op": "add",
+      "terms": [
+       "pnet",
+       "pvat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "inet",
+      "op": "mul",
+      "a": "q",
+      "b": 428,
+      "fmt": "money"
+     },
+     {
+      "name": "ivat",
+      "op": "pct",
+      "a": "inet",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "igross",
+      "op": "add",
+      "terms": [
+       "inet",
+       "ivat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "po",
+      "range": [
+       4400,
+       4499,
+       1
+      ]
+     },
+     {
+      "name": "rr",
+      "range": [
+       3200,
+       3299,
+       1
+      ]
+     },
+     {
+      "name": "inv",
+      "range": [
+       5600,
+       5699,
+       1
+      ]
+     }
+    ]
+   },
+   "key": {
+    "decision": "POST",
+    "explanation": "The invoice price (428.00) is 1.9% above the PO price (420.00), which is inside the 2% tolerance. Post it at the invoice amounts. This is a trap for students who hold every price difference.",
+    "journal": [
+     {
+      "acct": "1200",
+      "dr": "inet"
+     },
+     {
+      "acct": "1160",
+      "dr": "ivat"
+     },
+     {
+      "acct": "2000",
+      "cr": "igross"
+     }
+    ]
+   }
+  },
+  {
+   "seq": 6,
+   "template": {
+    "title": "Purchase: PVC pipe, {{q}} billed but {{r}} received",
+    "date": "2027-02-08",
+    "company": "Pinagpala Hardware and Construction Supply",
+    "docs": [
+     {
+      "type": "Purchasing policy (in force)",
+      "fields": {
+       "Approval limits": "Purchasing supervisor up to 50,000.00 per order; General Manager above 50,000.00",
+       "Same item, same supplier": "Orders within 3 days are added together when applying the limit",
+       "Price tolerance": "An invoice price up to 2% above the PO price is accepted",
+       "Suppliers": "Approved supplier list: Luzon Portland Cement Corp.; Bataan Rebar and Steel; Nueva Ecija Paint Depot; Central Luzon PVC Supply"
+      }
+     },
+     {
+      "type": "Purchase order",
+      "fields": {
+       "PO no.": "PO-{{po}}",
+       "Date": "2027-02-03",
+       "Supplier": "Central Luzon PVC Supply",
+       "Item": "PVC pipe 4 in x 3 m",
+       "Quantity ordered": "{{q}}",
+       "Unit price": "330.00",
+       "Order total (incl. 12% VAT)": "{{gross}}",
+       "Prepared by": "R. Bautista (purchasing clerk)",
+       "Approved by": "Purchasing supervisor E. Villanueva"
+      }
+     },
+     {
+      "type": "Receiving report",
+      "fields": {
+       "RR no.": "RR-{{rr}}",
+       "Date received": "2027-02-08",
+       "Item": "PVC pipe 4 in x 3 m",
+       "Quantity received": "{{r}}",
+       "Received by": "Warehouse head M. Sison"
+      }
+     },
+     {
+      "type": "Supplier invoice",
+      "fields": {
+       "Invoice no.": "CL-{{inv}}",
+       "Invoice date": "2027-02-08",
+       "Supplier": "Central Luzon PVC Supply",
+       "Item": "PVC pipe 4 in x 3 m",
+       "Quantity billed": "{{q}}",
+       "Unit price": "330.00",
+       "Net amount": "{{net}}",
+       "VAT 12%": "{{vat}}",
+       "Total due": "{{gross}}",
+       "Terms": "30 days"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "q",
+      "range": [
+       100,
+       150,
+       10
+      ]
+     },
+     {
+      "name": "short",
+      "range": [
+       10,
+       30,
+       5
+      ]
+     },
+     {
+      "name": "r",
+      "op": "sub",
+      "a": "q",
+      "b": "short"
+     },
+     {
+      "name": "net",
+      "op": "mul",
+      "a": "q",
+      "b": 330,
+      "fmt": "money"
+     },
+     {
+      "name": "vat",
+      "op": "pct",
+      "a": "net",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "net",
+       "vat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "po",
+      "range": [
+       4400,
+       4499,
+       1
+      ]
+     },
+     {
+      "name": "rr",
+      "range": [
+       3300,
+       3399,
+       1
+      ]
+     },
+     {
+      "name": "inv",
+      "range": [
+       5700,
+       5799,
+       1
+      ]
+     }
+    ]
+   },
+   "key": {
+    "decision": "HOLD",
+    "failed_control": "QTY_MISMATCH",
+    "explanation": "The supplier billed {{q}} pipes but the receiving report shows {{r}}. {{short}} pipes are being billed that were never received."
+   }
+  },
+  {
+   "seq": 7,
+   "template": {
+    "title": "Purchase: invoice number written two ways",
+    "date": "2027-02-09",
+    "company": "Pinagpala Hardware and Construction Supply",
+    "docs": [
+     {
+      "type": "Purchasing policy (in force)",
+      "fields": {
+       "Approval limits": "Purchasing supervisor up to 50,000.00 per order; General Manager above 50,000.00",
+       "Same item, same supplier": "Orders within 3 days are added together when applying the limit",
+       "Price tolerance": "An invoice price up to 2% above the PO price is accepted",
+       "Suppliers": "Approved supplier list: Luzon Portland Cement Corp.; Bataan Rebar and Steel; Nueva Ecija Paint Depot; Central Luzon PVC Supply"
+      }
+     },
+     {
+      "type": "Purchase order",
+      "fields": {
+       "PO no.": "PO-{{po}}",
+       "Date": "2027-02-04",
+       "Supplier": "Luzon Portland Cement Corp.",
+       "Item": "Portland cement, 40 kg bag",
+       "Quantity ordered": "{{q}}",
+       "Unit price": "245.00",
+       "Order total (incl. 12% VAT)": "{{gross}}",
+       "Prepared by": "R. Bautista (purchasing clerk)",
+       "Approved by": "Purchasing supervisor E. Villanueva"
+      }
+     },
+     {
+      "type": "Receiving report",
+      "fields": {
+       "RR no.": "RR-{{rr}}",
+       "Date received": "2027-02-09",
+       "Item": "Portland cement, 40 kg bag",
+       "Quantity received": "{{q}}",
+       "Received by": "Warehouse head M. Sison"
+      }
+     },
+     {
+      "type": "Supplier invoice",
+      "fields": {
+       "Invoice no.": "LP-{{inv}}",
+       "Invoice date": "2027-02-09",
+       "Supplier": "Luzon Portland Cement Corp.",
+       "Item": "Portland cement, 40 kg bag",
+       "Quantity billed": "{{q}}",
+       "Unit price": "245.00",
+       "Net amount": "{{net}}",
+       "VAT 12%": "{{vat}}",
+       "Total due": "{{gross}}",
+       "Terms": "30 days"
+      }
+     },
+     {
+      "type": "Invoice register extract",
+      "fields": {
+       "Invoice no.": "LP{{inv}}",
+       "Supplier": "Luzon Portland Cement Corp.",
+       "Amount": "{{gross}}",
+       "Already posted on": "2027-02-05",
+       "Status": "POSTED to the ledger"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "q",
+      "range": [
+       100,
+       200,
+       20
+      ]
+     },
+     {
+      "name": "net",
+      "op": "mul",
+      "a": "q",
+      "b": 245,
+      "fmt": "money"
+     },
+     {
+      "name": "vat",
+      "op": "pct",
+      "a": "net",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "net",
+       "vat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "po",
+      "range": [
+       4400,
+       4499,
+       1
+      ]
+     },
+     {
+      "name": "rr",
+      "range": [
+       3400,
+       3499,
+       1
+      ]
+     },
+     {
+      "name": "inv",
+      "range": [
+       20500,
+       20599,
+       1
+      ]
+     }
+    ]
+   },
+   "key": {
+    "decision": "HOLD",
+    "failed_control": "DUP_INVOICE",
+    "explanation": "The register has LP{{inv}} for the same supplier and the same amount ({{gross}}), posted on February 5. LP-{{inv}} is the same invoice with a hyphen. Posting it would record the purchase twice."
+   }
+  },
+  {
+   "seq": 8,
+   "template": {
+    "title": "Purchase: paint from a supplier not on the list",
+    "date": "2027-02-10",
+    "company": "Pinagpala Hardware and Construction Supply",
+    "docs": [
+     {
+      "type": "Purchasing policy (in force)",
+      "fields": {
+       "Approval limits": "Purchasing supervisor up to 50,000.00 per order; General Manager above 50,000.00",
+       "Same item, same supplier": "Orders within 3 days are added together when applying the limit",
+       "Price tolerance": "An invoice price up to 2% above the PO price is accepted",
+       "Suppliers": "Approved supplier list: Luzon Portland Cement Corp.; Bataan Rebar and Steel; Nueva Ecija Paint Depot; Central Luzon PVC Supply"
+      }
+     },
+     {
+      "type": "Purchase order",
+      "fields": {
+       "PO no.": "PO-{{po}}",
+       "Date": "2027-02-05",
+       "Supplier": "RJ Trading",
+       "Item": "Latex paint, 4 L can",
+       "Quantity ordered": "{{q}}",
+       "Unit price": "610.00",
+       "Order total (incl. 12% VAT)": "{{gross}}",
+       "Prepared by": "R. Bautista (purchasing clerk)",
+       "Approved by": "Purchasing supervisor E. Villanueva"
+      }
+     },
+     {
+      "type": "Receiving report",
+      "fields": {
+       "RR no.": "RR-{{rr}}",
+       "Date received": "2027-02-10",
+       "Item": "Latex paint, 4 L can",
+       "Quantity received": "{{q}}",
+       "Received by": "Warehouse head M. Sison"
+      }
+     },
+     {
+      "type": "Supplier invoice",
+      "fields": {
+       "Invoice no.": "RJ-00{{inv}}",
+       "Invoice date": "2027-02-10",
+       "Supplier": "RJ Trading",
+       "Item": "Latex paint, 4 L can",
+       "Quantity billed": "{{q}}",
+       "Unit price": "610.00",
+       "Net amount": "{{net}}",
+       "VAT 12%": "{{vat}}",
+       "Total due": "{{gross}}",
+       "Terms": "30 days"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "q",
+      "range": [
+       50,
+       80,
+       10
+      ]
+     },
+     {
+      "name": "net",
+      "op": "mul",
+      "a": "q",
+      "b": 610,
+      "fmt": "money"
+     },
+     {
+      "name": "vat",
+      "op": "pct",
+      "a": "net",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "net",
+       "vat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "po",
+      "range": [
+       4400,
+       4499,
+       1
+      ]
+     },
+     {
+      "name": "rr",
+      "range": [
+       3500,
+       3599,
+       1
+      ]
+     },
+     {
+      "name": "inv",
+      "range": [
+       93,
+       99,
+       1
+      ]
+     }
+    ]
+   },
+   "key": {
+    "decision": "HOLD",
+    "failed_control": "UNAPPROVED_VENDOR",
+    "explanation": "RJ Trading is not on the approved supplier list. The goods may be fine, but nobody authorized a new supplier, so the invoice must be held for approval."
+   }
+  },
+  {
+   "seq": 9,
+   "template": {
+    "title": "Purchase: three paint orders just under the limit (the third)",
+    "date": "2027-02-11",
+    "company": "Pinagpala Hardware and Construction Supply",
+    "docs": [
+     {
+      "type": "Purchasing policy (in force)",
+      "fields": {
+       "Approval limits": "Purchasing supervisor up to 50,000.00 per order; General Manager above 50,000.00",
+       "Same item, same supplier": "Orders within 3 days are added together when applying the limit",
+       "Price tolerance": "An invoice price up to 2% above the PO price is accepted",
+       "Suppliers": "Approved supplier list: Luzon Portland Cement Corp.; Bataan Rebar and Steel; Nueva Ecija Paint Depot; Central Luzon PVC Supply"
+      }
+     },
+     {
+      "type": "Purchase order",
+      "fields": {
+       "PO no.": "PO-{{po}}",
+       "Date": "2027-02-11",
+       "Supplier": "Nueva Ecija Paint Depot",
+       "Item": "Latex paint, 4 L can",
+       "Quantity ordered": "{{q}}",
+       "Unit price": "610.00",
+       "Order total (incl. 12% VAT)": "{{gross}}",
+       "Prepared by": "R. Bautista (purchasing clerk)",
+       "Approved by": "Purchasing supervisor E. Villanueva",
+       "Note": "Same item and supplier as PO-{{p1}} (Feb 9) and PO-{{p2}} (Feb 10), same requester"
+      }
+     },
+     {
+      "type": "Receiving report",
+      "fields": {
+       "RR no.": "RR-{{rr}}",
+       "Date received": "2027-02-11",
+       "Item": "Latex paint, 4 L can",
+       "Quantity received": "{{q}}",
+       "Received by": "Warehouse head M. Sison"
+      }
+     },
+     {
+      "type": "Supplier invoice",
+      "fields": {
+       "Invoice no.": "NP-{{inv}}",
+       "Invoice date": "2027-02-11",
+       "Supplier": "Nueva Ecija Paint Depot",
+       "Item": "Latex paint, 4 L can",
+       "Quantity billed": "{{q}}",
+       "Unit price": "610.00",
+       "Net amount": "{{net}}",
+       "VAT 12%": "{{vat}}",
+       "Total due": "{{gross}}",
+       "Terms": "30 days"
+      }
+     },
+     {
+      "type": "Purchase order register extract",
+      "fields": {
+       "First order": "PO-{{p1}}, 2027-02-09, {{q}} cans, {{gross}} incl. VAT, approved by supervisor",
+       "Second order": "PO-{{p2}}, 2027-02-10, {{q}} cans, {{gross}} incl. VAT, approved by supervisor",
+       "Third order": "PO-{{po}}, 2027-02-11, {{q}} cans, {{gross}} incl. VAT, approved by supervisor"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "q",
+      "range": [
+       70,
+       81,
+       1
+      ]
+     },
+     {
+      "name": "net",
+      "op": "mul",
+      "a": "q",
+      "b": 610,
+      "fmt": "money"
+     },
+     {
+      "name": "vat",
+      "op": "pct",
+      "a": "net",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "net",
+       "vat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "agg",
+      "op": "mul",
+      "a": "net",
+      "b": 3,
+      "fmt": "money"
+     },
+     {
+      "name": "po",
+      "range": [
+       4412,
+       4490,
+       1
+      ]
+     },
+     {
+      "name": "p1",
+      "op": "sub",
+      "a": "po",
+      "b": 2
+     },
+     {
+      "name": "p2",
+      "op": "sub",
+      "a": "po",
+      "b": 1
+     },
+     {
+      "name": "rr",
+      "range": [
+       3600,
+       3699,
+       1
+      ]
+     },
+     {
+      "name": "inv",
+      "range": [
+       3300,
+       3399,
+       1
+      ]
+     }
+    ]
+   },
+   "key": {
+    "decision": "HOLD",
+    "failed_control": "NO_AUTHORIZATION",
+    "explanation": "Each order is {{net}} before VAT, just under the 50,000.00 supervisor limit. They are the same item, supplier and requester on three days, so the policy adds them to {{agg}}, which needed the General Manager. Splitting the order avoided that approval."
+   }
+  },
+  {
+   "seq": 10,
+   "template": {
+    "title": "Purchase: cement invoice with an arithmetic error",
+    "date": "2027-02-12",
+    "company": "Pinagpala Hardware and Construction Supply",
+    "docs": [
+     {
+      "type": "Purchasing policy (in force)",
+      "fields": {
+       "Approval limits": "Purchasing supervisor up to 50,000.00 per order; General Manager above 50,000.00",
+       "Same item, same supplier": "Orders within 3 days are added together when applying the limit",
+       "Price tolerance": "An invoice price up to 2% above the PO price is accepted",
+       "Suppliers": "Approved supplier list: Luzon Portland Cement Corp.; Bataan Rebar and Steel; Nueva Ecija Paint Depot; Central Luzon PVC Supply"
+      }
+     },
+     {
+      "type": "Purchase order",
+      "fields": {
+       "PO no.": "PO-{{po}}",
+       "Date": "2027-02-08",
+       "Supplier": "Luzon Portland Cement Corp.",
+       "Item": "Portland cement, 40 kg bag",
+       "Quantity ordered": "{{q}}",
+       "Unit price": "245.00",
+       "Order total (incl. 12% VAT)": "{{pgross}}",
+       "Prepared by": "R. Bautista (purchasing clerk)",
+       "Approved by": "Purchasing supervisor E. Villanueva"
+      }
+     },
+     {
+      "type": "Receiving report",
+      "fields": {
+       "RR no.": "RR-{{rr}}",
+       "Date received": "2027-02-12",
+       "Item": "Portland cement, 40 kg bag",
+       "Quantity received": "{{q}}",
+       "Received by": "Warehouse head M. Sison"
+      }
+     },
+     {
+      "type": "Supplier invoice",
+      "fields": {
+       "Invoice no.": "LP-{{inv}}",
+       "Invoice date": "2027-02-12",
+       "Supplier": "Luzon Portland Cement Corp.",
+       "Item": "Portland cement, 40 kg bag",
+       "Quantity billed": "{{q}}",
+       "Unit price": "245.00",
+       "Net amount": "{{net}}",
+       "VAT 12%": "{{vat}}",
+       "Total due": "{{gross}}",
+       "Terms": "30 days"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "q",
+      "range": [
+       100,
+       200,
+       10
+      ]
+     },
+     {
+      "name": "cnet",
+      "op": "mul",
+      "a": "q",
+      "b": 245,
+      "fmt": "money"
+     },
+     {
+      "name": "cvat",
+      "op": "pct",
+      "a": "cnet",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "pgross",
+      "op": "add",
+      "terms": [
+       "cnet",
+       "cvat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "err",
+      "range": [
+       800,
+       1500,
+       100
+      ]
+     },
+     {
+      "name": "net",
+      "op": "sub",
+      "a": "cnet",
+      "b": "err",
+      "fmt": "money"
+     },
+     {
+      "name": "vat",
+      "op": "pct",
+      "a": "net",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "net",
+       "vat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "po",
+      "range": [
+       4400,
+       4499,
+       1
+      ]
+     },
+     {
+      "name": "rr",
+      "range": [
+       3700,
+       3799,
+       1
+      ]
+     },
+     {
+      "name": "inv",
+      "range": [
+       20600,
+       20699,
+       1
+      ]
+     }
+    ]
+   },
+   "key": {
+    "decision": "HOLD",
+    "failed_control": "MATH_ERROR",
+    "explanation": "{{q}} bags at 245.00 is {{cnet}}, but the invoice shows a net amount of {{net}} (the VAT and total follow the wrong figure). Ask the supplier for a corrected invoice."
+   }
+  },
+  {
+   "seq": 11,
+   "template": {
+    "title": "Purchase: one person ordered, received and approved",
+    "date": "2027-02-15",
+    "company": "Pinagpala Hardware and Construction Supply",
+    "docs": [
+     {
+      "type": "Purchasing policy (in force)",
+      "fields": {
+       "Approval limits": "Purchasing supervisor up to 50,000.00 per order; General Manager above 50,000.00",
+       "Same item, same supplier": "Orders within 3 days are added together when applying the limit",
+       "Price tolerance": "An invoice price up to 2% above the PO price is accepted",
+       "Suppliers": "Approved supplier list: Luzon Portland Cement Corp.; Bataan Rebar and Steel; Nueva Ecija Paint Depot; Central Luzon PVC Supply"
+      }
+     },
+     {
+      "type": "Purchase order",
+      "fields": {
+       "PO no.": "PO-{{po}}",
+       "Date": "2027-02-10",
+       "Supplier": "Central Luzon PVC Supply",
+       "Item": "PVC pipe 4 in x 3 m",
+       "Quantity ordered": "{{q}}",
+       "Unit price": "330.00",
+       "Order total (incl. 12% VAT)": "{{gross}}",
+       "Prepared by": "R. Bautista (purchasing clerk)",
+       "Approved by": "R. Bautista (purchasing clerk)"
+      }
+     },
+     {
+      "type": "Receiving report",
+      "fields": {
+       "RR no.": "RR-{{rr}}",
+       "Date received": "2027-02-15",
+       "Item": "PVC pipe 4 in x 3 m",
+       "Quantity received": "{{q}}",
+       "Received by": "R. Bautista (purchasing clerk)"
+      }
+     },
+     {
+      "type": "Supplier invoice",
+      "fields": {
+       "Invoice no.": "CL-{{inv}}",
+       "Invoice date": "2027-02-15",
+       "Supplier": "Central Luzon PVC Supply",
+       "Item": "PVC pipe 4 in x 3 m",
+       "Quantity billed": "{{q}}",
+       "Unit price": "330.00",
+       "Net amount": "{{net}}",
+       "VAT 12%": "{{vat}}",
+       "Total due": "{{gross}}",
+       "Terms": "30 days"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "q",
+      "range": [
+       60,
+       120,
+       10
+      ]
+     },
+     {
+      "name": "net",
+      "op": "mul",
+      "a": "q",
+      "b": 330,
+      "fmt": "money"
+     },
+     {
+      "name": "vat",
+      "op": "pct",
+      "a": "net",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "net",
+       "vat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "po",
+      "range": [
+       4400,
+       4499,
+       1
+      ]
+     },
+     {
+      "name": "rr",
+      "range": [
+       3800,
+       3899,
+       1
+      ]
+     },
+     {
+      "name": "inv",
+      "range": [
+       5800,
+       5899,
+       1
+      ]
+     }
+    ]
+   },
+   "key": {
+    "decision": "HOLD",
+    "failed_control": "SOD",
+    "explanation": "R. Bautista prepared and approved the order and also signed the receiving report. One person must not order, approve and receive the same goods."
+   }
+  },
+  {
+   "seq": 12,
+   "template": {
+    "title": "Purchase: {{net}} order approved by the supervisor only",
+    "date": "2027-02-16",
+    "company": "Pinagpala Hardware and Construction Supply",
+    "docs": [
+     {
+      "type": "Purchasing policy (in force)",
+      "fields": {
+       "Approval limits": "Purchasing supervisor up to 50,000.00 per order; General Manager above 50,000.00",
+       "Same item, same supplier": "Orders within 3 days are added together when applying the limit",
+       "Price tolerance": "An invoice price up to 2% above the PO price is accepted",
+       "Suppliers": "Approved supplier list: Luzon Portland Cement Corp.; Bataan Rebar and Steel; Nueva Ecija Paint Depot; Central Luzon PVC Supply"
+      }
+     },
+     {
+      "type": "Purchase order",
+      "fields": {
+       "PO no.": "PO-{{po}}",
+       "Date": "2027-02-11",
+       "Supplier": "Bataan Rebar and Steel",
+       "Item": "Rebar 10 mm x 6 m",
+       "Quantity ordered": "{{q}}",
+       "Unit price": "285.00",
+       "Order total (incl. 12% VAT)": "{{gross}}",
+       "Prepared by": "R. Bautista (purchasing clerk)",
+       "Approved by": "Purchasing supervisor E. Villanueva"
+      }
+     },
+     {
+      "type": "Receiving report",
+      "fields": {
+       "RR no.": "RR-{{rr}}",
+       "Date received": "2027-02-16",
+       "Item": "Rebar 10 mm x 6 m",
+       "Quantity received": "{{q}}",
+       "Received by": "Warehouse head M. Sison"
+      }
+     },
+     {
+      "type": "Supplier invoice",
+      "fields": {
+       "Invoice no.": "BR-{{inv}}",
+       "Invoice date": "2027-02-16",
+       "Supplier": "Bataan Rebar and Steel",
+       "Item": "Rebar 10 mm x 6 m",
+       "Quantity billed": "{{q}}",
+       "Unit price": "285.00",
+       "Net amount": "{{net}}",
+       "VAT 12%": "{{vat}}",
+       "Total due": "{{gross}}",
+       "Terms": "30 days"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "q",
+      "range": [
+       200,
+       400,
+       50
+      ]
+     },
+     {
+      "name": "net",
+      "op": "mul",
+      "a": "q",
+      "b": 285,
+      "fmt": "money"
+     },
+     {
+      "name": "vat",
+      "op": "pct",
+      "a": "net",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "net",
+       "vat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "po",
+      "range": [
+       4400,
+       4499,
+       1
+      ]
+     },
+     {
+      "name": "rr",
+      "range": [
+       3900,
+       3999,
+       1
+      ]
+     },
+     {
+      "name": "inv",
+      "range": [
+       7900,
+       7999,
+       1
+      ]
+     }
+    ]
+   },
+   "key": {
+    "decision": "HOLD",
+    "failed_control": "NO_AUTHORIZATION",
+    "explanation": "The order is {{net}} before VAT. Above 50,000.00 it needs the General Manager, but only the supervisor signed. The approval is missing."
+   }
+  },
+  {
+   "seq": 13,
+   "template": {
+    "title": "Purchase: order exactly at the supervisor limit",
+    "date": "2027-02-17",
+    "company": "Pinagpala Hardware and Construction Supply",
+    "docs": [
+     {
+      "type": "Purchasing policy (in force)",
+      "fields": {
+       "Approval limits": "Purchasing supervisor up to 50,000.00 per order; General Manager above 50,000.00",
+       "Same item, same supplier": "Orders within 3 days are added together when applying the limit",
+       "Price tolerance": "An invoice price up to 2% above the PO price is accepted",
+       "Suppliers": "Approved supplier list: Luzon Portland Cement Corp.; Bataan Rebar and Steel; Nueva Ecija Paint Depot; Central Luzon PVC Supply"
+      }
+     },
+     {
+      "type": "Purchase order",
+      "fields": {
+       "PO no.": "PO-{{po}}",
+       "Date": "2027-02-12",
+       "Supplier": "Nueva Ecija Paint Depot",
+       "Item": "Latex paint, 4 L can",
+       "Quantity ordered": "{{q}}",
+       "Unit price": "1,000.00",
+       "Order total (incl. 12% VAT)": "{{gross}}",
+       "Prepared by": "R. Bautista (purchasing clerk)",
+       "Approved by": "Purchasing supervisor E. Villanueva"
+      }
+     },
+     {
+      "type": "Receiving report",
+      "fields": {
+       "RR no.": "RR-{{rr}}",
+       "Date received": "2027-02-17",
+       "Item": "Latex paint, 4 L can",
+       "Quantity received": "{{q}}",
+       "Received by": "Warehouse head M. Sison"
+      }
+     },
+     {
+      "type": "Supplier invoice",
+      "fields": {
+       "Invoice no.": "NP-{{inv}}",
+       "Invoice date": "2027-02-17",
+       "Supplier": "Nueva Ecija Paint Depot",
+       "Item": "Latex paint, 4 L can",
+       "Quantity billed": "{{q}}",
+       "Unit price": "1,000.00",
+       "Net amount": "{{net}}",
+       "VAT 12%": "{{vat}}",
+       "Total due": "{{gross}}",
+       "Terms": "30 days"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "q",
+      "range": [
+       50,
+       50,
+       1
+      ]
+     },
+     {
+      "name": "net",
+      "range": [
+       50000,
+       50000,
+       1
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "vat",
+      "op": "pct",
+      "a": "net",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "net",
+       "vat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "po",
+      "range": [
+       4400,
+       4499,
+       1
+      ]
+     },
+     {
+      "name": "rr",
+      "range": [
+       4000,
+       4099,
+       1
+      ]
+     },
+     {
+      "name": "inv",
+      "range": [
+       3400,
+       3499,
+       1
+      ]
+     }
+    ]
+   },
+   "key": {
+    "decision": "POST",
+    "explanation": "The order is exactly {{net}} before VAT, which is within the supervisor limit (up to and including 50,000.00). Everything matches. Post it. Same lesson as a sale exactly at the credit limit.",
+    "journal": [
+     {
+      "acct": "1200",
+      "dr": "net"
+     },
+     {
+      "acct": "1160",
+      "dr": "vat"
+     },
+     {
+      "acct": "2000",
+      "cr": "gross"
+     }
+    ]
+   }
+  },
+  {
+   "seq": 14,
+   "template": {
+    "title": "Purchase: delegated approval while the GM was away",
+    "date": "2027-02-18",
+    "company": "Pinagpala Hardware and Construction Supply",
+    "docs": [
+     {
+      "type": "Purchasing policy (in force)",
+      "fields": {
+       "Approval limits": "Purchasing supervisor up to 50,000.00 per order; General Manager above 50,000.00",
+       "Same item, same supplier": "Orders within 3 days are added together when applying the limit",
+       "Price tolerance": "An invoice price up to 2% above the PO price is accepted",
+       "Suppliers": "Approved supplier list: Luzon Portland Cement Corp.; Bataan Rebar and Steel; Nueva Ecija Paint Depot; Central Luzon PVC Supply"
+      }
+     },
+     {
+      "type": "Purchase order",
+      "fields": {
+       "PO no.": "PO-{{po}}",
+       "Date": "2027-02-13",
+       "Supplier": "Luzon Portland Cement Corp.",
+       "Item": "Portland cement, 40 kg bag",
+       "Quantity ordered": "{{q}}",
+       "Unit price": "245.00",
+       "Order total (incl. 12% VAT)": "{{gross}}",
+       "Prepared by": "R. Bautista (purchasing clerk)",
+       "Approved by": "Finance manager C. Ramos (for the General Manager)"
+      }
+     },
+     {
+      "type": "Receiving report",
+      "fields": {
+       "RR no.": "RR-{{rr}}",
+       "Date received": "2027-02-18",
+       "Item": "Portland cement, 40 kg bag",
+       "Quantity received": "{{q}}",
+       "Received by": "Warehouse head M. Sison"
+      }
+     },
+     {
+      "type": "Supplier invoice",
+      "fields": {
+       "Invoice no.": "LP-{{inv}}",
+       "Invoice date": "2027-02-18",
+       "Supplier": "Luzon Portland Cement Corp.",
+       "Item": "Portland cement, 40 kg bag",
+       "Quantity billed": "{{q}}",
+       "Unit price": "245.00",
+       "Net amount": "{{net}}",
+       "VAT 12%": "{{vat}}",
+       "Total due": "{{gross}}",
+       "Terms": "30 days"
+      }
+     },
+     {
+      "type": "Delegation memo",
+      "fields": {
+       "From": "General Manager T. Pineda",
+       "To": "Finance manager C. Ramos",
+       "Covers": "2027-02-12 to 2027-02-19, purchase approvals up to 200,000.00",
+       "Signed": "Yes"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "q",
+      "range": [
+       250,
+       400,
+       50
+      ]
+     },
+     {
+      "name": "net",
+      "op": "mul",
+      "a": "q",
+      "b": 245,
+      "fmt": "money"
+     },
+     {
+      "name": "vat",
+      "op": "pct",
+      "a": "net",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "net",
+       "vat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "po",
+      "range": [
+       4400,
+       4499,
+       1
+      ]
+     },
+     {
+      "name": "rr",
+      "range": [
+       4100,
+       4199,
+       1
+      ]
+     },
+     {
+      "name": "inv",
+      "range": [
+       20700,
+       20799,
+       1
+      ]
+     }
+    ]
+   },
+   "key": {
+    "decision": "POST",
+    "explanation": "The order is {{net}} net and needs the General Manager, who was away. A signed memo delegated purchase approvals to the finance manager for these dates, up to 200,000.00. The approval is valid. Post it.",
+    "journal": [
+     {
+      "acct": "1200",
+      "dr": "net"
+     },
+     {
+      "acct": "1160",
+      "dr": "vat"
+     },
+     {
+      "acct": "2000",
+      "cr": "gross"
+     }
+    ]
+   }
+  },
+  {
+   "seq": 15,
+   "template": {
+    "title": "Payment: cement invoice paid inside the discount period",
+    "date": "2027-02-12",
+    "company": "Pinagpala Hardware and Construction Supply",
+    "docs": [
+     {
+      "type": "Check voucher",
+      "fields": {
+       "CV no.": "CV-{{cv}}",
+       "Payee": "Luzon Portland Cement Corp.",
+       "Invoice paid": "LP-{{inv}} dated 2027-02-02, total {{gross}}",
+       "Terms": "2/10, n/30 on the net amount",
+       "Paid on": "2027-02-12",
+       "Discount (2% of the net amount)": "{{disc}}",
+       "Check amount": "{{cash}}",
+       "Approved by": "General Manager T. Pineda"
+      }
+     },
+     {
+      "type": "Bank debit advice",
+      "fields": {
+       "Date": "2027-02-12",
+       "Check cleared": "{{cash}}"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "q",
+      "range": [
+       300,
+       500,
+       50
+      ]
+     },
+     {
+      "name": "net",
+      "op": "mul",
+      "a": "q",
+      "b": 245,
+      "fmt": "money"
+     },
+     {
+      "name": "vat",
+      "op": "pct",
+      "a": "net",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "net",
+       "vat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "disc",
+      "op": "pct",
+      "a": "net",
+      "pct": 2,
+      "fmt": "money"
+     },
+     {
+      "name": "cash",
+      "op": "sub",
+      "a": "gross",
+      "b": "disc",
+      "fmt": "money"
+     },
+     {
+      "name": "cv",
+      "range": [
+       2200,
+       2299,
+       1
+      ]
+     },
+     {
+      "name": "inv",
+      "range": [
+       20450,
+       20499,
+       1
+      ]
+     }
+    ]
+   },
+   "key": {
+    "decision": "POST",
+    "explanation": "The payment is on day 10, so the 2% discount on the net amount ({{disc}}) is taken. The payable of {{gross}} is cleared with {{cash}} cash and {{disc}} purchase discount.",
+    "journal": [
+     {
+      "acct": "2000",
+      "dr": "gross"
+     },
+     {
+      "acct": "1000",
+      "cr": "cash"
+     },
+     {
+      "acct": "5900",
+      "cr": "disc"
+     }
+    ]
+   }
+  },
+  {
+   "seq": 16,
+   "template": {
+    "title": "Payment: an invoice paid a second time",
+    "date": "2027-02-19",
+    "company": "Pinagpala Hardware and Construction Supply",
+    "docs": [
+     {
+      "type": "Check voucher",
+      "fields": {
+       "CV no.": "CV-{{cv2}}",
+       "Payee": "Bataan Rebar and Steel",
+       "Invoice paid": "BR-{{inv}} dated 2027-02-03, total {{gross}}",
+       "Check amount": "{{gross}}",
+       "Approved by": "General Manager T. Pineda"
+      }
+     },
+     {
+      "type": "Payment register extract",
+      "fields": {
+       "Invoice": "BR-{{inv}}",
+       "Paid on": "2027-02-11 by CV-{{cv1}}, {{gross}}",
+       "Status": "PAID in full"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "q",
+      "range": [
+       100,
+       200,
+       25
+      ]
+     },
+     {
+      "name": "net",
+      "op": "mul",
+      "a": "q",
+      "b": 285,
+      "fmt": "money"
+     },
+     {
+      "name": "vat",
+      "op": "pct",
+      "a": "net",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "net",
+       "vat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "cv1",
+      "range": [
+       2100,
+       2199,
+       1
+      ]
+     },
+     {
+      "name": "cv2",
+      "range": [
+       2230,
+       2299,
+       1
+      ]
+     },
+     {
+      "name": "inv",
+      "range": [
+       7700,
+       7799,
+       1
+      ]
+     }
+    ]
+   },
+   "key": {
+    "decision": "HOLD",
+    "failed_control": "DUP_INVOICE",
+    "explanation": "The register shows BR-{{inv}} was paid in full on February 11 (CV-{{cv1}}). This voucher pays the same invoice again. It should be held and the first payment confirmed."
+   }
+  },
+  {
+   "seq": 17,
+   "template": {
+    "title": "Return to a supplier: {{q}} damaged GI sheets",
+    "date": "2027-02-22",
+    "company": "Pinagpala Hardware and Construction Supply",
+    "docs": [
+     {
+      "type": "Debit memo",
+      "fields": {
+       "DM no.": "DM-{{dm}}",
+       "Supplier": "Central Luzon PVC Supply",
+       "Item": "GI sheet 0.4 mm x 8 ft",
+       "Quantity returned": "{{q}}",
+       "Net": "{{net}}",
+       "VAT 12%": "{{vat}}",
+       "Total": "{{gross}}",
+       "Approved by": "General Manager T. Pineda"
+      }
+     },
+     {
+      "type": "Return slip",
+      "fields": {
+       "Slip no.": "RS-0{{rs}}",
+       "Goods released to the supplier's driver": "{{q}} sheets",
+       "Signed by driver": "Yes"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "q",
+      "range": [
+       10,
+       30,
+       5
+      ]
+     },
+     {
+      "name": "net",
+      "op": "mul",
+      "a": "q",
+      "b": 420,
+      "fmt": "money"
+     },
+     {
+      "name": "vat",
+      "op": "pct",
+      "a": "net",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "net",
+       "vat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "dm",
+      "range": [
+       100,
+       199,
+       1
+      ]
+     },
+     {
+      "name": "rs",
+      "range": [
+       40,
+       99,
+       1
+      ]
+     }
+    ]
+   },
+   "key": {
+    "decision": "POST",
+    "explanation": "The goods left the warehouse (return slip signed by the driver) and the General Manager approved the debit memo. Reduce the payable by {{gross}} and take the inventory and the input VAT back out.",
+    "journal": [
+     {
+      "acct": "2000",
+      "dr": "gross"
+     },
+     {
+      "acct": "1200",
+      "cr": "net"
+     },
+     {
+      "acct": "1160",
+      "cr": "vat"
+     }
+    ]
+   }
+  },
+  {
+   "seq": 18,
+   "template": {
+    "title": "Payroll: regular pay, J. Dela Cruz",
+    "date": "2027-02-15",
+    "company": "Pinagpala Hardware and Construction Supply",
+    "docs": [
+     {
+      "type": "HR master file extract",
+      "fields": {
+       "Employee": "J. Dela Cruz",
+       "Status": "Active",
+       "Hourly rate": "{{rate}}",
+       "Hired": "2025-06-02"
+      }
+     },
+     {
+      "type": "Payroll register line",
+      "fields": {
+       "Employee": "J. Dela Cruz",
+       "Period": "2027-02-01 to 2027-02-15",
+       "Regular hours": "{{hrs}}",
+       "Rate per hour": "{{rate}}",
+       "Overtime hours (125%)": "0",
+       "Gross pay": "{{gross}}",
+       "SSS": "{{sss}}",
+       "PhilHealth": "{{ph}}",
+       "Pag-IBIG": "{{pi}}",
+       "Net pay": "{{net}}"
+      }
+     },
+     {
+      "type": "Time record",
+      "fields": {
+       "Employee": "J. Dela Cruz",
+       "Days worked": "{{days}}",
+       "Hours": "{{hrs}}",
+       "Approved by": "Shop supervisor L. Mercado"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "days",
+      "range": [
+       10,
+       12,
+       1
+      ]
+     },
+     {
+      "name": "hrs",
+      "op": "mul",
+      "a": "days",
+      "b": 8
+     },
+     {
+      "name": "rate",
+      "range": [
+       90,
+       105,
+       5
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "reg",
+      "op": "mul",
+      "a": "hrs",
+      "b": "rate",
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "reg"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "sss",
+      "op": "pct",
+      "a": "gross",
+      "pct": 4.5,
+      "fmt": "money"
+     },
+     {
+      "name": "ph",
+      "op": "pct",
+      "a": "gross",
+      "pct": 2.5,
+      "fmt": "money"
+     },
+     {
+      "name": "pi",
+      "range": [
+       100,
+       100,
+       1
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "ded",
+      "op": "add",
+      "terms": [
+       "sss",
+       "ph",
+       "pi"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "net",
+      "op": "sub",
+      "a": "gross",
+      "b": "ded",
+      "fmt": "money"
+     }
+    ]
+   },
+   "key": {
+    "decision": "POST",
+    "explanation": "The employee is on the HR master file, the time record shows {{hrs}} hours, the rate is the master rate and the deductions follow the register. Record the payroll.",
+    "journal": [
+     {
+      "acct": "5300",
+      "dr": "gross"
+     },
+     {
+      "acct": "2100",
+      "cr": "sss"
+     },
+     {
+      "acct": "2110",
+      "cr": "ph"
+     },
+     {
+      "acct": "2120",
+      "cr": "pi"
+     },
+     {
+      "acct": "1000",
+      "cr": "net"
+     }
+    ]
+   }
+  },
+  {
+   "seq": 19,
+   "template": {
+    "title": "Payroll: a name that is not on the HR file",
+    "date": "2027-02-15",
+    "company": "Pinagpala Hardware and Construction Supply",
+    "docs": [
+     {
+      "type": "HR master file extract",
+      "fields": {
+       "Employee": "{{g.nm}}",
+       "Status": "NOT FOUND: no such person on the HR master file"
+      }
+     },
+     {
+      "type": "Payroll register line",
+      "fields": {
+       "Employee": "{{g.nm}}",
+       "Period": "2027-02-01 to 2027-02-15",
+       "Regular hours": "{{hrs}}",
+       "Rate per hour": "{{rate}}",
+       "Overtime hours (125%)": "0",
+       "Gross pay": "{{gross}}",
+       "SSS": "{{sss}}",
+       "PhilHealth": "{{ph}}",
+       "Pag-IBIG": "{{pi}}",
+       "Net pay": "{{net}}"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "days",
+      "range": [
+       10,
+       12,
+       1
+      ]
+     },
+     {
+      "name": "hrs",
+      "op": "mul",
+      "a": "days",
+      "b": 8
+     },
+     {
+      "name": "rate",
+      "range": [
+       90,
+       105,
+       5
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "g",
+      "pick": [
+       {
+        "nm": "J. Manalo"
+       },
+       {
+        "nm": "R. Ocampo"
+       },
+       {
+        "nm": "F. Lazaro"
+       }
+      ]
+     },
+     {
+      "name": "reg",
+      "op": "mul",
+      "a": "hrs",
+      "b": "rate",
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "reg"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "sss",
+      "op": "pct",
+      "a": "gross",
+      "pct": 4.5,
+      "fmt": "money"
+     },
+     {
+      "name": "ph",
+      "op": "pct",
+      "a": "gross",
+      "pct": 2.5,
+      "fmt": "money"
+     },
+     {
+      "name": "pi",
+      "range": [
+       100,
+       100,
+       1
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "ded",
+      "op": "add",
+      "terms": [
+       "sss",
+       "ph",
+       "pi"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "net",
+      "op": "sub",
+      "a": "gross",
+      "b": "ded",
+      "fmt": "money"
+     }
+    ]
+   },
+   "key": {
+    "decision": "HOLD",
+    "failed_control": "GHOST_EMPLOYEE",
+    "explanation": "{{g.nm}} is paid on the register but is not on the HR master file. Paying someone who is not an employee is the classic ghost employee."
+   }
+  },
+  {
+   "seq": 20,
+   "template": {
+    "title": "Payroll: paid after resigning",
+    "date": "2027-02-15",
+    "company": "Pinagpala Hardware and Construction Supply",
+    "docs": [
+     {
+      "type": "HR master file extract",
+      "fields": {
+       "Employee": "D. Soriano",
+       "Status": "Resigned, last day 2027-01-31",
+       "Hourly rate": "{{rate}}"
+      }
+     },
+     {
+      "type": "Payroll register line",
+      "fields": {
+       "Employee": "D. Soriano",
+       "Period": "2027-02-01 to 2027-02-15",
+       "Regular hours": "{{hrs}}",
+       "Rate per hour": "{{rate}}",
+       "Overtime hours (125%)": "0",
+       "Gross pay": "{{gross}}",
+       "SSS": "{{sss}}",
+       "PhilHealth": "{{ph}}",
+       "Pag-IBIG": "{{pi}}",
+       "Net pay": "{{net}}"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "days",
+      "range": [
+       10,
+       12,
+       1
+      ]
+     },
+     {
+      "name": "hrs",
+      "op": "mul",
+      "a": "days",
+      "b": 8
+     },
+     {
+      "name": "rate",
+      "range": [
+       90,
+       105,
+       5
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "reg",
+      "op": "mul",
+      "a": "hrs",
+      "b": "rate",
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "reg"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "sss",
+      "op": "pct",
+      "a": "gross",
+      "pct": 4.5,
+      "fmt": "money"
+     },
+     {
+      "name": "ph",
+      "op": "pct",
+      "a": "gross",
+      "pct": 2.5,
+      "fmt": "money"
+     },
+     {
+      "name": "pi",
+      "range": [
+       100,
+       100,
+       1
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "ded",
+      "op": "add",
+      "terms": [
+       "sss",
+       "ph",
+       "pi"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "net",
+      "op": "sub",
+      "a": "gross",
+      "b": "ded",
+      "fmt": "money"
+     }
+    ]
+   },
+   "key": {
+    "decision": "HOLD",
+    "failed_control": "TERMINATED_PAID",
+    "explanation": "D. Soriano resigned effective January 31 but is paid for February 1 to 15. The HR file was updated but payroll still paid the person."
+   }
+  },
+  {
+   "seq": 21,
+   "template": {
+    "title": "Payroll: hours that cannot be true",
+    "date": "2027-02-15",
+    "company": "Pinagpala Hardware and Construction Supply",
+    "docs": [
+     {
+      "type": "HR master file extract",
+      "fields": {
+       "Employee": "P. Aquino",
+       "Status": "Active",
+       "Hourly rate": "{{rate}}",
+       "Hired": "2025-06-02"
+      }
+     },
+     {
+      "type": "Payroll register line",
+      "fields": {
+       "Employee": "P. Aquino",
+       "Period": "2027-02-01 to 2027-02-15",
+       "Regular hours": "{{big}}",
+       "Rate per hour": "{{rate}}",
+       "Overtime hours (125%)": "0",
+       "Gross pay": "{{gross}}",
+       "SSS": "{{sss}}",
+       "PhilHealth": "{{ph}}",
+       "Pag-IBIG": "{{pi}}",
+       "Net pay": "{{net}}"
+      }
+     },
+     {
+      "type": "Time record",
+      "fields": {
+       "Employee": "P. Aquino",
+       "Days worked": "{{days}}",
+       "Hours": "{{hrs}}",
+       "Approved by": "Shop supervisor L. Mercado",
+       "Note": "The register pays {{big}} hours: nearly 20 hours every day, including the Sundays the store is closed"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "days",
+      "range": [
+       10,
+       12,
+       1
+      ]
+     },
+     {
+      "name": "hrs",
+      "op": "mul",
+      "a": "days",
+      "b": 8
+     },
+     {
+      "name": "big",
+      "range": [
+       280,
+       310,
+       10
+      ]
+     },
+     {
+      "name": "rate",
+      "range": [
+       90,
+       105,
+       5
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "reg",
+      "op": "mul",
+      "a": "big",
+      "b": "rate",
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "reg"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "sss",
+      "op": "pct",
+      "a": "gross",
+      "pct": 4.5,
+      "fmt": "money"
+     },
+     {
+      "name": "ph",
+      "op": "pct",
+      "a": "gross",
+      "pct": 2.5,
+      "fmt": "money"
+     },
+     {
+      "name": "pi",
+      "range": [
+       100,
+       100,
+       1
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "ded",
+      "op": "add",
+      "terms": [
+       "sss",
+       "ph",
+       "pi"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "net",
+      "op": "sub",
+      "a": "gross",
+      "b": "ded",
+      "fmt": "money"
+     }
+    ]
+   },
+   "key": {
+    "decision": "HOLD",
+    "failed_control": "IMPLAUSIBLE_HOURS",
+    "explanation": "The time record shows {{hrs}} hours but the register pays {{big}} for a 15-day period. The hours are not physically plausible and do not match the time record."
+   }
+  },
+  {
+   "seq": 22,
+   "template": {
+    "title": "Payroll: overtime with no approved slip",
+    "date": "2027-02-15",
+    "company": "Pinagpala Hardware and Construction Supply",
+    "docs": [
+     {
+      "type": "HR master file extract",
+      "fields": {
+       "Employee": "R. Tolentino",
+       "Status": "Active",
+       "Hourly rate": "{{rate}}",
+       "Hired": "2025-06-02"
+      }
+     },
+     {
+      "type": "Payroll register line",
+      "fields": {
+       "Employee": "R. Tolentino",
+       "Period": "2027-02-01 to 2027-02-15",
+       "Regular hours": "{{hrs}}",
+       "Rate per hour": "{{rate}}",
+       "Overtime hours (125%)": "{{oth}}",
+       "Gross pay": "{{gross}}",
+       "SSS": "{{sss}}",
+       "PhilHealth": "{{ph}}",
+       "Pag-IBIG": "{{pi}}",
+       "Net pay": "{{net}}"
+      }
+     },
+     {
+      "type": "Time record",
+      "fields": {
+       "Employee": "R. Tolentino",
+       "Days worked": "{{days}}",
+       "Hours": "{{hrs}}",
+       "Approved by": "Shop supervisor L. Mercado"
+      }
+     },
+     {
+      "type": "Overtime slip",
+      "fields": {
+       "Status": "NONE: no approved overtime slip for this employee in the period"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "days",
+      "range": [
+       10,
+       12,
+       1
+      ]
+     },
+     {
+      "name": "hrs",
+      "op": "mul",
+      "a": "days",
+      "b": 8
+     },
+     {
+      "name": "oth",
+      "range": [
+       8,
+       16,
+       2
+      ]
+     },
+     {
+      "name": "rate",
+      "range": [
+       90,
+       105,
+       5
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "reg",
+      "op": "mul",
+      "a": "hrs",
+      "b": "rate",
+      "fmt": "money"
+     },
+     {
+      "name": "otr",
+      "op": "mul",
+      "a": "rate",
+      "b": 1.25,
+      "fmt": "money"
+     },
+     {
+      "name": "otp",
+      "op": "mul",
+      "a": "oth",
+      "b": "otr",
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "reg",
+       "otp"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "sss",
+      "op": "pct",
+      "a": "gross",
+      "pct": 4.5,
+      "fmt": "money"
+     },
+     {
+      "name": "ph",
+      "op": "pct",
+      "a": "gross",
+      "pct": 2.5,
+      "fmt": "money"
+     },
+     {
+      "name": "pi",
+      "range": [
+       100,
+       100,
+       1
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "ded",
+      "op": "add",
+      "terms": [
+       "sss",
+       "ph",
+       "pi"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "net",
+      "op": "sub",
+      "a": "gross",
+      "b": "ded",
+      "fmt": "money"
+     }
+    ]
+   },
+   "key": {
+    "decision": "HOLD",
+    "failed_control": "UNAUTH_OVERTIME",
+    "explanation": "The register pays {{oth}} hours of overtime at 125% but there is no approved overtime slip. Overtime must be authorized before it is paid."
+   }
+  },
+  {
+   "seq": 23,
+   "template": {
+    "title": "Payroll: a rate higher than the master file",
+    "date": "2027-02-15",
+    "company": "Pinagpala Hardware and Construction Supply",
+    "docs": [
+     {
+      "type": "HR master file extract",
+      "fields": {
+       "Employee": "A. Navarro",
+       "Status": "Active",
+       "Hourly rate": "{{mrate}}",
+       "Personnel action form for a rate change": "NONE on file"
+      }
+     },
+     {
+      "type": "Payroll register line",
+      "fields": {
+       "Employee": "A. Navarro",
+       "Period": "2027-02-01 to 2027-02-15",
+       "Regular hours": "{{hrs}}",
+       "Rate per hour": "{{rate}}",
+       "Overtime hours (125%)": "0",
+       "Gross pay": "{{gross}}",
+       "SSS": "{{sss}}",
+       "PhilHealth": "{{ph}}",
+       "Pag-IBIG": "{{pi}}",
+       "Net pay": "{{net}}"
+      }
+     },
+     {
+      "type": "Time record",
+      "fields": {
+       "Employee": "A. Navarro",
+       "Days worked": "{{days}}",
+       "Hours": "{{hrs}}",
+       "Approved by": "Shop supervisor L. Mercado"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "days",
+      "range": [
+       10,
+       12,
+       1
+      ]
+     },
+     {
+      "name": "hrs",
+      "op": "mul",
+      "a": "days",
+      "b": 8
+     },
+     {
+      "name": "mrate",
+      "range": [
+       90,
+       100,
+       5
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "bump",
+      "range": [
+       10,
+       20,
+       5
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "rate",
+      "op": "add",
+      "terms": [
+       "mrate",
+       "bump"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "reg",
+      "op": "mul",
+      "a": "hrs",
+      "b": "rate",
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "reg"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "sss",
+      "op": "pct",
+      "a": "gross",
+      "pct": 4.5,
+      "fmt": "money"
+     },
+     {
+      "name": "ph",
+      "op": "pct",
+      "a": "gross",
+      "pct": 2.5,
+      "fmt": "money"
+     },
+     {
+      "name": "pi",
+      "range": [
+       100,
+       100,
+       1
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "ded",
+      "op": "add",
+      "terms": [
+       "sss",
+       "ph",
+       "pi"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "net",
+      "op": "sub",
+      "a": "gross",
+      "b": "ded",
+      "fmt": "money"
+     }
+    ]
+   },
+   "key": {
+    "decision": "HOLD",
+    "failed_control": "UNAUTH_RATE",
+    "explanation": "The register pays {{rate}} an hour but the HR master rate is {{mrate}} and there is no approved personnel action. The rate change was not authorized."
+   }
+  },
+  {
+   "seq": 24,
+   "template": {
+    "title": "Payroll: approved overtime",
+    "date": "2027-02-15",
+    "company": "Pinagpala Hardware and Construction Supply",
+    "docs": [
+     {
+      "type": "HR master file extract",
+      "fields": {
+       "Employee": "M. Castillo",
+       "Status": "Active",
+       "Hourly rate": "{{rate}}",
+       "Hired": "2025-06-02"
+      }
+     },
+     {
+      "type": "Payroll register line",
+      "fields": {
+       "Employee": "M. Castillo",
+       "Period": "2027-02-01 to 2027-02-15",
+       "Regular hours": "{{hrs}}",
+       "Rate per hour": "{{rate}}",
+       "Overtime hours (125%)": "{{oth}}",
+       "Gross pay": "{{gross}}",
+       "SSS": "{{sss}}",
+       "PhilHealth": "{{ph}}",
+       "Pag-IBIG": "{{pi}}",
+       "Net pay": "{{net}}"
+      }
+     },
+     {
+      "type": "Time record",
+      "fields": {
+       "Employee": "M. Castillo",
+       "Days worked": "{{days}}",
+       "Hours": "{{hrs}}",
+       "Approved by": "Shop supervisor L. Mercado"
+      }
+     },
+     {
+      "type": "Overtime slip",
+      "fields": {
+       "Employee": "M. Castillo",
+       "Overtime hours": "{{oth}}",
+       "Reason": "Delivery rush, Feb 8 and 9",
+       "Approved by": "Shop supervisor L. Mercado (signed)"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "days",
+      "range": [
+       10,
+       12,
+       1
+      ]
+     },
+     {
+      "name": "hrs",
+      "op": "mul",
+      "a": "days",
+      "b": 8
+     },
+     {
+      "name": "oth",
+      "range": [
+       6,
+       12,
+       2
+      ]
+     },
+     {
+      "name": "rate",
+      "range": [
+       90,
+       105,
+       5
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "reg",
+      "op": "mul",
+      "a": "hrs",
+      "b": "rate",
+      "fmt": "money"
+     },
+     {
+      "name": "otr",
+      "op": "mul",
+      "a": "rate",
+      "b": 1.25,
+      "fmt": "money"
+     },
+     {
+      "name": "otp",
+      "op": "mul",
+      "a": "oth",
+      "b": "otr",
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "reg",
+       "otp"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "sss",
+      "op": "pct",
+      "a": "gross",
+      "pct": 4.5,
+      "fmt": "money"
+     },
+     {
+      "name": "ph",
+      "op": "pct",
+      "a": "gross",
+      "pct": 2.5,
+      "fmt": "money"
+     },
+     {
+      "name": "pi",
+      "range": [
+       100,
+       100,
+       1
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "ded",
+      "op": "add",
+      "terms": [
+       "sss",
+       "ph",
+       "pi"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "net",
+      "op": "sub",
+      "a": "gross",
+      "b": "ded",
+      "fmt": "money"
+     }
+    ]
+   },
+   "key": {
+    "decision": "POST",
+    "explanation": "{{oth}} hours of overtime at 125% are supported by a signed slip. The pay is correct. Post it; do not hold a legitimate overtime payment.",
+    "journal": [
+     {
+      "acct": "5300",
+      "dr": "gross"
+     },
+     {
+      "acct": "2100",
+      "cr": "sss"
+     },
+     {
+      "acct": "2110",
+      "cr": "ph"
+     },
+     {
+      "acct": "2120",
+      "cr": "pi"
+     },
+     {
+      "acct": "1000",
+      "cr": "net"
+     }
+    ]
+   }
+  },
+  {
+   "seq": 25,
+   "template": {
+    "title": "Payroll: new hire, part of the period",
+    "date": "2027-02-15",
+    "company": "Pinagpala Hardware and Construction Supply",
+    "docs": [
+     {
+      "type": "HR master file extract",
+      "fields": {
+       "Employee": "K. Bernardo",
+       "Status": "Active, hired 2027-02-08",
+       "Hourly rate": "{{rate}}",
+       "Personnel action form": "Signed, rate {{rate}}, start 2027-02-08"
+      }
+     },
+     {
+      "type": "Payroll register line",
+      "fields": {
+       "Employee": "K. Bernardo",
+       "Period": "2027-02-01 to 2027-02-15",
+       "Regular hours": "{{hrs}}",
+       "Rate per hour": "{{rate}}",
+       "Overtime hours (125%)": "0",
+       "Gross pay": "{{gross}}",
+       "SSS": "{{sss}}",
+       "PhilHealth": "{{ph}}",
+       "Pag-IBIG": "{{pi}}",
+       "Net pay": "{{net}}"
+      }
+     },
+     {
+      "type": "Time record",
+      "fields": {
+       "Employee": "K. Bernardo",
+       "Days worked": "{{days}}",
+       "Hours": "{{hrs}}",
+       "Approved by": "Shop supervisor L. Mercado"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "days",
+      "range": [
+       7,
+       7,
+       1
+      ]
+     },
+     {
+      "name": "hrs",
+      "range": [
+       56,
+       56,
+       1
+      ]
+     },
+     {
+      "name": "rate",
+      "range": [
+       85,
+       95,
+       5
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "reg",
+      "op": "mul",
+      "a": "hrs",
+      "b": "rate",
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "reg"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "sss",
+      "op": "pct",
+      "a": "gross",
+      "pct": 4.5,
+      "fmt": "money"
+     },
+     {
+      "name": "ph",
+      "op": "pct",
+      "a": "gross",
+      "pct": 2.5,
+      "fmt": "money"
+     },
+     {
+      "name": "pi",
+      "range": [
+       100,
+       100,
+       1
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "ded",
+      "op": "add",
+      "terms": [
+       "sss",
+       "ph",
+       "pi"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "net",
+      "op": "sub",
+      "a": "gross",
+      "b": "ded",
+      "fmt": "money"
+     }
+    ]
+   },
+   "key": {
+    "decision": "POST",
+    "explanation": "The new hire started on February 8 with a signed personnel action, so 56 hours (seven days) is the right pay for the period. Do not hold a mid-period start.",
+    "journal": [
+     {
+      "acct": "5300",
+      "dr": "gross"
+     },
+     {
+      "acct": "2100",
+      "cr": "sss"
+     },
+     {
+      "acct": "2110",
+      "cr": "ph"
+     },
+     {
+      "acct": "2120",
+      "cr": "pi"
+     },
+     {
+      "acct": "1000",
+      "cr": "net"
+     }
+    ]
+   }
+  },
+  {
+   "seq": 26,
+   "template": {
+    "title": "Fixed assets: a tire replacement booked as an asset",
+    "date": "2027-02-09",
+    "company": "Pinagpala Hardware and Construction Supply",
+    "docs": [
+     {
+      "type": "Supplier invoice",
+      "fields": {
+       "Invoice no.": "TT-{{inv}}",
+       "Supplier": "Tires Today",
+       "Description": "Four replacement tires for the delivery truck",
+       "Net amount": "{{net}}",
+       "VAT 12%": "{{vat}}",
+       "Total": "{{gross}}"
+      }
+     },
+     {
+      "type": "Journal entry request",
+      "fields": {
+       "Requested by": "Bookkeeper",
+       "Debit": "1500 Fixed Assets {{net}}",
+       "Reason": "The truck is a fixed asset"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "net",
+      "range": [
+       12000,
+       18000,
+       500
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "vat",
+      "op": "pct",
+      "a": "net",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "net",
+       "vat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "inv",
+      "range": [
+       1800,
+       1899,
+       1
+      ]
+     }
+    ]
+   },
+   "key": {
+    "decision": "HOLD",
+    "failed_control": "CAPEX_ERROR",
+    "explanation": "New tires keep the truck in working order. They do not extend its life or capacity, so they are a repair and maintenance expense, not a fixed asset."
+   }
+  },
+  {
+   "seq": 27,
+   "template": {
+    "title": "Fixed assets: a delivery motorcycle",
+    "date": "2027-02-15",
+    "company": "Pinagpala Hardware and Construction Supply",
+    "docs": [
+     {
+      "type": "Purchase order",
+      "fields": {
+       "PO no.": "PO-{{po}}",
+       "Item": "Delivery motorcycle, 150 cc",
+       "Order total (incl. 12% VAT)": "{{gross}}",
+       "Approved by": "General Manager T. Pineda"
+      }
+     },
+     {
+      "type": "Receiving report",
+      "fields": {
+       "RR no.": "RR-{{rr}}",
+       "Date": "2027-02-15",
+       "Received by": "Warehouse head M. Sison",
+       "Registered": "LTO registration attached"
+      }
+     },
+     {
+      "type": "Supplier invoice",
+      "fields": {
+       "Invoice no.": "MM-{{inv}}",
+       "Supplier": "Central Luzon Motors",
+       "Net amount": "{{net}}",
+       "VAT 12%": "{{vat}}",
+       "Total": "{{gross}}"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "net",
+      "range": [
+       100800,
+       100800,
+       1
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "vat",
+      "op": "pct",
+      "a": "net",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "net",
+       "vat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "po",
+      "range": [
+       4420,
+       4429,
+       1
+      ]
+     },
+     {
+      "name": "rr",
+      "range": [
+       4200,
+       4299,
+       1
+      ]
+     },
+     {
+      "name": "inv",
+      "range": [
+       2200,
+       2299,
+       1
+      ]
+     }
+    ]
+   },
+   "key": {
+    "decision": "POST",
+    "explanation": "A motorcycle with a long life, approved by the General Manager, received and registered. Capitalize it: fixed assets {{net}}, input VAT {{vat}} and the payable {{gross}}.",
+    "journal": [
+     {
+      "acct": "1500",
+      "dr": "net"
+     },
+     {
+      "acct": "1160",
+      "dr": "vat"
+     },
+     {
+      "acct": "2000",
+      "cr": "gross"
+     }
+    ]
+   }
+  },
+  {
+   "seq": 28,
+   "template": {
+    "title": "Fixed assets: depreciation booked before the asset was in use",
+    "date": "2027-02-26",
+    "company": "Pinagpala Hardware and Construction Supply",
+    "docs": [
+     {
+      "type": "Depreciation schedule",
+      "fields": {
+       "Asset": "Delivery motorcycle, cost {{cost}}",
+       "Placed in service": "2027-02-24",
+       "Policy": "Depreciation starts the month after the asset is placed in service",
+       "February depreciation shown": "{{dep}} ({{cost}} over 72 months)"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "cost",
+      "range": [
+       100800,
+       100800,
+       1
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "dep",
+      "range": [
+       1400,
+       1400,
+       1
+      ],
+      "fmt": "money"
+     }
+    ]
+   },
+   "key": {
+    "decision": "HOLD",
+    "failed_control": "CUTOFF",
+    "explanation": "The motorcycle went into service on February 24. By policy depreciation starts in March, so booking a month of depreciation ({{dep}}) in February charges the wrong period."
+   }
+  },
+  {
+   "seq": 29,
+   "template": {
+    "title": "Fixed assets: sale of an old delivery van at a gain",
+    "date": "2027-02-25",
+    "company": "Pinagpala Hardware and Construction Supply",
+    "docs": [
+     {
+      "type": "Disposal approval",
+      "fields": {
+       "Asset": "Delivery van, cost {{cost}}",
+       "Accumulated depreciation": "{{acc}}",
+       "Carrying amount": "{{cv}}",
+       "Approved by": "General Manager T. Pineda"
+      }
+     },
+     {
+      "type": "Official receipt",
+      "fields": {
+       "OR no.": "OR-{{or}}",
+       "Buyer": "Gapan Haulers",
+       "Sale price net of VAT": "{{price}}",
+       "VAT 12%": "{{vat}}",
+       "Amount received": "{{recv}}"
+      }
+     },
+     {
+      "type": "Bank deposit slip",
+      "fields": {
+       "Date": "2027-02-25",
+       "Deposited to": "Operating account",
+       "Amount": "{{recv}}",
+       "Validated by bank": "Yes"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "price",
+      "range": [
+       60000,
+       80000,
+       5000
+      ]
+     },
+     {
+      "name": "vat",
+      "op": "pct",
+      "a": "price",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "recv",
+      "op": "add",
+      "terms": [
+       "price",
+       "vat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "cost",
+      "range": [
+       520000,
+       520000,
+       1
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "acc",
+      "range": [
+       468000,
+       468000,
+       1
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "cv",
+      "range": [
+       52000,
+       52000,
+       1
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "gain",
+      "op": "sub",
+      "a": "price",
+      "b": "cv",
+      "fmt": "money"
+     },
+     {
+      "name": "or",
+      "range": [
+       2300,
+       2399,
+       1
+      ]
+     }
+    ]
+   },
+   "key": {
+    "decision": "POST",
+    "explanation": "Remove the van and its accumulated depreciation, record the cash and output VAT, and take the {{gain}} difference between the {{price}} price and the {{cv}} carrying amount as a gain on disposal.",
+    "journal": [
+     {
+      "acct": "1000",
+      "dr": "recv"
+     },
+     {
+      "acct": "1590",
+      "dr": "acc"
+     },
+     {
+      "acct": "1500",
+      "cr": "cost"
+     },
+     {
+      "acct": "2200",
+      "cr": "vat"
+     },
+     {
+      "acct": "4100",
+      "cr": "gain"
+     }
+    ]
+   }
+  },
+  {
+   "seq": 30,
+   "template": {
+    "title": "Month-end: supplier invoice dated before the goods came",
+    "date": "2027-02-26",
+    "company": "Pinagpala Hardware and Construction Supply",
+    "docs": [
+     {
+      "type": "Purchasing policy (in force)",
+      "fields": {
+       "Approval limits": "Purchasing supervisor up to 50,000.00 per order; General Manager above 50,000.00",
+       "Same item, same supplier": "Orders within 3 days are added together when applying the limit",
+       "Price tolerance": "An invoice price up to 2% above the PO price is accepted",
+       "Suppliers": "Approved supplier list: Luzon Portland Cement Corp.; Bataan Rebar and Steel; Nueva Ecija Paint Depot; Central Luzon PVC Supply"
+      }
+     },
+     {
+      "type": "Purchase order",
+      "fields": {
+       "PO no.": "PO-{{po}}",
+       "Date": "2027-02-20",
+       "Supplier": "Luzon Portland Cement Corp.",
+       "Item": "Portland cement, 40 kg bag",
+       "Quantity ordered": "{{q}}",
+       "Unit price": "245.00",
+       "Order total (incl. 12% VAT)": "{{gross}}",
+       "Prepared by": "R. Bautista (purchasing clerk)",
+       "Approved by": "General Manager T. Pineda"
+      }
+     },
+     {
+      "type": "Receiving report",
+      "fields": {
+       "RR no.": "RR-{{rr}}",
+       "Date received": "2027-03-02",
+       "Item": "Portland cement, 40 kg bag",
+       "Quantity received": "{{q}}",
+       "Received by": "Warehouse head M. Sison",
+       "Note": "Delivered on March 2"
+      }
+     },
+     {
+      "type": "Supplier invoice",
+      "fields": {
+       "Invoice no.": "LP-{{inv}}",
+       "Invoice date": "2027-02-26",
+       "Supplier": "Luzon Portland Cement Corp.",
+       "Item": "Portland cement, 40 kg bag",
+       "Quantity billed": "{{q}}",
+       "Unit price": "245.00",
+       "Net amount": "{{net}}",
+       "VAT 12%": "{{vat}}",
+       "Total due": "{{gross}}",
+       "Terms": "30 days"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "q",
+      "range": [
+       150,
+       300,
+       50
+      ]
+     },
+     {
+      "name": "net",
+      "op": "mul",
+      "a": "q",
+      "b": 245,
+      "fmt": "money"
+     },
+     {
+      "name": "vat",
+      "op": "pct",
+      "a": "net",
+      "pct": 12,
+      "fmt": "money"
+     },
+     {
+      "name": "gross",
+      "op": "add",
+      "terms": [
+       "net",
+       "vat"
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "po",
+      "range": [
+       4425,
+       4499,
+       1
+      ]
+     },
+     {
+      "name": "rr",
+      "range": [
+       4300,
+       4399,
+       1
+      ]
+     },
+     {
+      "name": "inv",
+      "range": [
+       20800,
+       20899,
+       1
+      ]
+     }
+    ]
+   },
+   "key": {
+    "decision": "HOLD",
+    "failed_control": "CUTOFF",
+    "explanation": "The invoice is dated February 26 but the goods arrived on March 2. The inventory ({{net}}) and the payable ({{gross}}) belong to March. Recording them in February overstates both."
+   }
+  },
+  {
+   "seq": 31,
+   "template": {
+    "title": "Month-end: electricity for February, bill not yet received",
+    "date": "2027-02-28",
+    "company": "Pinagpala Hardware and Construction Supply",
+    "docs": [
+     {
+      "type": "Accrual memo",
+      "fields": {
+       "Expense": "Electricity, February 2027",
+       "Basis": "Meter reading on 2027-02-28 and the January rate",
+       "Estimated amount": "{{amt}}",
+       "Prepared by": "Bookkeeper",
+       "Approved by": "Finance manager C. Ramos (signed)"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "amt",
+      "range": [
+       12000,
+       18000,
+       1000
+      ],
+      "fmt": "money"
+     }
+    ]
+   },
+   "key": {
+    "decision": "POST",
+    "explanation": "The electricity was used in February, so the expense of {{amt}} belongs to February even though the bill comes in March. Record the approved accrual.",
+    "journal": [
+     {
+      "acct": "5100",
+      "dr": "amt"
+     },
+     {
+      "acct": "2300",
+      "cr": "amt"
+     }
+    ]
+   }
+  },
+  {
+   "seq": 32,
+   "template": {
+    "title": "Month-end: a manual entry with no approval",
+    "date": "2027-02-28",
+    "company": "Pinagpala Hardware and Construction Supply",
+    "docs": [
+     {
+      "type": "Journal entry request",
+      "fields": {
+       "Entry": "Debit 5100 Operating Expenses {{amt}}; credit 1000 Cash in Bank {{amt}}",
+       "Description": "Owner's family expense",
+       "Prepared by": "Bookkeeper",
+       "Approved by": "(blank)"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "amt",
+      "range": [
+       40000,
+       80000,
+       10000
+      ],
+      "fmt": "money"
+     }
+    ]
+   },
+   "key": {
+    "decision": "HOLD",
+    "failed_control": "NO_AUTHORIZATION",
+    "explanation": "A manual journal entry for {{amt}} with no approval, and the description shows a personal expense of the owner booked as a business expense. It must not be posted without authorization."
+   }
+  },
+  {
+   "seq": 33,
+   "template": {
+    "title": "Month-end: allowance for doubtful accounts",
+    "date": "2027-02-28",
+    "company": "Pinagpala Hardware and Construction Supply",
+    "docs": [
+     {
+      "type": "Aging of receivables",
+      "fields": {
+       "Over 90 days": "{{over}}",
+       "Policy": "Provide 25% of balances over 90 days",
+       "Allowance needed": "{{allow}}",
+       "Allowance now": "0.00"
+      }
+     },
+     {
+      "type": "Adjusting entry memo",
+      "fields": {
+       "Entry": "Debit 5110 Bad Debts Expense {{allow}}; credit 1110 Allowance {{allow}}",
+       "Approved by": "Finance manager C. Ramos (signed)"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "over",
+      "range": [
+       60000,
+       100000,
+       10000
+      ],
+      "fmt": "money"
+     },
+     {
+      "name": "allow",
+      "op": "pct",
+      "a": "over",
+      "pct": 25,
+      "fmt": "money"
+     }
+    ]
+   },
+   "key": {
+    "decision": "POST",
+    "explanation": "25% of {{over}} is {{allow}} and no allowance exists yet. The adjustment is approved and follows the policy. Record it.",
+    "journal": [
+     {
+      "acct": "5110",
+      "dr": "allow"
+     },
+     {
+      "acct": "1110",
+      "cr": "allow"
+     }
+    ]
+   }
+  },
+  {
+   "seq": 34,
+   "template": {
+    "title": "Month-end: the same person prepared and approved the entry",
+    "date": "2027-02-28",
+    "company": "Pinagpala Hardware and Construction Supply",
+    "docs": [
+     {
+      "type": "Journal entry request",
+      "fields": {
+       "Entry": "Debit 1200 Merchandise Inventory {{amt}}; credit 5000 Cost of Goods Sold {{amt}}",
+       "Description": "Inventory count adjustment",
+       "Prepared by": "Finance manager C. Ramos",
+       "Approved by": "Finance manager C. Ramos"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "amt",
+      "range": [
+       8000,
+       16000,
+       500
+      ],
+      "fmt": "money"
+     }
+    ]
+   },
+   "key": {
+    "decision": "HOLD",
+    "failed_control": "SOD",
+    "explanation": "C. Ramos both prepared and approved the same entry. An adjustment to inventory and cost of goods sold needs a second person to approve it."
+   }
+  },
+  {
+   "seq": 35,
+   "template": {
+    "title": "Month-end: bank charges",
+    "date": "2027-02-28",
+    "company": "Pinagpala Hardware and Construction Supply",
+    "docs": [
+     {
+      "type": "Bank statement extract",
+      "fields": {
+       "Date": "2027-02-28",
+       "Service charge": "{{fee}}",
+       "Account": "Operating account"
+      }
+     },
+     {
+      "type": "Journal entry memo",
+      "fields": {
+       "Entry": "Debit 5100 Operating Expenses {{fee}}; credit 1000 Cash in Bank {{fee}}",
+       "Approved by": "Finance manager C. Ramos (signed)"
+      }
+     }
+    ],
+    "vars": [
+     {
+      "name": "fee",
+      "range": [
+       650,
+       950,
+       50
+      ],
+      "fmt": "money"
+     }
+    ]
+   },
+   "key": {
+    "decision": "POST",
+    "explanation": "A small charge of {{fee}} that the bank statement supports, with an approved memo. Record it. Small clean items are posted, not held.",
+    "journal": [
+     {
+      "acct": "5100",
+      "dr": "fee"
+     },
+     {
+      "acct": "1000",
+      "cr": "fee"
+     }
+    ]
+   }
+  }
+ ]
+}

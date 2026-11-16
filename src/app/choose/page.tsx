@@ -29,6 +29,12 @@ export default function ChoosePage() {
   const isTeacher = profile?.role === "teacher";
   const accessBlocked = useAccessGuard();
   const [pendingCount, setPendingCount] = useState(0);
+  // the AIS practice sets the teacher has opened to the class (migration 0088); empty before that update is applied
+  const [openSets, setOpenSets] = useState<{ id: string; started: string | null }[]>([]);
+  useEffect(() => {
+    if (isTeacher || !userId) return;
+    supabase.rpc("ais_open_sets").then(({ data, error }) => { if (!error) setOpenSets((data as { id: string; started: string | null }[]) ?? []); });
+  }, [isTeacher, userId]);
   useEffect(() => {
     if (!isTeacher) return;
     supabase.rpc("pending_count").then(({ data, error }) => { if (!error && typeof data === "number") setPendingCount(data); });
@@ -196,11 +202,11 @@ export default function ChoosePage() {
             lastOpened={!isTeacher && lastEdition === "AIS" ? lastUsed.AIS : undefined}
             company={isTeacher ? `${counts("AIS")} compan${counts("AIS") === 1 ? "y" : "ies"}` : aisCompany?.name}
             extra={!isTeacher && aisCompanies.length > 1 ? `${aisCompanies.length} companies — switch from the sidebar` : undefined}
-            locked={!isTeacher && (!canUse(profile, "ais") || !enabled.AIS || !aisCompany)}
-            lockedText={!canUse(profile, "ais") ? "Your teacher has not given you this system." : enabled.AIS ? "Your teacher will add you to a company." : "Opens when your teacher turns it on."}
-            cta={isTeacher ? "Manage AIS companies" : "Open"}
+            locked={!isTeacher && (!canUse(profile, "ais") || !enabled.AIS || (!aisCompany && openSets.length === 0))}
+            lockedText={!canUse(profile, "ais") ? "Your teacher has not given you this system." : enabled.AIS ? "Your teacher will open a practice set or add you to a company." : "Opens when your teacher turns it on."}
+            cta={isTeacher ? "Manage AIS companies" : aisCompany ? "Open" : "Choose a practice set"}
             busy={busy === "AIS"}
-            onClick={() => (isTeacher ? router.push("/ais/teams") : open("AIS"))}
+            onClick={() => (isTeacher ? router.push("/ais/teams") : aisCompany ? open("AIS") : router.push("/ais/start"))}
           />
 
           {/* ---------------- BFAR: standalone, no company or database ---------------- */}
@@ -226,6 +232,16 @@ export default function ChoosePage() {
             onClick={() => router.push("/bir-lab")}
           />
         </div>
+
+        {!isTeacher && enabled.AIS && aisCompany && openSets.some((s) => !s.started) && (
+          <div className="mt-8 w-full max-w-3xl border border-hairline rounded-xl bg-panel p-5 flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <div className="font-semibold text-[14px]">A new AIS practice set is open</div>
+              <div className="text-[12.5px] text-[#A3B1C2] mt-0.5">Start it for your own company, with numbers that are yours alone.</div>
+            </div>
+            <button onClick={() => router.push("/ais/start")} className="rounded-lg px-4 py-2 text-[13px] font-semibold text-white" style={{ background: VIOLET }}>Choose a practice set</button>
+          </div>
+        )}
 
         {isTeacher && (
           <div className="mt-8 w-full max-w-3xl border border-hairline rounded-xl bg-panel p-5 flex items-center justify-between gap-4 flex-wrap">

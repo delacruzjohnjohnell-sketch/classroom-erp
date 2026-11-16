@@ -360,5 +360,7 @@ def check(draws=200):
 if __name__ == "__main__":
     bad = check()
     if "--check" not in sys.argv and not bad:
-        json.dump(build(), open("set2-pinagpala.json", "w"), indent=1, ensure_ascii=False); print("wrote set2-pinagpala.json")
+        for path in ("set2-pinagpala.json", "../../src/lib/aisSets/pinagpala-expenditure-feb-2027.json"):   # the second is the copy the app ships with
+            json.dump(build(), open(path, "w"), indent=1, ensure_ascii=False)
+        print("wrote set2-pinagpala.json and the app's copy")
     sys.exit(1 if bad else 0)

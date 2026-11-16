@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, LogOut, Plus, Trash2, Users } from "lucide-react";
 import { ConfirmDialog, Empty, FormStyles, GoldBtn, Label, Modal, OutlineBtn, Panel, TinyBtn } from "@/components/ui";
 import BulkCompanies from "@/components/ais/BulkCompanies";
+import PracticeSetsPanel from "@/components/ais/PracticeSetsPanel";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { mutate, ok } from "@/lib/mutate";
@@ -250,12 +251,7 @@ export default function AisTeamsPage() {
 
         <Panel title="Practice sets">
           <div className="mb-3"><GoldBtn onClick={() => setImporting(true)}><Plus size={14} /> Import a practice set</GoldBtn></div>
-          {sets.length === 0 ? <Empty>No practice set yet. Import one: paste the set&rsquo;s JSON file.</Empty> : (
-            <table>
-              <thead><tr><th>Set</th><th>Topic</th><th style={{ textAlign: "right" }}>Documents</th><th style={{ textAlign: "right" }}>Assigned to</th></tr></thead>
-              <tbody>{sets.map((x) => <tr key={x.id}><td><b>{x.title}</b><div className="text-[11px] text-[#7F8EA0]">{x.id}</div></td><td>{x.topic}</td><td style={{ textAlign: "right" }}>{x.txns}</td><td style={{ textAlign: "right" }}>{x.assigned} compan{x.assigned === 1 ? "y" : "ies"}</td></tr>)}</tbody>
-            </table>
-          )}
+          <PracticeSetsPanel sets={sets} onChanged={loadCompanies} />
         </Panel>
 
         <Panel title="The seats">
