@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/session";
+import AnnouncementsPanel from "@/components/AnnouncementsPanel";
 import { FORMS, TRACKS, type Track } from "@/birlab/forms/registry";
 import { isRdo, isTin, isoToUs } from "@/birlab/engine/tax";
 import { useBirStore, type Profile } from "@/birlab/store/useBirStore";
@@ -45,6 +46,8 @@ export default function BirLabHome() {
         <h1 className="border-l-4 border-[#f2b705] pl-3 text-2xl font-bold text-[#0b2a6f]">BIR eForms Lab</h1>
         <p className="mt-1 max-w-3xl text-sm text-gray-600">Practice filling out BIR returns in a screen that works like the Offline eBIRForms Package. Each form has a lesson, a filling guide, tips, a quick check and three case problems. Nothing here is sent to the BIR.</p>
       </div>
+
+      <AnnouncementsPanel system="BIR" />
 
       <section className="rounded-lg border border-gray-200 bg-white p-4">
         <h2 className="text-sm font-semibold text-gray-800">Taxpayer profile</h2>

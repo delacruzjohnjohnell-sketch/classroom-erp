@@ -4,6 +4,7 @@ import { BookOpen, ClipboardList, FileSpreadsheet, Library, NotebookPen, Table2 
 import { entriesOfBook, FREE_BOOK } from "@/bfar/core/student-work";
 import { PRACTICE_SETS } from "@/bfar/practice-sets";
 import { Card, PageHeader } from "@/bfar/components/ui";
+import AnnouncementsPanel from "@/components/AnnouncementsPanel";
 import { useAccountingStore, useHydrated } from "@/bfar/store/useAccountingStore";
 
 const TOOLS = [
@@ -24,6 +25,7 @@ export default function BfarHome() {
         title="Basic Financial Accounting and Reporting"
         subtitle="Prof. Win Ballada's accounting cycle for a sole proprietorship, following PFRS for SMEs and double-entry bookkeeping. Everything you enter is saved in this browser and works offline."
       />
+      <AnnouncementsPanel system="BFAR" className="mb-4" />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {TOOLS.map((t) => (
           <Link key={t.href} href={t.href} className="block focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg">

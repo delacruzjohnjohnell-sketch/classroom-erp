@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FileSearch, Inbox, Loader2, ShieldCheck, Users } from "lucide-react";
 import AppShell from "@/components/AppShell";
+import AnnouncementsPanel from "@/components/AnnouncementsPanel";
 import { Panel, Empty, GoldBtn } from "@/components/ui";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
@@ -60,6 +61,8 @@ function AisHome() {
           {isTeacher ? "Reviewing as teacher." : access.lookOnly ? "You have no seat in this company yet, so you can only look. Ask your teacher." : `Your seat: ${seatsText(mySeats)}.`}
         </div>
       </div>
+
+      <AnnouncementsPanel system="AIS" />
 
       <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))" }}>
         {SEATS.map((s) => {

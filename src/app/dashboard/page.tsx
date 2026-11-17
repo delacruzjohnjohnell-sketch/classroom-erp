@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
 import AppShell from "@/components/AppShell";
+import AnnouncementsPanel from "@/components/AnnouncementsPanel";
 import StdDashboard, { type StdDashData } from "@/components/StdDashboard";
 import PracticeReportPanel from "@/components/PracticeReportPanel";
 import { useSession } from "@/lib/session";
@@ -109,6 +110,7 @@ function DashboardBody() {
 
   return (
     <>
+      <AnnouncementsPanel system="STANDARD" className="mb-4" />
       <PracticeReportPanel />
       <StdDashboard d={data} />
     </>

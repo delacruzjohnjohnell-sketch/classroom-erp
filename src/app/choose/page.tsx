@@ -148,6 +148,9 @@ export default function ChoosePage() {
         </div>
         <div className="flex items-center gap-2">
           {isTeacher && (
+            <button onClick={() => router.push("/teacher/announcements")} className="flex items-center gap-1.5 border border-hairline rounded-md px-3 py-1.5 text-xs font-semibold" style={{ color: "#2F6BFF" }}>Announcements</button>
+          )}
+          {isTeacher && (
             <button onClick={() => router.push("/teacher/approvals")} className="flex items-center gap-1.5 border border-hairline rounded-md px-3 py-1.5 text-xs font-semibold" style={{ color: "#2F6BFF" }}>
               Sign-up approvals
               {pendingCount > 0 && <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-[#FF6B7A] text-white text-[10.5px] font-bold flex items-center justify-center">{pendingCount}</span>}
